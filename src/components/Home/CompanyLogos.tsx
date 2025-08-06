@@ -50,70 +50,110 @@ const CompanyLogos = () => {
       name: "Babbel",
       logo: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/654a11e4f74e6a1c57ff7388_Client-Babbel.png",
     },
-    {
-      name: "Seiko",
-      logo: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/654a11e4515b1846176cde22_Client-Seiko.png",
-    },
-    {
-      name: "Perrier",
-      logo: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/654a11e4892770c6295ea195_Client-Perriere.png",
-    },
   ];
 
-  const duplicatedCompanies = [...companies, ...companies];
+  const tripleCompanies = [...companies, ...companies, ...companies];
 
   return (
-    <div className="py-12 bg-white">
-      <div className="max-w-7xl mx-auto px-12 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Trusted by Industry Leaders
-          </h2>
-          <p className="text-lg text-gray-600">
-            Join thousands of companies that trust our platform
-          </p>
+    <>
+      <style>
+        {`
+          @keyframes seamlessMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-100% / 3)); }
+          }
+          .animate-seamless-marquee {
+            animation: seamlessMarquee 25s linear infinite;
+          }
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+          }
+          .animate-fade-in-up-delayed {
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.8; }
+          }
+          .animate-pulse-subtle {
+            animation: pulse 3s ease-in-out infinite;
+          }
+        `}
+      </style>
+
+      <div className="relative bg-white dark:bg-slate-900 py-20 sm:py-28 overflow-hidden">
+        <div className="absolute top-1/2 -left-[400px] -translate-y-1/2 animate-pulse-subtle">
+          <div className="w-[600px] h-[600px] rounded-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 dark:from-purple-500/20 dark:to-blue-500/20 blur-3xl"></div>
+        </div>
+        <div
+          className="absolute top-1/4 -right-[300px] animate-pulse-subtle"
+          style={{ animationDelay: "1.5s" }}
+        >
+          <div className="w-[400px] h-[400px] rounded-full bg-gradient-to-l from-pink-500/8 to-purple-500/8 dark:from-pink-500/15 dark:to-purple-500/15 blur-2xl"></div>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div
-            className="flex space-x-24 items-center w-max"
-            style={{
-              animation: "scroll 13s linear infinite",
-            }}
-          >
-            {duplicatedCompanies.map((company, index) => (
-              <div
-                key={index}
-                className="flex-shrink-0 opacity-70 hover:opacity-100 transition-all duration-300 hover:scale-110"
-              >
-                <div className="w-24 h-24 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
-                  <img
-                    src={company.logo}
-                    alt={company.name}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center animate-fade-in-up">
+            <div className="inline-flex items-center px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-full text-sm font-medium text-purple-700 dark:text-purple-300 mb-6">
+              <span className="w-2 h-2 bg-purple-500 rounded-full mr-2 animate-pulse"></span>
+              Trusted Worldwide
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
+              Industry Leaders
+              <span className="block text-2xl md:text-3xl lg:text-4xl mt-2 font-normal text-slate-600 dark:text-slate-400">
+                Choose Our Platform
+              </span>
+            </h2>
+          </div>
+
+          <div className="text-center animate-fade-in-up-delayed">
+            <p className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              Join thousands of innovative companies that trust our platform to
+              reach millions of customers worldwide.
+            </p>
+          </div>
+
+          <div className="relative mt-20">
+            <div className="overflow-hidden">
+              <div className="flex flex-nowrap items-center gap-x-16 md:gap-x-20 lg:gap-x-24 animate-seamless-marquee will-change-transform">
+                {tripleCompanies.map((company, index) => (
+                  <div
+                    key={`${company.name}-${index}`}
+                    className="flex-shrink-0 group"
+                  >
+                    <img
+                      src={company.logo}
+                      alt={`${company.name} logo`}
+                      className="h-12 md:h-16 lg:h-20 w-auto object-contain transition-all duration-500 ease-out group-hover:scale-110 filter grayscale opacity-60 group-hover:filter-none group-hover:opacity-100 dark:invert dark:brightness-100 dark:opacity-70 dark:group-hover:opacity-100"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://placehold.co/160x64/e2e8f0/64748b?text=${encodeURIComponent(
+                          company.name
+                        )}`;
+                      }}
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent dark:from-slate-900 pointer-events-none"></div>
+            <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-transparent dark:from-slate-900 pointer-events-none"></div>
+          </div>
+
+          <div className="text-center mt-16 animate-fade-in-up-delayed">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              And hundreds more companies worldwide
+            </p>
           </div>
         </div>
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes scroll {
-              0% {
-                transform: translateX(0%);
-              }
-              100% {
-                transform: translateX(-70%);
-              }
-            }
-          `,
-        }}
-      />
-    </div>
+    </>
   );
 };
 

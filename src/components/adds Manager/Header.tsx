@@ -1,6 +1,6 @@
-import React from 'react';
-import { Menu, X, Target } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Menu, X, Target } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -17,17 +17,44 @@ const Header: React.FC = () => {
             </div>
             <div className="ml-6 flex items-center">
               <Target className="h-5 w-5 text-purple-600 mr-2" />
-              <span className="text-lg font-semibold text-purple-600">Ads Manager</span>
+              <span className="text-lg font-semibold text-purple-600">
+                Ads Manager
+              </span>
             </div>
           </div>
-          
+
           <nav className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              <Link to="/products/screen-manager" className="text-gray-700 hover:text-purple-600 transition-colors">Screen Manager</Link>
-              <Link to="/" className="text-gray-700 hover:text-purple-600 transition-colors">Solutions</Link>
-              <Link to="/" className="text-gray-700 hover:text-purple-600 transition-colors">Pricing</Link>
-              <Link to="/" className="text-gray-700 hover:text-purple-600 transition-colors">Resources</Link>
-              <Link to="/" className="text-gray-700 hover:text-purple-600 transition-colors">Contact</Link>
+              <Link
+                to="/products/screen-manager"
+                className="text-gray-700 hover:text-purple-600 transition-colors"
+              >
+                Screen Manager
+              </Link>
+              <Link
+                to="/"
+                className="text-gray-700 hover:text-purple-600 transition-colors"
+              >
+                Solutions
+              </Link>
+              <Link
+                to="/"
+                className="text-gray-700 hover:text-purple-600 transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
+                to="/"
+                className="text-gray-700 hover:text-purple-600 transition-colors"
+              >
+                Resources
+              </Link>
+              <Link
+                to="/"
+                className="text-gray-700 hover:text-purple-600 transition-colors"
+              >
+                Contact
+              </Link>
             </div>
           </nav>
 
@@ -51,11 +78,41 @@ const Header: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
-            <Link to="/products/screen-manager" className="text-gray-700 hover:text-purple-600 block px-3 py-2" onClick={() => setIsMenuOpen(false)}>Screen Manager</Link>
-            <Link to="/" className="text-gray-700 hover:text-purple-600 block px-3 py-2" onClick={() => setIsMenuOpen(false)}>Solutions</Link>
-            <Link to="/" className="text-gray-700 hover:text-purple-600 block px-3 py-2" onClick={() => setIsMenuOpen(false)}>Pricing</Link>
-            <Link to="/" className="text-gray-700 hover:text-purple-600 block px-3 py-2" onClick={() => setIsMenuOpen(false)}>Resources</Link>
-            <Link to="/" className="text-gray-700 hover:text-purple-600 block px-3 py-2" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+            <Link
+              to="/products/screen-manager"
+              className="text-gray-700 hover:text-purple-600 block px-3 py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Screen Manager
+            </Link>
+            <Link
+              to="/"
+              className="text-gray-700 hover:text-purple-600 block px-3 py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Solutions
+            </Link>
+            <Link
+              to="/"
+              className="text-gray-700 hover:text-purple-600 block px-3 py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+            <Link
+              to="/"
+              className="text-gray-700 hover:text-purple-600 block px-3 py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Resources
+            </Link>
+            <Link
+              to="/"
+              className="text-gray-700 hover:text-purple-600 block px-3 py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Contact
+            </Link>
             <button className="w-full bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors mt-2">
               Login / Sign up
             </button>

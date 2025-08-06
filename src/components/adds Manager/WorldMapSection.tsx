@@ -51,7 +51,7 @@ const WorldMapSection: React.FC = () => {
   const handleScroll = useCallback(() => {
     const scrollY = window.scrollY || window.pageYOffset;
     const winH = window.innerHeight || 800;
-    const maxScroll = winH * 0.6; 
+    const maxScroll = winH * 0.6;
     const pct = Math.min(Math.max(scrollY / maxScroll, 0), 1);
     setProgress(pct);
   }, []);
@@ -73,10 +73,17 @@ const WorldMapSection: React.FC = () => {
       aria-label="Global map and scheduling video section"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`text-center mb-12 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900">Global Reach</h2>
+        <div
+          className={`text-center mb-12 transition-all duration-700 ${
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+        >
+          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900">
+            Global Reach
+          </h2>
           <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
-            Connect with audiences worldwide through our network. Watch scheduling in action and see content locations animate on the map.
+            Connect with audiences worldwide through our network. Watch
+            scheduling in action and see content locations animate on the map.
           </p>
         </div>
 
@@ -86,7 +93,11 @@ const WorldMapSection: React.FC = () => {
           </div>
         </div>
 
-        <div className={`grid grid-cols-1 lg:grid-cols-2 gap-10 items-center ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} transition-all duration-700`}>
+        <div
+          className={`grid grid-cols-1 lg:grid-cols-2 gap-10 items-center ${
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          } transition-all duration-700`}
+        >
           <div className="flex items-center justify-center">
             <div
               className="w-full max-w-3xl"
@@ -127,7 +138,9 @@ const WorldMapSection: React.FC = () => {
             <div
               className="w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl bg-black"
               style={{
-                transform: `perspective(1200px) rotateX(${rotationX * 0.18}deg)`,
+                transform: `perspective(1200px) rotateX(${
+                  rotationX * 0.18
+                }deg)`,
                 transition: "transform 200ms linear",
               }}
             >
@@ -145,16 +158,20 @@ const WorldMapSection: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className={`mt-10 text-center max-w-3xl mx-auto text-gray-600 transition-opacity duration-700 ${inView ? "opacity-100" : "opacity-0"}`}>
+        <div
+          className={`mt-10 text-center max-w-3xl mx-auto text-gray-600 transition-opacity duration-700 ${
+            inView ? "opacity-100" : "opacity-0"
+          }`}
+        >
           <p>
-            The map animates based on scroll — start near 25° tilt and smoothly rotate to flat as you scroll down. Video previews play automatically to show scheduling flows.
+            The map animates based on scroll — start near 25° tilt and smoothly
+            rotate to flat as you scroll down. Video previews play automatically
+            to show scheduling flows.
           </p>
         </div>
       </div>
     </section>
   );
 };
-
-
 
 export default WorldMapSection;
