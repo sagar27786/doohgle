@@ -1,41 +1,36 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, MouseEvent as ReactMouseEvent } from "react";
 import { Menu, X, ChevronDown, Monitor, Target, Sun, Moon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProductsOpen, setIsProductsOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isProductsOpen, setIsProductsOpen] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(true);
+  const [lastScrollY, setLastScrollY] = useState<number>(0);
 
-  const { theme, toggleTheme } = useTheme() as {
-    theme: string;
-    toggleTheme: () => void;
-  };
+  const { theme, toggleTheme } = useTheme();
 
   const productsMenuRef = useRef(null);
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const toggleProductsMenu = () => setIsProductsOpen(!isProductsOpen);
+  const toggleMenu = (): void => setIsMenuOpen(!isMenuOpen);
+  const toggleProductsMenu = (): void => setIsProductsOpen(!isProductsOpen);
 
   useEffect(() => {
-    interface HandleClickOutsideEvent extends MouseEvent {
-      target: Node;
-    }
-
-    const handleClickOutside = (event: HandleClickOutsideEvent) => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (
         productsMenuRef.current &&
-        !(productsMenuRef.current as unknown as HTMLElement).contains(
-          event.target
-        )
+        event.target instanceof Node &&
+        !(productsMenuRef.current as HTMLElement).contains(event.target)
       ) {
         setIsProductsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside as EventListener);
+    };
   }, []);
 
   // Scroll effect to hide/show navbar
@@ -57,7 +52,7 @@ const Header = () => {
     };
 
     // Throttle scroll events for better performance
-    let timeoutId = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const throttledHandleScroll = () => {
       if (timeoutId === null) {
         timeoutId = setTimeout(() => {

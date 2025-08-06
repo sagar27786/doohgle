@@ -50,13 +50,31 @@ import VisibilitySection from "./components/adds Manager/VisibilitySection";
 import YouTubeSection from "./components/adds Manager/YouTubeSection";
 import AdsManagerFooter from "./components/adds Manager/Footer";
 
-// ThemeProvider for dark mode
-const ThemeContext = createContext();
-export const useTheme = () => useContext(ThemeContext);
+// Theme types
+type Theme = 'light' | 'dark';
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+}
 
-const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem("theme") || "light"
+// ThemeProvider for dark mode
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
+interface ThemeProviderProps {
+  children: React.ReactNode;
+}
+
+const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem("theme") as Theme) || "light"
   );
 
   useEffect(() => {
@@ -67,7 +85,7 @@ const ThemeProvider = ({ children }) => {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+    setTheme((prevTheme: Theme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
   return (
