@@ -1,8 +1,9 @@
 import React from "react";
 import { Menu, X, ChevronDown, Monitor, Target } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isProductsOpen, setIsProductsOpen] = React.useState(false);
 
@@ -103,7 +104,10 @@ const Header = () => {
             >
               Contact
             </Link>
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors">
+            <button
+              onClick={() => navigate("/auth/login")}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+            >
               Login / Sign up
             </button>
           </div>

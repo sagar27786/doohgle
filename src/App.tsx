@@ -27,7 +27,7 @@ import PricingSection from "./components/Screen Manager/PricingSection";
 import ResourcesSection from "./components/Screen Manager/ResourcesSection";
 import ScreenManagerFooter from "./components/Screen Manager/Footer";
 import MonetizeSection from "./components/Screen Manager/MonetizeSection";
-import TestimonialCarousel from "./components/Screen Manager/TestimonialCarousel";
+import LoginSignup from "./components/Auth/LoginSignup";
 
 // Ads Manager page components
 import AdsManagerHeader from "./components/adds Manager/Header";
@@ -74,18 +74,8 @@ const HomePage = () => {
 // Screen Manager page component
 const ScreenManagerPage = () => {
   return (
-    <div className="min-h-screen bg-white">
-      <ScreenManagerHeader />
+    <div className="h-screen bg-white">
       <ScreenManagerHero />
-      <FeaturesSection />
-      <MonetizeSection />
-      <TestimonialCarousel />
-      <DeviceSection />
-      <EntertainmentSection />
-      <CompanyAnimation />
-      <PricingSection />
-      <ResourcesSection />
-      <ScreenManagerFooter />
     </div>
   );
 };
@@ -118,20 +108,28 @@ const AdsManagerPage = () => {
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-white">
-        <Header />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route
-            path="/products/screen-manager"
-            element={<ScreenManagerPage />}
-          />
-          <Route
-            path="/products/ads-manager"
-            element={<AdsManagerPage />}
-          />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={
+          <>
+            <Header />
+            <HomePage />
+          </>
+        } />
+        <Route
+          path="/products/screen-manager"
+          element={<ScreenManagerPage />}
+        />
+        <Route
+          path="/products/ads-manager"
+          element={
+            <>
+              <Header />
+              <AdsManagerPage />
+            </>
+          }
+        />
+        <Route path="/auth/login" element={<LoginSignup />} />
+      </Routes>
     </Router>
   );
 }
