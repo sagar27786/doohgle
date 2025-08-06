@@ -6,6 +6,9 @@ import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   const { theme, toggleTheme } = useTheme() as {
     theme: string;
     toggleTheme: () => void;
@@ -13,13 +16,9 @@ const Header = () => {
 
   const productsMenuRef = useRef(null);
 
-  // Toggle main mobile menu
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  // Toggle products dropdown (for both desktop and mobile)
   const toggleProductsMenu = () => setIsProductsOpen(!isProductsOpen);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     interface HandleClickOutsideEvent extends MouseEvent {
       target: Node;
@@ -39,6 +38,39 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Scroll effect to hide/show navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const screenHeight = window.innerHeight;
+
+      // If scrolled down more than screen height, hide navbar
+      if (currentScrollY > screenHeight && currentScrollY > lastScrollY) {
+        setIsVisible(false);
+      }
+      // If scrolling up or at top, show navbar
+      else if (currentScrollY < lastScrollY || currentScrollY < 100) {
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    // Throttle scroll events for better performance
+    let timeoutId = null;
+    const throttledHandleScroll = () => {
+      if (timeoutId === null) {
+        timeoutId = setTimeout(() => {
+          handleScroll();
+          timeoutId = null;
+        }, 10);
+      }
+    };
+
+    window.addEventListener("scroll", throttledHandleScroll);
+    return () => window.removeEventListener("scroll", throttledHandleScroll);
+  }, [lastScrollY]);
+
   interface NavLinkProps {
     to: string;
     children: React.ReactNode;
@@ -47,7 +79,7 @@ const Header = () => {
   const NavLink = ({ to, children }: NavLinkProps) => (
     <Link
       to={to}
-      className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors"
+      className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-base font-medium transition-colors"
     >
       {children}
     </Link>
@@ -63,14 +95,16 @@ const Header = () => {
   const ProductLink = ({ to, icon, title, subtitle }: ProductLinkProps) => (
     <Link
       to={to}
-      className="flex items-start p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+      className="flex items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
       onClick={() => {
         setIsProductsOpen(false);
         setIsMenuOpen(false);
       }}
     >
-      <div className="flex-shrink-0">{icon}</div>
-      <div className="ml-3">
+      <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-800/50 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+        {icon}
+      </div>
+      <div className="ml-4">
         <p className="font-semibold text-gray-900 dark:text-white">{title}</p>
         <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
       </div>
@@ -78,9 +112,13 @@ const Header = () => {
   );
 
   return (
-    <header className="bg-white/80 dark:bg-zinc-900 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800">
+    <header
+      className={`bg-white/80 dark:bg-slate-950 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link
@@ -96,27 +134,27 @@ const Header = () => {
             <div className="relative" ref={productsMenuRef}>
               <button
                 onClick={toggleProductsMenu}
-                className="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors"
+                className="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-base font-medium transition-colors"
               >
                 Products
                 <ChevronDown
-                  className={`ml-1 h-4 w-4 transition-transform duration-200 ${
+                  className={`ml-1 h-5 w-5 transition-transform duration-200 ${
                     isProductsOpen ? "rotate-180" : ""
                   }`}
                 />
               </button>
               {isProductsOpen && (
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-down">
-                  <div className="p-4 space-y-1">
+                <div className="absolute top-full left-0 mt-3 w-96 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-down">
+                  <div className="p-4 space-y-2">
                     <ProductLink
                       to="/products/screen-manager"
-                      icon={<Monitor className="h-5 w-5 text-blue-500" />}
+                      icon={<Monitor className="h-6 w-6 text-blue-500" />}
                       title="Screen Manager"
                       subtitle="Manage and monetize your screens"
                     />
                     <ProductLink
                       to="/products/ads-manager"
-                      icon={<Target className="h-5 w-5 text-purple-500" />}
+                      icon={<Target className="h-6 w-6 text-purple-500" />}
                       title="Ads Manager"
                       subtitle="Create targeted ad campaigns"
                     />
@@ -135,7 +173,7 @@ const Header = () => {
               <NavLink to="/contact">Contact</NavLink>
               <Link
                 to="/login"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+                className="bg-indigo-600 text-white px-5 py-2.5 rounded-md text-base font-medium hover:bg-indigo-700 transition-colors"
               >
                 Login / Sign up
               </Link>
@@ -147,9 +185,9 @@ const Header = () => {
               aria-label="Toggle theme"
             >
               {theme === "light" ? (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-6 w-6" />
               ) : (
-                <Sun className="h-5 w-5" />
+                <Sun className="h-6 w-6" />
               )}
             </button>
             {/* Mobile Menu Button */}
@@ -159,9 +197,9 @@ const Header = () => {
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300"
               >
                 {isMenuOpen ? (
-                  <X className="h-6 w-6" />
+                  <X className="h-7 w-7" />
                 ) : (
-                  <Menu className="h-6 w-6" />
+                  <Menu className="h-7 w-7" />
                 )}
               </button>
             </div>
@@ -175,7 +213,7 @@ const Header = () => {
           <div className="px-2 pt-2 pb-3 space-y-1">
             <button
               onClick={toggleProductsMenu}
-              className="flex items-center justify-between w-full px-3 py-2 text-base font-medium text-gray-800 dark:text-gray-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="flex items-center justify-between w-full px-3 py-3 text-base font-medium text-gray-800 dark:text-gray-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Products
               <ChevronDown
@@ -188,50 +226,50 @@ const Header = () => {
               <div className="pl-4 space-y-1 border-l-2 border-slate-200 dark:border-slate-700 ml-3">
                 <ProductLink
                   to="/products/screen-manager"
-                  icon={<Monitor className="h-4 w-4 text-blue-500" />}
+                  icon={<Monitor className="h-5 w-5 text-blue-500" />}
                   title="Screen Manager"
-                  subtitle=""
+                  subtitle="Manage your screens"
                 />
                 <ProductLink
                   to="/products/ads-manager"
-                  icon={<Target className="h-4 w-4 text-purple-500" />}
+                  icon={<Target className="h-5 w-5 text-purple-500" />}
                   title="Ads Manager"
-                  subtitle=""
+                  subtitle="Create ad campaigns"
                 />
               </div>
             )}
             <Link
               to="/solutions"
               onClick={toggleMenu}
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Solutions
             </Link>
             <Link
               to="/pricing"
               onClick={toggleMenu}
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Pricing
             </Link>
             <Link
               to="/resources"
               onClick={toggleMenu}
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Resources
             </Link>
             <Link
               to="/contact"
               onClick={toggleMenu}
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Contact
             </Link>
             <Link
               to="/login"
               onClick={toggleMenu}
-              className="block w-full text-left bg-indigo-600 text-white px-3 py-2 mt-2 rounded-md text-base font-medium hover:bg-indigo-700"
+              className="block w-full text-center bg-indigo-600 text-white px-3 py-3 mt-2 rounded-md text-base font-medium hover:bg-indigo-700"
             >
               Login / Sign up
             </Link>
