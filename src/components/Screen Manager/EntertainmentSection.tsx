@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const EntertainmentSection = () => {
   return (
@@ -10,9 +10,10 @@ const EntertainmentSection = () => {
               Next level entertainment
             </h2>
             <p className="text-lg text-gray-600 leading-relaxed">
-              Dimitri Gärtner, our founder, unveils the distinctive qualities of the 
-              FRAMEN platform. We've crafted a Netflix-style solution tailored for 
-              businesses to enhance communication with their guests.
+              Dimitri Gärtner, our founder, unveils the distinctive qualities of
+              the FRAMEN platform. We've crafted a Netflix-style solution
+              tailored for businesses to enhance communication with their
+              guests.
             </p>
           </div>
 

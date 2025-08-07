@@ -12,7 +12,7 @@ const Header: React.FC = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <Link to="/" className="text-2xl font-bold text-gray-900">
-                <span className="text-gray-600">◊</span> FRAMEN
+                <span className="text-gray-600">◊</span> DOOGHLE
               </Link>
             </div>
             <div className="ml-6 flex items-center">
