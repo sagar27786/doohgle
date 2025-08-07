@@ -10,7 +10,7 @@ const SuccessStories = () => {
         "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/654b643e9b492cb0ee379a04_stepstone-campaign-transcode.mp4",
       mediaType: "video",
       description:
-        "Across Germany, DOOGLE strategically deploys Stepstone's campaigns within premium coworking hubs, effectively reaching the target demographic actively contemplating career shifts and organizational seeking talents and new joiners.",
+        "Across India, DOOHGLE strategically deploys Stepstone's campaigns within premium coworking hubs, effectively reaching the target demographic actively contemplating career shifts and organizational seeking talents and new joiners.",
       metrics: {
         impressions: "1.7M",
         locations: "291",
@@ -24,7 +24,7 @@ const SuccessStories = () => {
         "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/654b5ff02025359b0100c85e_vodafon-campaign-media.jpg",
       mediaType: "image",
       description:
-        "Leveraging DOOGLE's dynamic reach, Vodafone elevates brand presence among young professionals in prime locations. The campaign delivers impressive early exposure averaging eight hours and engaging with tech-conscious consumers.",
+        "Leveraging DOOHGLE's dynamic reach, Vodafone elevates brand presence among young professionals in prime locations. The campaign delivers impressive early exposure averaging eight hours and engaging with tech-conscious consumers.",
       metrics: {
         impressions: "17.8M",
         locations: "9.6K",
@@ -38,7 +38,7 @@ const SuccessStories = () => {
         "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/654a4177b81e77be0ad9e874_video-d9cc690c-bb9a-4700-b3fc-796c709055a8-transcode.mp4",
       mediaType: "video",
       description:
-        "PROCOLUMBIA, in partnership with DOOGLE, extends its campaign beyond social channels to strategic DOOH placements. Through digital out of home we can target the customers precisely.",
+        "PROCOLUMBIA, in partnership with DOOHGLE, extends its campaign beyond social channels to strategic DOOH placements. Through digital out of home we can target the customers precisely.",
       metrics: {
         impressions: "5.9M",
         locations: "577",

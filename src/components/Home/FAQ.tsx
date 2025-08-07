@@ -6,7 +6,7 @@ const FAQ = () => {
 
   const faqs = [
     {
-      question: "Is DOOGLE's Software for free?",
+      question: "Is DOOHGLE's Software for free?",
       answer:
         "Yes! Our software is available without fee. Create your account and login to your dashboard. Once you start an Ad Campaign, enter your payment options for the ad spend. Screen Managers equally can use our software for free with the option to upgrade to our Premium plan for additional features.",
     },
@@ -28,7 +28,7 @@ const FAQ = () => {
     {
       question: "What is different to traditional DOOH?",
       answer:
-        "Unlike traditional DOOH, DOOGLE offers programmatic booking, real-time optimization, and detailed analytics.",
+        "Unlike traditional DOOH, DOOHGLE offers programmatic booking, real-time optimization, and detailed analytics.",
     },
   ];
 
