@@ -168,7 +168,7 @@ const Header = () => {
             <div className="hidden md:flex items-center space-x-4">
               <NavLink to="/contact">Contact</NavLink>
               <button
-              onClick={() => navigate("/auth/login")}
+              onClick={() => navigate("/auth") }
               className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
             >
               Login / Sign up

@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Home/Header";
 import HeroCarousel from "./components/Home/HeroCarousel";
 import HeroVideo from "./components/Home/HeroVideo";
@@ -29,6 +29,8 @@ import ResourcesSection from "./components/Screen Manager/ResourcesSection";
 import ScreenManagerFooter from "./components/Screen Manager/Footer";
 import MonetizeSection from "./components/Screen Manager/MonetizeSection";
 import LoginSignup from "./components/Auth/LoginSignup";
+import Login from "./components/Auth/Login";
+import Signup from "./components/Auth/Signup";
 
 // Ads Manager page components
 import AdsManagerHeader from "./components/adds Manager/Header";
@@ -145,6 +147,7 @@ const AdsManagerPage = () => {
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const hideHeaderRoutes = ["/auth/login", "/products/screen-manager"];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
   return (
@@ -155,6 +158,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/products/screen-manager" element={<ScreenManagerPage />} />
           <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+          <Route path="/auth" element={<Login onSwitch={() => navigate("/auth/signup")} />} />
+          <Route path="/auth/signup" element={<Signup onSwitch={() => navigate("/auth")} />} />
           <Route path="/auth/login" element={<LoginSignup />} />
         </Routes>
       </div>
