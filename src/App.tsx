@@ -145,7 +145,7 @@ const AdsManagerPage = () => {
 
 function App() {
   const location = useLocation();
-  const hideHeaderRoutes = ["/auth/login"];
+  const hideHeaderRoutes = ["/auth/login", "/products/screen-manager"];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
   return (
     <ThemeProvider>
