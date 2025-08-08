@@ -98,11 +98,13 @@ const GlobalFeed = () => {
   }, [isPlaying, currentSlide]);
 
   return (
-    <div className="bg-gray-50 py-16">
+    <div className="bg-gray-50 dark:bg-slate-900 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Global Feed</h2>
-          <p className="text-xl text-gray-600">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Global Feed
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-slate-300">
             Discover campaigns from around the world
           </p>
         </div>
@@ -111,27 +113,27 @@ const GlobalFeed = () => {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
           >
-            <ChevronLeft className="h-6 w-6 text-purple-600" />
+            <ChevronLeft className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </button>
 
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
           >
-            <ChevronRight className="h-6 w-6 text-purple-600" />
+            <ChevronRight className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </button>
 
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="absolute top-4 right-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            className="absolute top-4 right-4 z-10 bg-white dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
           >
             {isPlaying ? (
-              <Pause className="h-5 w-5 text-purple-600" />
+              <Pause className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             ) : (
-              <Play className="h-5 w-5 text-purple-600" />
+              <Play className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             )}
           </button>
 
@@ -148,7 +150,7 @@ const GlobalFeed = () => {
                     slide.isLandscape ? "w-1/2" : "w-1/4"
                   }`}
                 >
-                  <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-slate-700">
                     <div className="relative h-96">
                       {slide.type === "video" && (
                         <video
@@ -183,7 +185,7 @@ const GlobalFeed = () => {
                       )}
 
                       {/* Overlay with title */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 dark:from-black/80 to-transparent p-4">
                         <h3 className="text-white text-sm font-semibold">
                           {slide.title}
                         </h3>
@@ -204,8 +206,8 @@ const GlobalFeed = () => {
                   onClick={() => setCurrentSlide(index)}
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     index === currentSlide
-                      ? "bg-purple-600 scale-125"
-                      : "bg-gray-300 hover:bg-gray-400"
+                      ? "bg-purple-600 dark:bg-purple-400 scale-125"
+                      : "bg-gray-300 dark:bg-slate-600 hover:bg-gray-400 dark:hover:bg-slate-500"
                   }`}
                 />
               )

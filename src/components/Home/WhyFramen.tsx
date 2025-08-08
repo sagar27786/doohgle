@@ -49,7 +49,7 @@ const WhyFramen = () => {
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-start mb-12">
-          <h2 className="text-4xl font-bold text-white">Why FRAMEN?</h2>
+          <h2 className="text-4xl font-bold text-white">Why DOOHGLE?</h2>
           <button className="bg-white text-indigo-600 px-6 py-2.5 rounded-md font-medium hover:bg-gray-50 transition-colors">
             Sign up for free
           </button>

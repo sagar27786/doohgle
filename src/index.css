@@ -35,7 +35,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
   25% {
@@ -101,7 +102,8 @@
 
 /* Smooth transitions for all interactive elements */
 * {
-  transition-property: transform, opacity, box-shadow, background-color, border-color;
+  transition-property: transform, opacity, box-shadow, background-color,
+    border-color;
   transition-duration: 0.2s;
   transition-timing-function: ease-in-out;
 }
@@ -132,4 +134,29 @@
 .animate-gradient {
   background-size: 200% 200%;
   animation: gradientShift 3s ease infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
 }

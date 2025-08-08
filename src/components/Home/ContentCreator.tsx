@@ -1,137 +1,121 @@
 import React from "react";
 
 const ContentCreator = () => {
-  const [hoveredImage, setHoveredImage] = React.useState<number | null>(null);
-
   const creatorImages = [
     {
       id: 1,
+      name: "Vanlife",
       src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/66057aabb7631dc3b9ae10be_Vanlife.png",
-      position: { top: "10%", left: "10%" },
-      delay: 0,
     },
     {
       id: 2,
+      name: "Nathaline Aron",
       src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/66057aaa2db46f3bba5916d6_Nathaline%20Aron%20Adventure%20%26%20Luxury%20Travel%20Voyagefox.png",
-      position: { top: "25%", left: "8%" },
-      delay: 0.2,
     },
     {
       id: 3,
+      name: "Fravely",
       src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/66057aaa8a8d201d8955e51b_Fravely.png",
-      position: { bottom: "30%", left: "12%" },
-      delay: 0.4,
     },
     {
       id: 4,
+      name: "Bewerbungsqueen",
       src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/66057aaaeb884e2adfbafb83_Bewerbungsqueen.png",
-      position: { top: "15%", right: "12%" },
-      delay: 0.6,
     },
     {
       id: 5,
+      name: "Sarah Emmerich",
       src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/660575a397d8cda071e2a43b_Sarah%20Emmerich.png",
-      position: { top: "40%", right: "8%" },
-      delay: 0.8,
     },
     {
       id: 6,
+      name: "Toan Nguyen",
       src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/66057aaaf5a50f0f9bb4982b_Toan%20Nguyen.png",
-      position: { bottom: "20%", right: "15%" },
-      delay: 1.0,
-    },
-    {
-      id: 7,
-      src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/66057aa998ddfd72fbb36508_Fabian%20Tausch%20Unicorn%20Bakery.png",
-      position: { bottom: "10%", left: "70%" },
-      delay: 1.2,
-    },
-    {
-      id: 8,
-      src: "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/66057aaab7631dc3b9ae103e_Laura%20Lewandowski.png",
-      position: { bottom: "5%", left: "35%" },
-      delay: 1.4,
     },
   ];
 
   return (
-    <div className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 py-24 overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-10 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full animate-pulse"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 bg-white bg-opacity-5 rounded-full animate-bounce"></div>
-        <div className="absolute bottom-20 left-32 w-24 h-24 bg-white bg-opacity-10 rounded-full animate-pulse"></div>
-        <div className="absolute bottom-32 right-10 w-12 h-12 bg-white bg-opacity-5 rounded-full animate-bounce"></div>
-      </div>
+    <div className="relative bg-white dark:bg-slate-900 py-24 overflow-hidden">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
+            Are you a content creator?
+          </h2>
+          <p className="mt-4 text-xl text-gray-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Expand your audience and be the first to monetize your content with
+            our Digital out of Home platform.
+          </p>
+        </div>
 
-      {creatorImages.map((item) => (
-        <div
-          key={item.id}
-          className="absolute animate-float"
-          style={{
-            ...item.position,
-            animationDelay: `${item.delay}s`,
-          }}
-          onMouseEnter={() => setHoveredImage(item.id)}
-          onMouseLeave={() => setHoveredImage(null)}
-        >
-          <div
-            className={`
-            w-20 h-20 bg-white rounded-full 
-            flex items-center justify-center cursor-pointer
-            transition-all duration-300 hover:scale-125 hover:shadow-2xl
-            overflow-hidden border-2 border-white/20
-            ${hoveredImage === item.id ? "shadow-2xl scale-110" : "shadow-lg"}
-          `}
-          >
+        <div className="relative h-[500px] flex items-center justify-center">
+          {/* Central Phone Mockup */}
+          <div className="relative z-10 w-64 h-[480px] bg-gray-800 dark:bg-black rounded-[40px] shadow-2xl border-4 border-gray-300 dark:border-gray-700 p-2">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-5 bg-gray-800 dark:bg-black rounded-b-lg"></div>
+            <div className="w-full h-full bg-black rounded-[30px] overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1509343256512-d77a5cb3791b?q=80&w=800"
+                alt="Content on phone screen"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Surrounding Creator Avatars */}
+          <div className="absolute inset-0">
             <img
-              src={item.src}
-              className="w-full h-full object-cover rounded-full"
+              src={creatorImages[0].src}
+              alt={creatorImages[0].name}
+              className="absolute w-20 h-20 top-[10%] left-[25%] rounded-full shadow-lg border-4 border-white dark:border-slate-800 animate-float"
+              style={{ animationDelay: "0s" }}
+            />
+            <img
+              src={creatorImages[1].src}
+              alt={creatorImages[1].name}
+              className="absolute w-24 h-24 top-[30%] left-[10%] rounded-full shadow-lg border-4 border-white dark:border-slate-800 animate-float"
+              style={{ animationDelay: "0.5s" }}
+            />
+            <img
+              src={creatorImages[2].src}
+              alt={creatorImages[2].name}
+              className="absolute w-16 h-16 bottom-[15%] left-[30%] rounded-full shadow-lg border-4 border-white dark:border-slate-800 animate-float"
+              style={{ animationDelay: "1s" }}
+            />
+            <img
+              src={creatorImages[3].src}
+              alt={creatorImages[3].name}
+              className="absolute w-20 h-20 top-[15%] right-[22%] rounded-full shadow-lg border-4 border-white dark:border-slate-800 animate-float"
+              style={{ animationDelay: "0.2s" }}
+            />
+            <img
+              src={creatorImages[4].src}
+              alt={creatorImages[4].name}
+              className="absolute w-28 h-28 bottom-[25%] right-[8%] rounded-full shadow-lg border-4 border-white dark:border-slate-800 animate-float"
+              style={{ animationDelay: "0.7s" }}
+            />
+            <img
+              src={creatorImages[5].src}
+              alt={creatorImages[5].name}
+              className="absolute w-16 h-16 top-[55%] right-[25%] rounded-full shadow-lg border-4 border-white dark:border-slate-800 animate-float"
+              style={{ animationDelay: "1.2s" }}
             />
           </div>
         </div>
-      ))}
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <h2 className="text-5xl md:text-6xl font-bold text-white leading-tight">
-              Are you a content creator?
-            </h2>
-            <p className="text-xl text-purple-100 max-w-2xl mx-auto leading-relaxed">
-              Expand your audience and be the first to monetize your content
-              with our Digital out of Home platform.
-            </p>
-          </div>
 
-          <div className="pt-8">
-            <button className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-purple-600 bg-white rounded-full hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
-              <span className="relative z-10">Learn more</span>
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-            </button>
-          </div>
+        <div className="text-center mt-16">
+          <button className="bg-purple-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+            Learn more
+          </button>
         </div>
       </div>
       <style
         dangerouslySetInnerHTML={{
           __html: `
-          @keyframes float {
-            0%, 100% {
-              transform: translateY(0px) rotate(0deg);
+            @keyframes float {
+              0%, 100% { transform: translateY(0px); }
+              50% { transform: translateY(-15px); }
             }
-            25% {
-              transform: translateY(-10px) rotate(2deg);
-            }
-            50% {
-              transform: translateY(-5px) rotate(-1deg);
-            }
-            75% {
-              transform: translateY(-15px) rotate(1deg);
-            }
-          }
-          
-          .animate-float {
-            animation: float 6s ease-in-out infinite;
-          }
-        `,
+            .animate-float { animation: float 5s ease-in-out infinite; }
+          `,
         }}
       />
     </div>
