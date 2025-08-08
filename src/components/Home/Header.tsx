@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown, Monitor, Target, Sun, Moon } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
 
 const Header = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -20,16 +21,11 @@ const Header = () => {
   const toggleProductsMenu = () => setIsProductsOpen(!isProductsOpen);
 
   useEffect(() => {
-    interface HandleClickOutsideEvent extends MouseEvent {
-      target: Node;
-    }
-
-    const handleClickOutside = (event: HandleClickOutsideEvent) => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (
         productsMenuRef.current &&
-        !(productsMenuRef.current as unknown as HTMLElement).contains(
-          event.target
-        )
+        event.target instanceof Node &&
+        !(productsMenuRef.current as HTMLElement).contains(event.target)
       ) {
         setIsProductsOpen(false);
       }
@@ -57,7 +53,7 @@ const Header = () => {
     };
 
     // Throttle scroll events for better performance
-    let timeoutId = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const throttledHandleScroll = () => {
       if (timeoutId === null) {
         timeoutId = setTimeout(() => {
@@ -171,12 +167,12 @@ const Header = () => {
           <div className="flex items-center">
             <div className="hidden md:flex items-center space-x-4">
               <NavLink to="/contact">Contact</NavLink>
-              <Link
-                to="/login"
-                className="bg-indigo-600 text-white px-5 py-2.5 rounded-md text-base font-medium hover:bg-indigo-700 transition-colors"
-              >
-                Login / Sign up
-              </Link>
+              <button
+              onClick={() => navigate("/auth/login")}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+            >
+              Login / Sign up
+            </button>
             </div>
             {/* Theme Toggle */}
             <button

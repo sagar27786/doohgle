@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Home/Header";
 import HeroCarousel from "./components/Home/HeroCarousel";
 import HeroVideo from "./components/Home/HeroVideo";
@@ -32,7 +32,7 @@ import LoginSignup from "./components/Auth/LoginSignup";
 
 // Ads Manager page components
 import AdsManagerHeader from "./components/adds Manager/Header";
-import AddsManagerNavigation from "./components/adds Manager/AddsManagerNavigation";
+
 import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
 import AdsManagerHero from "./components/adds Manager/HeroSection";
 import AdsManagerFeatureSection from "./components/adds Manager/FeatureSection";
@@ -51,10 +51,21 @@ import YouTubeSection from "./components/adds Manager/YouTubeSection";
 import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // ThemeProvider for dark mode
-const ThemeContext = createContext();
+interface ThemeContextType {
+  theme: string;
+  toggleTheme: () => void;
+}
+const ThemeContext = createContext<ThemeContextType>({
+  theme: "light",
+  toggleTheme: () => {},
+});
 export const useTheme = () => useContext(ThemeContext);
 
-const ThemeProvider = ({ children }) => {
+interface ThemeProviderProps {
+  children: React.ReactNode;
+}
+
+const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") || "light"
   );
@@ -133,22 +144,21 @@ const AdsManagerPage = () => {
 };
 
 function App() {
+  const location = useLocation();
+  const hideHeaderRoutes = ["/auth/login"];
+  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
   return (
-    <Router>
-      <ThemeProvider>
-        <div className="min-h-screen bg-white">
-          <Header />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route
-              path="/products/screen-manager"
-              element={<ScreenManagerPage />}
-            />
-            <Route path="/products/ads-manager" element={<AdsManagerPage />} />
-          </Routes>
-        </div>
-      </ThemeProvider>
-    </Router>
+    <ThemeProvider>
+      <div className="min-h-screen bg-white">
+        {shouldShowHeader && <Header />}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products/screen-manager" element={<ScreenManagerPage />} />
+          <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+          <Route path="/auth/login" element={<LoginSignup />} />
+        </Routes>
+      </div>
+    </ThemeProvider>
   );
 }
 
