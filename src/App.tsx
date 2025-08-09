@@ -1,8 +1,15 @@
 import React, { createContext, useEffect, useState, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import Header from "./components/Home/Header";
 import HeroCarousel from "./components/Home/HeroCarousel";
 import HeroVideo from "./components/Home/HeroVideo";
+import Parallax from "./components/Home/Parallax";
 import MainHero from "./components/Home/MainHero";
 import CompanyLogos from "./components/Home/CompanyLogos";
 import Statistics from "./components/Home/Statistics";
@@ -93,7 +100,7 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 // Home page component
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#EBF0F5]">
       {/* <HeroCarousel />  */}
       <MainHero />
       <HeroVideo />
@@ -156,10 +163,19 @@ function App() {
         {shouldShowHeader && <Header />}
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products/screen-manager" element={<ScreenManagerPage />} />
+          <Route
+            path="/products/screen-manager"
+            element={<ScreenManagerPage />}
+          />
           <Route path="/products/ads-manager" element={<AdsManagerPage />} />
-          <Route path="/auth" element={<Login onSwitch={() => navigate("/auth/signup")} />} />
-          <Route path="/auth/signup" element={<Signup onSwitch={() => navigate("/auth")} />} />
+          <Route
+            path="/auth"
+            element={<Login onSwitch={() => navigate("/auth/signup")} />}
+          />
+          <Route
+            path="/auth/signup"
+            element={<Signup onSwitch={() => navigate("/auth")} />}
+          />
           <Route path="/auth/login" element={<LoginSignup />} />
         </Routes>
       </div>

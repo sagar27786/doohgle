@@ -1,6 +1,52 @@
-import { ChevronDown } from "lucide-react";
+import {
+  ArrowUp,
+  ArrowDown,
+  CornerDownLeft,
+  Command,
+  MoveRight,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+
+const FloatingKey = ({
+  icon: Icon,
+  className,
+  ariaLabel,
+  offsetY = 0,
+}: {
+  icon: React.ElementType;
+  className: string;
+  ariaLabel: string;
+  offsetY?: number;
+}) => (
+  <div
+    aria-hidden="true"
+    className={`
+      absolute hidden lg:flex items-center justify-center w-16 h-16 rounded-2xl 
+      bg-[#EBF0F5] text-slate-500 shadow-[7px_7px_15px_#bec4c9,_-7px_-7px_15px_#ffffff]
+      dark:bg-slate-800 dark:text-slate-400 dark:shadow-[7px_7px_15px_#1c1e22,_-7px_-7px_15px_#3a3e46]
+      transition-transform duration-500
+      ${className}
+    `}
+    style={{ transform: `translateY(${offsetY}px)` }}
+  >
+    <Icon className="w-8 h-8" />
+  </div>
+);
 
 const MainHero = () => {
+  const [scrollY, setScrollY] = useState(0);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setScrollY(y);
+      setSearchExpanded(y > 20); // Expand after scrolling ~20px
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const handleScrollDown = () => {
     window.scrollTo({
       top: window.innerHeight,
@@ -8,75 +54,92 @@ const MainHero = () => {
     });
   };
 
+  // Parallax offset (slower movement for floating keys)
+  const keyOffset = scrollY * 0.3;
+
   return (
-    <>
-      <style>
-        {`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-in {
-            animation: fadeIn 0.8s ease-out forwards;
-          }
-          @keyframes bounce-down {
-            0%, 20%, 50%, 80%, 100% {
-              transform: translateY(0);
-            }
-            40% {
-              transform: translateY(-10px);
-            }
-            60% {
-              transform: translateY(-5px);
-            }
-          }
-          .animate-bounce-down {
-            animation: bounce-down 2s ease-in-out infinite;
-          }
-        `}
-      </style>
+    <main
+      className="relative flex items-center justify-center min-h-screen overflow-hidden 
+    bg-[#EBF0F5] dark:bg-gradient-to-b dark:from-slate-950 dark:to-slate-900 
+     p-4 transition-colors duration-300"
+    >
+      <FloatingKey
+        icon={ArrowUp}
+        className="top-[15%] left-[10%]"
+        ariaLabel="Up arrow key"
+        offsetY={keyOffset}
+      />
+      <FloatingKey
+        icon={CornerDownLeft}
+        className="top-[30%] right-[12%]"
+        ariaLabel="Enter key"
+        offsetY={keyOffset * 1.2}
+      />
+      <FloatingKey
+        icon={Command}
+        className="bottom-[25%] right-[20%]"
+        ariaLabel="Command key"
+        offsetY={keyOffset * 0.8}
+      />
+      <div onClick={handleScrollDown}>
+        <FloatingKey
+          icon={ArrowDown}
+          className="bottom-[15%] left-[20%]"
+          ariaLabel="Down arrow key"
+          offsetY={keyOffset}
+        />
+      </div>
 
-      <div className="relative overflow-hidden bg-slate-50 dark:bg-slate-950 h-screen flex flex-col justify-center">
-        <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-3xl"></div>
-        </div>
-        <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2">
-          <div className="w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl"></div>
-        </div>
+      {/* Main content */}
+      <div className="relative z-10 text-center max-w-4xl mx-auto">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-slate-800 dark:text-slate-100 tracking-tighter mb-5">
+          Digital Out of Home Advertising
+        </h1>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-            <span className="block">Digital Out of Home Advertising</span>
-          </h1>
+        <p className="max-w-3xl mx-auto text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed mb-10">
+          Combine the power of Digital Out of Home with the precision of
+          programmatic.
+        </p>
 
-          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed mb-8">
-            Combine the power of Digital Out of Home with the precision of
-            programmatic.
-          </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button className="group relative inline-flex items-center justify-center h-14 w-full sm:w-auto px-8 text-lg font-semibold text-white bg-slate-800 dark:text-slate-900 dark:bg-slate-100 rounded-xl shadow-md hover:bg-slate-900 dark:hover:bg-white transition-all duration-300 transform hover:-translate-y-1">
+            <span>Start your Campaign</span>
+            <MoveRight className="w-5 h-5 ml-2 transform transition-transform duration-300 group-hover:translate-x-1" />
+          </button>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center ">
-            <button className="group relative inline-flex items-center justify-center px-8 py-3 rounded-lg text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-300 shadow-lg hover:shadow-indigo-500/40 transform hover:-translate-y-1">
-              <span className="absolute inset-0 bg-gradient-to-t from-indigo-700 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></span>
-              <span className="relative">Start your Campaign</span>
-            </button>
-            <button className="px-8 py-3 rounded-lg text-lg font-semibold text-slate-700 dark:text-slate-300 bg-white/60 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 shadow-sm transform hover:-translate-y-1">
-              Get our Digital Signage
-            </button>
-          </div>
-        </div>
-
-        {/* Scroll Down Button */}
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
-          <button
-            onClick={handleScrollDown}
-            className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-300 animate-bounce-down"
-            aria-label="Scroll to next section"
-          >
-            <ChevronDown className="h-8 w-8" />
+          <button className="h-14 w-full sm:w-auto px-8 text-lg font-semibold text-slate-700 bg-[#EBF0F5] dark:text-slate-300 dark:bg-slate-900 rounded-xl shadow-inner hover:scale-[0.98] transition-all duration-300">
+            Get our Digital Signage
           </button>
         </div>
+
+        {/* AI Assistant Search Box */}
+        <div className="mt-12 flex items-center justify-center">
+          <div
+            className={`flex items-center justify-between px-6 py-4 shadow-lg transition-all duration-500 ease-out
+      ${searchExpanded ? "w-[600px] h-20" : "w-[300px] h-16"} 
+      bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700
+      hover:shadow-xl cursor-text`}
+          >
+            {/* Left icon */}
+            <div className="flex items-center">
+              <span className="mr-4 text-slate-400 dark:text-slate-500">
+                ✨
+              </span>
+              <span className="text-slate-600 dark:text-slate-300 text-base md:text-lg">
+                {searchExpanded ? "Keep Scrolling" : "Sign Up. It's free. :)"}
+              </span>
+            </div>
+
+            {/* Optional AI mic or send icon */}
+            {searchExpanded && (
+              <button className="ml-4 p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                💬
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-    </>
+    </main>
   );
 };
 
