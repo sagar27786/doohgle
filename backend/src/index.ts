@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
+import screensRoutes from './routes/screens';
 
 // Load env vars
 dotenv.config();
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/screens', screensRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

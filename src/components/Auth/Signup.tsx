@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { signup } from '../../api/auth';
 
 export default function Signup({ onSwitch }: { onSwitch: () => void }) {
-  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '', role: 'user' });
+  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -23,11 +25,15 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
         return;
       }
       const res = await signup(form);
-      if (res?.success || res?.message) {
-        setMessage(res.message || 'Signup complete!');
+      if (res.ok) {
+        if (res.data?.token) {
+          localStorage.setItem('token', res.data.token);
+        }
+        setMessage(res.data?.message || 'Signup complete!');
         setIsError(false);
+        navigate('/products/screen-manager');
       } else {
-        setMessage('Unable to sign up. Please try again.');
+        setMessage(res.data?.message || 'Unable to sign up. Please try again.');
         setIsError(true);
       }
     } catch (err) {
@@ -111,21 +117,7 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
             />
           </div>
 
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-            >
-              <option value="advertiser">Advertiser</option>
-              <option value="venue_owner">Venue Owner</option>
-            </select>
-          </div>
+          
 
           <button
             type="submit"

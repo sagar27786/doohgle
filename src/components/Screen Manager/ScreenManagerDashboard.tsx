@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createScreen, getMyScreens } from '../../api/screens';
 import { 
   Grid, 
   Search, 
@@ -84,10 +86,23 @@ const Sidebar: React.FC<{
   onTabChange: (tab: string) => void;
   sidebarOpen?: boolean;
 }> = ({ activeTab, onTabChange }) => {
+  const [appMenuOpen, setAppMenuOpen] = useState(false);
+  const appMenuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (appMenuRef.current && !appMenuRef.current.contains(e.target as Node)) {
+        setAppMenuOpen(false);
+      }
+    }
+    if (appMenuOpen) document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [appMenuOpen]);
   const navigationItems: NavigationItem[] = [
     { id: 'gallery', label: 'Gallery', icon: Grid },
     { id: 'discover', label: 'Discover', icon: Search },
-    { id: 'channels', label: 'Channels', icon: Tv },
+    { id: 'myscreens', label: 'My Screens', icon: Tv },
     { id: 'screens', label: 'Screens', icon: Monitor },
     { id: 'locations', label: 'Locations', icon: MapPin },
     { id: 'earn', label: 'Earn Money', icon: DollarSign, hasSubmenu: true },
@@ -97,15 +112,47 @@ const Sidebar: React.FC<{
   return (
     <div className="w-80 bg-white border-r border-gray-200 h-screen flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-2">
+      <div className="p-4 border-b border-gray-200" ref={appMenuRef}>
+        <div className="flex items-center space-x-2 relative">
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
             <Grid className="w-4 h-4 text-white" />
           </div>
-          <div>
+          <button
+            type="button"
+            onClick={() => setAppMenuOpen((v) => !v)}
+            className="text-left"
+            aria-haspopup="menu"
+            aria-expanded={appMenuOpen}
+          >
             <h1 className="font-semibold text-gray-900">DOOHGLE</h1>
             <p className="text-sm text-gray-500">Screen Manager</p>
-          </div>
+          </button>
+
+          {appMenuOpen && (
+            <div
+              role="menu"
+              className="absolute top-12 left-0 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden"
+            >
+              <button
+                className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50"
+                onClick={() => {
+                  setAppMenuOpen(false);
+                  // stay on same page
+                }}
+              >
+                Screen Manager Dashboard
+              </button>
+              <button
+                className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50"
+                onClick={() => {
+                  setAppMenuOpen(false);
+                  navigate('/products/ads-manager');
+                }}
+              >
+                Advertiser Dashboard
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -264,6 +311,245 @@ const MainContent: React.FC = () => {
   );
 };
 
+// Screen Registration Form
+const ScreenRegistrationForm: React.FC = () => {
+  const [form, setForm] = useState({
+    screen_name: '',
+    location_in_venue: '',
+    screen_size_inches: '',
+    resolution: '1920x1080',
+    orientation: 'landscape',
+    device_type: 'smart_tv',
+    device_model: '',
+    ads_enabled: true,
+    ad_frequency: 20,
+    viewing_distance: 'close',
+    typical_viewer_duration: '2-5 minutes',
+    peak_viewing_hours: ['09:00-11:00'] as string[],
+  });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; error: boolean } | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const target = e.target as HTMLInputElement & HTMLSelectElement;
+    const name = target.name;
+    const isCheckbox = (target as HTMLInputElement).type === 'checkbox';
+    const value: any = isCheckbox ? (target as HTMLInputElement).checked : target.value;
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const updatePeakHour = (idx: number, value: string) => {
+    setForm(prev => {
+      const list = [...prev.peak_viewing_hours];
+      list[idx] = value;
+      return { ...prev, peak_viewing_hours: list };
+    });
+  };
+  const addPeakHour = () => setForm(prev => ({ ...prev, peak_viewing_hours: [...prev.peak_viewing_hours, ''] }));
+  const removePeakHour = (idx: number) => setForm(prev => ({ ...prev, peak_viewing_hours: prev.peak_viewing_hours.filter((_, i) => i !== idx) }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMsg(null);
+    try {
+      const payload = {
+        screen_name: form.screen_name,
+        location_in_venue: form.location_in_venue,
+        screen_size_inches: form.screen_size_inches ? Number(form.screen_size_inches) : null,
+        resolution: form.resolution,
+        orientation: form.orientation as 'landscape' | 'portrait',
+        device_type: form.device_type as 'smart_tv' | 'media_player' | 'custom',
+        device_model: form.device_model || undefined,
+        ads_enabled: !!form.ads_enabled,
+        ad_frequency: Number(form.ad_frequency) || 0,
+        viewing_distance: form.viewing_distance as 'close' | 'medium' | 'far',
+        typical_viewer_duration: form.typical_viewer_duration,
+        peak_viewing_hours: form.peak_viewing_hours,
+      };
+      const { ok, data } = await createScreen(payload);
+      if (ok) {
+        setMsg({ text: data?.message || 'Screen registered successfully!', error: false });
+      } else {
+        setMsg({ text: data?.message || 'Failed to register screen', error: true });
+      }
+    } catch (err) {
+      setMsg({ text: 'Something went wrong. Please try again.', error: true });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-8 md:p-10 bg-gray-50">
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg ring-1 ring-gray-100 p-8 md:p-10">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Register a Screen</h2>
+          <p className="mt-1 text-sm text-gray-500">Add basic details about your display to start managing content and ads.</p>
+        </div>
+        {msg && (
+          <div className={`mb-6 rounded-lg border px-4 py-3 text-sm ${msg.error ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>{msg.text}</div>
+        )}
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Screen name</label>
+            <input name="screen_name" value={form.screen_name} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="Reception Display #1" required />
+          </div>
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Location in venue</label>
+            <input name="location_in_venue" value={form.location_in_venue} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="Main Reception" required />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Screen size (inches)</label>
+            <input name="screen_size_inches" type="number" min={1} value={form.screen_size_inches} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="55" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Resolution</label>
+            <input name="resolution" value={form.resolution} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="1920x1080" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Orientation</label>
+            <select name="orientation" value={form.orientation} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition">
+              <option value="landscape">Landscape</option>
+              <option value="portrait">Portrait</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Device type</label>
+            <select name="device_type" value={form.device_type} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition">
+              <option value="smart_tv">Smart TV</option>
+              <option value="media_player">Media Player</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Device model</label>
+            <input name="device_model" value={form.device_model} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="Samsung TU7000" />
+          </div>
+          <div className="flex items-center space-x-3 mt-1">
+            <input id="ads_enabled" name="ads_enabled" type="checkbox" checked={form.ads_enabled} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+            <label htmlFor="ads_enabled" className="text-sm text-gray-700">Enable Ads</label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Ad Frequency (%)</label>
+            <input name="ad_frequency" type="number" min={0} max={100} value={form.ad_frequency} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Viewing distance</label>
+            <select name="viewing_distance" value={form.viewing_distance} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition">
+              <option value="close">Close</option>
+              <option value="medium">Medium</option>
+              <option value="far">Far</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Typical viewer duration</label>
+            <input name="typical_viewer_duration" value={form.typical_viewer_duration} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="2-5 minutes" />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Peak viewing hours</label>
+            <div className="space-y-2">
+              {form.peak_viewing_hours.map((h, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input value={h} onChange={(e) => updatePeakHour(idx, e.target.value)} className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="09:00-11:00" />
+                  <button type="button" onClick={() => removePeakHour(idx)} className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition">Remove</button>
+                </div>
+              ))}
+              <button type="button" onClick={addPeakHour} className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition">+ Add time range</button>
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <button type="submit" disabled={saving} className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60">
+              {saving ? 'Saving...' : 'Register Screen'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// My Screens Grid
+const MyScreensGrid: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [screens, setScreens] = useState<Array<{
+    id: number;
+    screen_name: string;
+    location_in_venue: string;
+  }>>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      const { ok, data } = await getMyScreens();
+      if (!mounted) return;
+      if (ok && data?.screens) {
+        setScreens(data.screens);
+      } else {
+        setError(data?.message || 'Failed to load screens');
+      }
+      setLoading(false);
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  return (
+    <div className="flex-1 overflow-y-auto p-8 md:p-10 bg-gray-50">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">My Screens</h2>
+          <p className="mt-1 text-sm text-gray-500">Your registered screens appear here.</p>
+        </div>
+        {loading && (
+          <div className="text-gray-600">Loading screens...</div>
+        )}
+        {error && (
+          <div className="mb-4 rounded-lg border px-4 py-3 text-sm bg-red-50 text-red-700 border-red-200">{error}</div>
+        )}
+        {!loading && !error && (
+          screens.length === 0 ? (
+            <div className="text-gray-600">No screens found.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {screens.map((s) => (
+                <div key={s.id} className="bg-white rounded-2xl shadow ring-1 ring-gray-100 overflow-hidden">
+                  {/* Image area (3/4th of the card) */}
+                  <div className="aspect-video bg-gray-100">
+                    <img
+                      src={`https://picsum.photos/seed/screen-${s.id}/640/360`}
+                      alt={s.screen_name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  {/* Footer */}
+                  <div className="px-4 py-3 border-t border-gray-100">
+                    <div className="text-sm font-medium text-gray-900 truncate">{s.screen_name}</div>
+                    <div className="text-sm text-gray-500 truncate">{s.location_in_venue}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main Screen Manager Dashboard Component
 const ScreenManagerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('gallery');
@@ -301,7 +587,13 @@ const ScreenManagerDashboard: React.FC = () => {
       )}
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <MainContent />
+        {activeTab === 'screens' ? (
+          <ScreenRegistrationForm />
+        ) : activeTab === 'myscreens' ? (
+          <MyScreensGrid />
+        ) : (
+          <MainContent />
+        )}
       </div>
     </div>
   );

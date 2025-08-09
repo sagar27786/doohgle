@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth';
 
 export default function Login({ onSwitch }: { onSwitch: () => void }) {
@@ -6,6 +7,7 @@ export default function Login({ onSwitch }: { onSwitch: () => void }) {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -18,13 +20,13 @@ export default function Login({ onSwitch }: { onSwitch: () => void }) {
     setIsError(false);
     try {
       const res = await login(form);
-      if (res?.token) {
-        localStorage.setItem('token', res.token);
+      if (res.ok && res.data?.token) {
+        localStorage.setItem('token', res.data.token);
         setMessage('Logged in successfully!');
         setIsError(false);
-        // TODO: navigate or update global auth state if needed
+        navigate('/products/screen-manager');
       } else {
-        setMessage(res?.message || 'Invalid email or password');
+        setMessage(res.data?.message || 'Invalid email or password');
         setIsError(true);
       }
     } catch (err) {

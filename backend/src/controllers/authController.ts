@@ -7,15 +7,12 @@ import { User } from '../models/user';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 export async function signup(req: Request, res: Response) {
-  const { email, password, confirmPassword, role } = req.body;
-  if (!email || !password || !confirmPassword || !role) {
+  const { email, password, confirmPassword } = req.body;
+  if (!email || !password || !confirmPassword) {
     return res.status(400).json({ message: 'All fields are required.' });
   }
   if (password !== confirmPassword) {
     return res.status(400).json({ message: 'Passwords do not match.' });
-  }
-  if (role !== 'advertiser' && role !== 'venue_owner') {
-    return res.status(400).json({ message: 'Role must be advertiser or venue_owner.' });
   }
   try {
     console.log("User does not exist one");
@@ -26,12 +23,13 @@ export async function signup(req: Request, res: Response) {
     console.log("User does not exist");
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
-      [email, hashedPassword, role]
+      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email',
+      [email, hashedPassword]
     );
     const user: User = result.rows[0];
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-    res.status(201).json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    const roles: string[] = [];
+    const token = jwt.sign({ id: user.id, email: user.email, roles }, JWT_SECRET, { expiresIn: '1d' });
+    res.status(201).json({ token, user: { id: user.id, email: user.email, roles } });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err });
   }
@@ -52,8 +50,11 @@ export async function login(req: Request, res: Response) {
     if (!valid) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    // Fetch roles from user_roles table (may be empty)
+    const rolesRes = await pool.query('SELECT role FROM user_roles WHERE user_id = $1', [user.id]);
+    const roles: string[] = rolesRes.rows.map((r: { role: string }) => r.role);
+    const token = jwt.sign({ id: user.id, email: user.email, roles }, JWT_SECRET, { expiresIn: '1d' });
+    res.json({ token, user: { id: user.id, email: user.email, roles } });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err });
   }
