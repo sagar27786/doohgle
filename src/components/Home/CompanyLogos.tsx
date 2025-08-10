@@ -86,7 +86,7 @@ const CompanyLogos = () => {
         `}
       </style>
 
-      <div className="relative bg-white dark:bg-slate-900 py-20 sm:py-28 overflow-hidden">
+      <div className="relative bg-gray-200 dark:bg-slate-900 py-20 sm:py-28 overflow-hidden">
         <div className="absolute top-1/2 -left-[400px] -translate-y-1/2 animate-pulse-subtle">
           <div className="w-[600px] h-[600px] rounded-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 dark:from-purple-500/20 dark:to-blue-500/20 blur-3xl"></div>
         </div>

@@ -100,10 +100,9 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 // Home page component
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-[#EBF0F5]">
+    <div className="min-h-screen bg-gray-200">
       {/* <HeroCarousel />  */}
       <MainHero />
-      <HeroVideo />
       <CompanyLogos />
       <Statistics />
       <DOOHSection />

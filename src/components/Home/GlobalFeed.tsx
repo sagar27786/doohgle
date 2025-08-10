@@ -98,7 +98,7 @@ const GlobalFeed = () => {
   }, [isPlaying, currentSlide]);
 
   return (
-    <div className="bg-gray-50 dark:bg-slate-900 py-16">
+    <div className="bg-gray-200 dark:bg-slate-900 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -113,14 +113,14 @@ const GlobalFeed = () => {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-gray-200dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
           >
             <ChevronLeft className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </button>
 
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-gray-200dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
           >
             <ChevronRight className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </button>
@@ -128,7 +128,7 @@ const GlobalFeed = () => {
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="absolute top-4 right-4 z-10 bg-white dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
+            className="absolute top-4 right-4 z-10 bg-gray-200dark:bg-slate-800 rounded-full p-3 shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:scale-110 border border-gray-200 dark:border-slate-600"
           >
             {isPlaying ? (
               <Pause className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -150,7 +150,7 @@ const GlobalFeed = () => {
                     slide.isLandscape ? "w-1/2" : "w-1/4"
                   }`}
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-slate-700">
+                  <div className="bg-gray-200dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg dark:shadow-2xl hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-slate-700">
                     <div className="relative h-96">
                       {slide.type === "video" && (
                         <video

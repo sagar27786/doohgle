@@ -3,7 +3,7 @@ import React from "react";
 const DOOHSection = () => {
   return (
     // Set the background for both light and dark modes
-    <div className="bg-white dark:bg-slate-900 py-16 transition-colors duration-300">
+    <div className="bg-gray-200 dark:bg-slate-900 py-16 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           {/* Image Section */}
@@ -36,11 +36,6 @@ const DOOHSection = () => {
               message meets the right people, exactly when it matters. On the
               Ads Manager, you can book your campaigns across diverse venues.
             </p>
-
-            {/* Updated button styles for dark mode */}
-            <button className="border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 px-6 py-2.5 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-              Find out more
-            </button>
           </div>
         </div>
       </div>

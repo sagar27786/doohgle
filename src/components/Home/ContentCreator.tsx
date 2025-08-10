@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const ContentCreator = () => {
   const creatorImages = [
@@ -102,9 +103,11 @@ const ContentCreator = () => {
         </div>
 
         <div className="text-center mt-16">
-          <button className="bg-purple-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            Learn more
-          </button>
+          <Link to="/content-creator">
+            <button className=" btn min-w-fit bg-purple-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+              Learn more
+            </button>
+          </Link>
         </div>
       </div>
       <style

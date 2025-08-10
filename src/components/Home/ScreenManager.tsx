@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronRight, Monitor, Users, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const ScreenManager = () => {
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
@@ -46,7 +47,7 @@ const ScreenManager = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 py-16 transition-colors duration-300">
+    <div className="bg-gray-200 dark:bg-slate-900 py-16 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -137,9 +138,11 @@ const ScreenManager = () => {
         </div>
 
         <div className="text-center mt-16">
-          <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
-            Start Managing Your Screens
-          </button>
+          <Link to="/screen-manager">
+            <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
+              Start Managing Your Screens
+            </button>
+          </Link>
         </div>
       </div>
     </div>

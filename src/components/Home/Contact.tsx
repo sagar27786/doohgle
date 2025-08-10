@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Contact = () => {
   const teamMembers = [
@@ -20,7 +21,7 @@ const Contact = () => {
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-900 py-16 transition-colors duration-300">
+    <div className="bg-gray-200 dark:bg-slate-900 py-16 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
           Get in touch
@@ -45,12 +46,11 @@ const Contact = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="bg-indigo-600 text-white px-8 py-3 rounded-md font-medium hover:bg-indigo-700 transition-colors">
-            Contact Sales
-          </button>
-          <button className="border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 px-8 py-3 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-            Go to Help Center
-          </button>
+          <Link to="/contact">
+            <div className="bg-indigo-600 text-white px-8 py-3 rounded-md font-medium hover:bg-indigo-700 transition-colors">
+              Contact Sales
+            </div>
+          </Link>
         </div>
       </div>
     </div>

@@ -293,7 +293,7 @@ const InteractiveMap = () => {
           </label>
           <div className="relative">
             <select
-              className="w-full p-3 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white appearance-none cursor-pointer hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
+              className="w-full p-3 border border-gray-300 rounded-md bg-gray-200dark:bg-slate-700 dark:border-slate-600 dark:text-white appearance-none cursor-pointer hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
               value={selectedCountry.code}
               onChange={(e) => {
                 const country = countries.find(
@@ -348,13 +348,13 @@ const InteractiveMap = () => {
           <div className="absolute top-4 right-4 space-y-2 z-10">
             <button
               onClick={handleZoomIn}
-              className="bg-white dark:bg-slate-700 rounded shadow-lg p-2 hover:shadow-xl transition-shadow duration-300"
+              className="bg-gray-200dark:bg-slate-700 rounded shadow-lg p-2 hover:shadow-xl transition-shadow duration-300"
             >
               <ZoomIn className="h-5 w-5 text-gray-600 dark:text-slate-300" />
             </button>
             <button
               onClick={handleZoomOut}
-              className="bg-white dark:bg-slate-700 rounded shadow-lg p-2 hover:shadow-xl transition-shadow duration-300"
+              className="bg-gray-200dark:bg-slate-700 rounded shadow-lg p-2 hover:shadow-xl transition-shadow duration-300"
             >
               <ZoomOut className="h-5 w-5 text-gray-600 dark:text-slate-300" />
             </button>
@@ -429,7 +429,7 @@ const InteractiveMap = () => {
             Venue preset
           </label>
           <button
-            className="w-full mt-2 p-3 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white text-left flex items-center justify-between hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
+            className="w-full mt-2 p-3 border border-gray-300 rounded-md bg-gray-200dark:bg-slate-700 dark:border-slate-600 dark:text-white text-left flex items-center justify-between hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
             onClick={() => setShowVenuePreset(!showVenuePreset)}
           >
             <span>Custom</span>
@@ -441,7 +441,7 @@ const InteractiveMap = () => {
           </button>
 
           {showVenuePreset && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-md shadow-lg">
+            <div className="absolute z-10 w-full mt-1 bg-gray-200dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-md shadow-lg">
               {[
                 "Custom",
                 "Millennials",
@@ -525,7 +525,7 @@ const InteractiveMap = () => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-red-400 dark:border-red-500/80 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 dark:[color-scheme:dark]"
+              className="w-full pl-10 pr-4 py-3 border border-red-400 dark:border-red-500/80 bg-gray-200dark:bg-slate-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 dark:[color-scheme:dark]"
             />
           </div>
           <p className="text-sm text-red-600 dark:text-red-400">
@@ -543,7 +543,7 @@ const InteractiveMap = () => {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 hover:border-purple-300 transition-all duration-300 dark:[color-scheme:dark]"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 bg-gray-200dark:bg-slate-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 hover:border-purple-300 transition-all duration-300 dark:[color-scheme:dark]"
             />
           </div>
         </div>
@@ -561,7 +561,7 @@ const InteractiveMap = () => {
         <div className="relative">
           <Clock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-slate-500 pointer-events-none" />
           <button
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 text-gray-900 dark:text-white text-left flex items-center justify-between hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md bg-gray-200dark:bg-slate-700 dark:border-slate-600 text-gray-900 dark:text-white text-left flex items-center justify-between hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
             onClick={() => setShowTimezone(!showTimezone)}
           >
             <span>{timezone}</span>
@@ -573,7 +573,7 @@ const InteractiveMap = () => {
           </button>
 
           {showTimezone && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
+            <div className="absolute z-10 w-full mt-1 bg-gray-200dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
               {[
                 "Use screen's time zone",
                 "+01:00",
@@ -671,7 +671,7 @@ const InteractiveMap = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
+        <div className="bg-gray-200dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <Eye className="h-5 w-5 text-gray-600 dark:text-slate-400" />
@@ -684,7 +684,7 @@ const InteractiveMap = () => {
           <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
+        <div className="bg-gray-200dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <BarChart3 className="h-5 w-5 text-gray-600 dark:text-slate-400" />
@@ -699,7 +699,7 @@ const InteractiveMap = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
+        <div className="bg-gray-200dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <RotateCcw className="h-5 w-5 text-gray-600 dark:text-slate-400" />
@@ -713,7 +713,7 @@ const InteractiveMap = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900/50 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-gray-200dark:bg-slate-900/50 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
         <div className="relative h-64">
           <img
             src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=400&fit=crop"
@@ -753,7 +753,7 @@ const InteractiveMap = () => {
   return (
     <div className="bg-gray-50 dark:bg-slate-900 py-16 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
+        <div className="bg-gray-200dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <span className="text-lg font-semibold text-gray-900 dark:text-white">
