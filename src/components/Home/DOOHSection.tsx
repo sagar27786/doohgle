@@ -19,10 +19,6 @@ const DOOHSection = () => {
           {/* Text Content Section */}
           <div className="lg:w-1/2 space-y-6">
             <div className="space-y-2">
-              {/* Adjusted text colors for dark mode */}
-              <h3 className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
-                DOOH
-              </h3>
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Advertise where attention is real
               </h2>

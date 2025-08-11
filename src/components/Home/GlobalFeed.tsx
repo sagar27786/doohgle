@@ -101,7 +101,7 @@ const GlobalFeed = () => {
     <div className="bg-gray-200 dark:bg-slate-900 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
             Global Feed
           </h2>
           <p className="text-xl text-gray-600 dark:text-slate-300">
