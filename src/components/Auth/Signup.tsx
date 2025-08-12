@@ -1,43 +1,69 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signup } from '../../api/auth';
+import { authService } from '../../services/authService';
 
 export default function Signup({ onSwitch }: { onSwitch: () => void }) {
   const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [showOtpField, setShowOtpField] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1: Request OTP for the provided email
+  const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setMessage('');
     setIsError(false);
+    if (!form.email) {
+      setMessage('Email is required');
+      setIsError(true);
+      return;
+    }
     try {
-      if (form.password !== form.confirmPassword) {
-        setMessage('Passwords do not match');
-        setIsError(true);
-        return;
-      }
-      const res = await signup(form);
-      if (res.ok) {
-        if (res.data?.token) {
-          localStorage.setItem('token', res.data.token);
-        }
-        setMessage(res.data?.message || 'Signup complete!');
-        setIsError(false);
-        navigate('/products/screen-manager');
-      } else {
-        setMessage(res.data?.message || 'Unable to sign up. Please try again.');
-        setIsError(true);
-      }
-    } catch (err) {
-      setMessage('Something went wrong. Please try again.');
+      setLoading(true);
+      await authService.requestOTP(form.email);
+      setShowOtpField(true);
+      setMessage('OTP sent to your email');
+      setIsError(false);
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message || 'Failed to send OTP');
+      setIsError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP and complete signup
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+    setIsError(false);
+    if (form.password !== form.confirmPassword) {
+      setMessage('Passwords do not match');
+      setIsError(true);
+      return;
+    }
+    try {
+      setLoading(true);
+      const { token, user } = await authService.verifyOTPAndSignup({
+        email: form.email,
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+        otp,
+      });
+      authService.setAuthData(token, user);
+      authService.setupAxiosInterceptors();
+      setMessage('Signup complete!');
+      setIsError(false);
+      navigate('/products/screen-manager');
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message || 'Signup failed');
       setIsError(true);
     } finally {
       setLoading(false);
@@ -65,7 +91,7 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={showOtpField ? handleSignup : handleRequestOTP} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Email
@@ -79,43 +105,64 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
               placeholder="you@example.com"
               autoComplete="email"
               required
+              disabled={showOtpField}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              required
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-            />
-          </div>
+          {showOtpField && (
+            <>
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Enter OTP
+                </label>
+                <input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="6-digit code"
+                  required
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                />
+              </div>
 
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Confirm password
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              required
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-            />
-          </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  required
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Confirm password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  required
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                />
+              </div>
+            </>
+          )}
 
           
 
@@ -124,7 +171,7 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
             disabled={loading}
             className="w-full inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold px-4 py-2.5 transition-colors"
           >
-            {loading ? 'Creating account…' : 'Create account'}
+            {loading ? 'Processing…' : showOtpField ? 'Sign up' : 'Send OTP'}
           </button>
         </form>
 
