@@ -61,6 +61,7 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 import HowItWorks from "./components/Home/HowItWorks";
 import ImageComparisonSlider from "./components/Home/ImageComparisonSlider";
 import ContactPage from "./components/Home/ContactPage";
+import DOOHChatbot from "./components/Home/DoohChatBot";
 
 // ThemeProvider for dark mode
 interface ThemeContextType {
@@ -110,6 +111,7 @@ const HomePage = () => {
         beforeImage="https://images.unsplash.com/photo-1752564020971-086a96380302?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
         afterImage="https://images.unsplash.com/photo-1754404053337-7363006e4391?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
       />
+      <DOOHChatbot />
       <CompanyLogos />
       <Statistics />
       <DOOHSection />

@@ -84,7 +84,7 @@ const MainHero = () => {
       >
         <FloatingKey
           icon={ArrowUp}
-          className="top-[15%] left-[10%]"
+          className="top-[25%] left-[10%]"
           ariaLabel="Up arrow key"
           offsetY={keyOffset}
         />
