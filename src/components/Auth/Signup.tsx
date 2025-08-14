@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 
 export default function Signup({ onSwitch }: { onSwitch: () => void }) {
-  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,23 +15,24 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Step 1: Request OTP for the provided email
+  // Step 1: Request OTP for the provided phone (email required)
   const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
     setIsError(false);
-    if (!form.email) {
-      setMessage('Email is required');
+    if (!form.phone || !form.email) {
+      setMessage('Phone number and email are required');
       setIsError(true);
       return;
     }
     try {
       setLoading(true);
-      await authService.requestOTP(form.email);
+      await authService.requestOTP({ phone: form.phone, email: form.email });
       setShowOtpField(true);
-      setMessage('OTP sent to your email');
+      setMessage('OTP sent to your phone');
       setIsError(false);
     } catch (err: any) {
+      // Show backend error if available (e.g., user exists)
       setMessage(err?.response?.data?.message || 'Failed to send OTP');
       setIsError(true);
     } finally {
@@ -52,18 +53,20 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
     try {
       setLoading(true);
       const { token, user } = await authService.verifyOTPAndSignup({
+        name: form.name,
         email: form.email,
+        phone: form.phone,
         password: form.password,
         confirmPassword: form.confirmPassword,
         otp,
       });
-      authService.setAuthData(token, user);
-      authService.setupAxiosInterceptors();
-      setMessage('Signup complete!');
+      localStorage.setItem('token', token);
+      setMessage('Signup successful!');
       setIsError(false);
-      navigate('/products/screen-manager');
+      navigate('/role-select');
     } catch (err: any) {
-      setMessage(err?.response?.data?.message || 'Signup failed');
+      // Show backend error if available (e.g., invalid OTP, forbidden)
+      setMessage(err?.response?.data?.message || 'Failed to verify OTP or signup');
       setIsError(true);
     } finally {
       setLoading(false);
@@ -92,6 +95,42 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
         )}
 
         <form onSubmit={showOtpField ? handleSignup : handleRequestOTP} className="space-y-4">
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Full Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Your full name"
+              autoComplete="name"
+              required
+              disabled={showOtpField}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Phone number
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="e.g. +919876543210"
+              autoComplete="tel"
+              required
+              disabled={showOtpField}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Email
@@ -165,13 +204,12 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
           )}
 
           
-
           <button
             type="submit"
             disabled={loading}
             className="w-full inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold px-4 py-2.5 transition-colors"
           >
-            {loading ? 'Processing…' : showOtpField ? 'Sign up' : 'Send OTP'}
+            {loading ? 'Processing…' : showOtpField ? 'Verify OTP and Sign up' : 'Send OTP'}
           </button>
         </form>
 

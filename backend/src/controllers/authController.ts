@@ -43,107 +43,152 @@ const generateOTP = (): string => {
 };
 
 export async function sendOTP(req: Request, res: Response) {
-  const { email } = req.body;
-  
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required.' });
+  const { email, phone } = req.body as { email?: string; phone?: string };
+
+  if (!email && !phone) {
+    return res.status(400).json({ message: 'Either email or phone is required.' });
   }
 
   try {
-    // Check if user already exists
-    const userExists = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (userExists.rows.length > 0) {
-      return res.status(409).json({ message: 'User already exists.' });
+    // If phone provided, we use SMS OTP flow; otherwise email OTP for fallback/dev
+    if (phone) {
+      // Check existing by phone
+      const userByPhone = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
+      if (userByPhone.rows.length > 0) {
+        return res.status(409).json({ message: 'User with this phone already exists.' });
+      }
+
+      const otp = generateOTP();
+      await saveOTP({ phone }, otp);
+      // TODO: integrate with SMS provider like Twilio. For now, log for dev.
+      console.log(`[DEV] SMS OTP to ${phone}: ${otp}`);
+      return res.status(200).json({ message: 'OTP sent via SMS' });
     }
 
-    // Generate and save OTP
-    const otp = generateOTP();
-    await saveOTP(email, otp);
+    if (email) {
+      const userByEmail = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      if (userByEmail.rows.length > 0) {
+        return res.status(409).json({ message: 'User with this email already exists.' });
+      }
 
-    // Send OTP via email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Your OTP for Doohgle Signup',
-      text: `Your OTP for Doohgle signup is: ${otp}. It will expire in 10 minutes.`,
-    };
-    const transporter = await getTransporter();
-    const info = await transporter.sendMail(mailOptions);
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-    if (previewUrl) {
-      console.log('Ethereal preview URL:', previewUrl);
+      const otp = generateOTP();
+      await saveOTP({ email }, otp);
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Your OTP for Doohgle Signup',
+        text: `Your OTP for Doohgle signup is: ${otp}. It will expire in 10 minutes.`,
+      };
+      const transporter = await getTransporter();
+      const info = await transporter.sendMail(mailOptions);
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      if (previewUrl) {
+        console.log('Ethereal preview URL:', previewUrl);
+      }
+      return res.status(200).json({ message: 'OTP sent to email' });
     }
-    res.status(200).json({ message: 'OTP sent successfully' });
+
+    return res.status(400).json({ message: 'Invalid request' });
   } catch (err) {
     console.error('Error sending OTP:', err);
-    res.status(500).json({ message: 'Failed to send OTP shiv', error: err });
+    return res.status(500).json({ message: 'Failed to send OTP', error: err });
   }
 }
 
 export async function verifySignupOTP(req: Request, res: Response) {
-  const { email, otp, password, confirmPassword } = req.body;
-  
-  if (!email || !otp || !password || !confirmPassword) {
-    return res.status(400).json({ message: 'All fields are required.' });
-  }
+  const { email, phone, otp, password, confirmPassword, name } = req.body as {
+    email?: string; phone?: string; otp: string; password: string; confirmPassword: string; name: string;
+  };
 
+  if (!otp || !password || !confirmPassword || !phone) {
+    return res.status(400).json({ message: 'Phone, OTP, password, and confirmPassword are required.' });
+  }
   if (password !== confirmPassword) {
     return res.status(400).json({ message: 'Passwords do not match.' });
   }
 
   try {
-    // Verify OTP
-    const isValidOTP = await verifyOTP(email, otp);
+    // Verify OTP against phone (primary)
+    const isValidOTP = await verifyOTP({ phone }, otp);
     if (!isValidOTP) {
       return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
 
-    // Hash password and create user
+    // Ensure uniqueness for phone and optional email
+    const existingByPhone = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
+    if (existingByPhone.rows.length > 0) {
+      return res.status(409).json({ message: 'User with this phone already exists.' });
+    }
+    if (email) {
+      const existingByEmail = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      if (existingByEmail.rows.length > 0) {
+        return res.status(409).json({ message: 'User with this email already exists.' });
+      }
+    }
+
+    // Hash password and create user with name, email and phone
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email',
-      [email, hashedPassword]
+      'INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, name, email, phone, role',
+      [name || '', email || null, phone, hashedPassword]
     );
-    
-    const user: User = result.rows[0];
-    const roles: string[] = [];
-    const token = jwt.sign({ id: user.id, email: user.email, roles }, JWT_SECRET, { expiresIn: '1d' });
-    
-    res.status(201).json({ 
+
+    const user: any = result.rows[0];
+    const roles: string[] = user.role ? [user.role] : [];
+    const token = jwt.sign({ id: user.id, email: user.email, phone: user.phone, roles }, JWT_SECRET, { expiresIn: '1d' });
+
+    return res.status(201).json({ 
       token, 
-      user: { 
-        id: user.id, 
-        email: user.email, 
-        roles 
-      } 
+      user: { id: user.id, email: user.email, phone: user.phone, roles }
     });
   } catch (err) {
     console.error('Error during signup:', err);
-    res.status(500).json({ message: 'Server error during signup', error: err });
+    return res.status(500).json({ message: 'Server error during signup', error: err });
   }
 }
 
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
+  const { email, phone, password } = req.body as { email?: string; phone?: string; password: string };
+  if ((!email && !phone) || !password) {
+    return res.status(400).json({ message: 'Email or phone and password are required.' });
   }
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = email
+      ? await pool.query('SELECT * FROM users WHERE email = $1', [email])
+      : await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
     if (result.rows.length === 0) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
-    const user: User = result.rows[0];
-    const valid = await bcrypt.compare(password, user.password);
+    const user: any = result.rows[0];
+    const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
-    // Fetch roles from user_roles table (may be empty)
-    const rolesRes = await pool.query('SELECT role FROM user_roles WHERE user_id = $1', [user.id]);
-    const roles: string[] = rolesRes.rows.map((r: { role: string }) => r.role);
-    const token = jwt.sign({ id: user.id, email: user.email, roles }, JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user.id, email: user.email, roles } });
+    const roles: string[] = user.role ? [user.role] : [];
+    const token = jwt.sign({ id: user.id, email: user.email, phone: user.phone, roles }, JWT_SECRET, { expiresIn: '1d' });
+    return res.json({ token, user: { id: user.id, email: user.email, phone: user.phone, roles } });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err });
+    return res.status(500).json({ message: 'Server error', error: err });
+  }
+}
+
+// After signup: set role for the current user
+export async function setRole(req: Request, res: Response) {
+  try {
+    const userId = (req as any).user?.id as number | undefined;
+    const { role } = req.body as { role?: 'advertiser' | 'venue_owner' };
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    if (role !== 'advertiser' && role !== 'venue_owner') {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+    const result = await pool.query('UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, phone, role', [role, userId]);
+    const user = result.rows[0];
+    const roles: string[] = user.role ? [user.role] : [];
+    const token = jwt.sign({ id: user.id, email: user.email, phone: user.phone, roles }, JWT_SECRET, { expiresIn: '1d' });
+    return res.json({ token, user: { id: user.id, email: user.email, phone: user.phone, roles } });
+  } catch (err) {
+    console.error('Error setting role:', err);
+    return res.status(500).json({ message: 'Failed to set role', error: err });
   }
 }

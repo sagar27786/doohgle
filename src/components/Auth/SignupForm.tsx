@@ -24,7 +24,7 @@ export const SignupForm: React.FC = () => {
 
     try {
       setLoading(true);
-      await authService.requestOTP(email);
+      await authService.requestOTP({ email });
       setShowOtpField(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to send OTP');
@@ -45,14 +45,16 @@ export const SignupForm: React.FC = () => {
     try {
       setLoading(true);
       const { token, user } = await authService.verifyOTPAndSignup({
+        name: '', // Provide a value or add a field for name
         email,
+        phone: '', // Provide a value or add a field for phone
         password,
         confirmPassword,
         otp
       });
       
-      authService.setAuthData(token, user);
-      authService.setupAxiosInterceptors();
+      authService.setAuthToken(token);
+      authService.setCurrentUser(user);
       navigate('/dashboard'); // Redirect to dashboard after successful signup
     } catch (err: any) {
       setError(err.response?.data?.message || 'Signup failed');

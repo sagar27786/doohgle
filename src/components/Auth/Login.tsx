@@ -26,11 +26,14 @@ export default function Login({ onSwitch }: { onSwitch: () => void }) {
         setIsError(false);
         navigate('/products/screen-manager');
       } else {
-        setMessage(res.data?.message || 'Invalid email or password');
+        // Show backend error message if present
+        setMessage(res.data?.message ||
+          (res.status === 403 ? 'Forbidden: Access denied.' : 'Invalid email or password'));
         setIsError(true);
       }
-    } catch (err) {
-      setMessage('Something went wrong. Please try again.');
+    } catch (err: any) {
+      // Show backend error if available
+      setMessage(err?.response?.data?.message || 'Something went wrong. Please try again.');
       setIsError(true);
     } finally {
       setLoading(false);

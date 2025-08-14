@@ -6,8 +6,7 @@
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate": "node -e \"require('dotenv').config(); const { exec } = require('child_process'); exec(`psql ${process.env.DATABASE_URL} -f migrations/001_initial_schema.sql`, (err, stdout, stderr) => { if (err) { console.error(err); return; } console.log(stdout); console.error(stderr); });\"",
-    "migrate:otp": "node -e \"require('dotenv').config(); const { exec } = require('child_process'); exec(`psql ${process.env.DATABASE_URL} -f migrations/003_add_otp_table.sql`, (err, stdout, stderr) => { if (err) { console.error(err); return; } console.log(stdout); console.error(stderr); });\""
+    "migrate": "node-pg-migrate"
   },
   "dependencies": {
     "@types/axios": "^0.9.36",
@@ -26,6 +25,7 @@
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.19.10",
     "@types/pg": "^8.15.5",
+    "node-pg-migrate": "^8.0.3",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"
   }

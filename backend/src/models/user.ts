@@ -4,4 +4,5 @@ export interface User {
   password: string;
   // Role is now optional; roles are managed in a separate user_roles table.
   role?: 'advertiser' | 'venue_owner';
+  phone?: string;
 }
