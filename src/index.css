@@ -87,14 +87,6 @@
   }
 }
 
-.animate-slide-up {
-  animation: slideInUp 0.6s ease-out;
-}
-
-.animate-slide-left {
-  animation: slideInLeft 0.6s ease-out;
-}
-
 .animate-slide-right {
   animation: slideInRight 0.6s ease-out;
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
+import BecomeExpert from "./components/adds Manager/BecomeExpert";
 
 const GlobalFeed = () => {
   const [currentSlide, setCurrentSlide] = React.useState(0);

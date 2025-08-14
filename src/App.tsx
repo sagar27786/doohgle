@@ -28,28 +28,33 @@ import ResourcesSection from "./components/Screen Manager/ResourcesSection";
 import ScreenManagerFooter from "./components/Screen Manager/Footer";
 import MonetizeSection from "./components/Screen Manager/MonetizeSection";
 import LoginSignup from "./components/Auth/LoginSignup";
+import FormPage from "./pages/FormPages";
 
 // Ads Manager page components
 import AdsManagerHeader from "./components/adds Manager/Header";
 import AddsManagerNavigation from "./components/adds Manager/AddsManagerNavigation";
+// import AddsManagerNavigation from "./components/adds Manager/Dashboard/AddsManagerNavigation";
+
 import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
 import AdsManagerHero from "./components/adds Manager/HeroSection";
 import AdsManagerFeatureSection from "./components/adds Manager/FeatureSection";
 import ChartsSection from "./components/adds Manager/ChartsSection";
 import DashboardSection from "./components/adds Manager/DashboardSection";
-import DashboardClaritySection from "./components/adds Manager/DashboardClaritySection";
+import DashboardClaritySection from "./components/adds Manager/Dashboard/DashboardClaritySection";
 import VideoSection from "./components/adds Manager/VideoSection";
 import VideoFeatureSection from "./components/adds Manager/VideoFeatureSection";
-import WorldMapSection from "./components/adds Manager/WorldMapSection";
-import WorldMapVideoSection from "./components/adds Manager/WorldMapVideoSection";
+import WorldMapSection from "./components/adds Manager/Dashboard/WorldMapSection";
+import WorldMapVideoSection from "./components/adds Manager/Dashboard/WorldMapVideoSection";
 import BillingSection from "./components/adds Manager/BillingSection";
 import LottieRowSection from "./components/adds Manager/LottieRowSection";
 import ScrollTextSection from "./components/adds Manager/ScrollTextSection";
 import VisibilitySection from "./components/adds Manager/VisibilitySection";
 import YouTubeSection from "./components/adds Manager/YouTubeSection";
 import AdsManagerFooter from "./components/adds Manager/Footer";
+import Process from "./components/adds Manager/process";
+import BecomeExpert from "./components/adds Manager/Dashboard/BecomeExpert";
+import AdsManagerDashboardPage from "./pages/AdsManagerDashboardPage";
 
-// Home page component
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-white">
@@ -74,8 +79,17 @@ const HomePage = () => {
 // Screen Manager page component
 const ScreenManagerPage = () => {
   return (
-    <div className="h-screen bg-white">
+    <div className="min-h-screen bg-white">
+      <ScreenManagerHeader />
       <ScreenManagerHero />
+      <FeaturesSection />
+      <DeviceSection />
+      <EntertainmentSection />
+      <CompanyAnimation />
+      <MonetizeSection />
+      <PricingSection />
+      <ResourcesSection />
+      <ScreenManagerFooter />
     </div>
   );
 };
@@ -88,16 +102,12 @@ const AdsManagerPage = () => {
       <VisibilitySection />
       <WorldMapSection />
       <YouTubeSection />
-      {/* <AdsManagerHero /> */}
-      {/* <DashboardSection /> */}
-      {/* <DashboardClaritySection /> */}
-      {/* <AdsManagerFeatureSection /> */}
-      {/* <VideoFeatureSection title={""} videoUrl={""} /> */}
-      {/* <BillingSection /> */}
       <ChartsSection />
       <LottieRowSection />
-      {/* <ScrollTextSection /> */}
-      {/* <VideoSection title={""} videoUrl={""} /> */}
+      <Process/>
+      <BecomeExpert />
+      <GlobalFeed />
+      <FAQ />
       <AdsManagerFooter />
     </div>
   );
@@ -128,7 +138,9 @@ function App() {
             </>
           }
         />
+        <Route path="/products/ads-manager/dashboard" element={<AdsManagerDashboardPage />} />
         <Route path="/auth/login" element={<LoginSignup />} />
+        <Route path="/form/:formType" element={<FormPage />} />
       </Routes>
     </Router>
   );
