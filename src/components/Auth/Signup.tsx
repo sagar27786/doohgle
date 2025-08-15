@@ -52,7 +52,7 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
     }
     try {
       setLoading(true);
-      const { token, user } = await authService.verifyOTPAndSignup({
+      const { token } = await authService.verifyOTPAndSignup({
         name: form.name,
         email: form.email,
         phone: form.phone,

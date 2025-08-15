@@ -162,6 +162,7 @@ const VenueDashboard = () => {
   const [screenForm, setScreenForm] = useState(screenInitialState);
   const [screenMsg, setScreenMsg] = useState('');
   const [screenLoading, setScreenLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'add' | 'screens' | 'bookings'>('screens');
 
   const handleScreenChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }) => {
     const { name, value } = e.target;
@@ -214,12 +215,27 @@ const VenueDashboard = () => {
       <aside className="w-64 bg-gray-100 border-r flex flex-col p-6">
         <h2 className="text-lg font-bold mb-6">Menu</h2>
         <button
-          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-          onClick={() => setShowAddScreen(true)}
+          className={`mb-3 px-4 py-2 rounded text-left ${activeTab === 'add' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200'}`}
+          onClick={() => { setActiveTab('add'); setShowAddScreen(true); }}
         >
-          Add Screens
+          Add Screen
         </button>
-        {/* ...other sidebar options can go here... */}
+
+        <button
+          className={`mb-3 px-4 py-2 rounded text-left ${activeTab === 'screens' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200'}`}
+          onClick={() => { setActiveTab('screens'); setShowAddScreen(false); }}
+        >
+          Your Screens
+        </button>
+
+        <button
+          className={`mb-3 px-4 py-2 rounded text-left ${activeTab === 'bookings' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200'}`}
+          onClick={() => { setActiveTab('bookings'); setShowAddScreen(false); }}
+        >
+          Your Bookings
+        </button>
+
+  {/* bottom Add Screen removed - Add Screen moved to top of menu */}
       </aside>
 
       {/* Main Content */}
@@ -227,12 +243,12 @@ const VenueDashboard = () => {
         <h1 className="text-2xl font-bold">Venue Owner Dashboard</h1>
         <p>Welcome to your dashboard. Here you can manage your screens, bookings, assets, pricing, and more.</p>
 
-        {showAddScreen && (
+        {showAddScreen && activeTab !== 'add' && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
               <button
                 className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                onClick={() => setShowAddScreen(false)}
+                onClick={() => { setShowAddScreen(false); setActiveTab('overview'); }}
               >
                 &times;
               </button>
@@ -416,9 +432,213 @@ const VenueDashboard = () => {
           </div>
         )}
 
-        <AssetAndPricingForms />
-        <ScreenList />
-        <BookingList />
+        {activeTab === 'add' && (
+          <div className="mt-6">
+            <div className="bg-white rounded-lg shadow-lg p-8 w-full">
+              <button
+                className="float-right text-gray-500 hover:text-gray-700"
+                onClick={() => { setShowAddScreen(false); setActiveTab('overview'); }}
+              >
+                &times;
+              </button>
+              <h2 className="text-xl font-semibold mb-4">Register New Screen</h2>
+              <form onSubmit={handleScreenSubmit} className="max-h-[80vh] overflow-y-auto">
+                {/* Basic Information */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="screen_name" value={screenForm.screen_name} onChange={handleScreenChange} 
+                           placeholder="Screen Name" required className="border rounded px-3 py-2" />
+                    <input name="location_in_venue" value={screenForm.location_in_venue} onChange={handleScreenChange}
+                           placeholder="Location in Venue" required className="border rounded px-3 py-2" />
+                    <textarea name="description" value={screenForm.description} onChange={handleScreenChange as any}
+                            placeholder="Description" className="border rounded px-3 py-2 md:col-span-2" rows={3} />
+                  </div>
+                </div>
+
+                {/* Address Information */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Address Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="address_line1" value={screenForm.address_line1} onChange={handleScreenChange}
+                           placeholder="Address Line 1" className="border rounded px-3 py-2 md:col-span-2" />
+                    <input name="address_line2" value={screenForm.address_line2} onChange={handleScreenChange}
+                           placeholder="Address Line 2" className="border rounded px-3 py-2 md:col-span-2" />
+                    <input name="city" value={screenForm.city} onChange={handleScreenChange}
+                           placeholder="City" className="border rounded px-3 py-2" />
+                    <input name="state" value={screenForm.state} onChange={handleScreenChange}
+                           placeholder="State" className="border rounded px-3 py-2" />
+                    <input name="country" value={screenForm.country} onChange={handleScreenChange}
+                           placeholder="Country" className="border rounded px-3 py-2" />
+                    <input name="postal_code" value={screenForm.postal_code} onChange={handleScreenChange}
+                           placeholder="Postal Code" className="border rounded px-3 py-2" />
+                    <input name="latitude" value={screenForm.latitude} onChange={handleScreenChange}
+                           placeholder="Latitude" type="number" step="any" className="border rounded px-3 py-2" />
+                    <input name="longitude" value={screenForm.longitude} onChange={handleScreenChange}
+                           placeholder="Longitude" type="number" step="any" className="border rounded px-3 py-2" />
+                  </div>
+                </div>
+
+                {/* Technical Specifications */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Technical Specifications</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input name="width_px" value={screenForm.width_px} onChange={handleScreenChange}
+                           placeholder="Width (px)" type="number" className="border rounded px-3 py-2" />
+                    <input name="height_px" value={screenForm.height_px} onChange={handleScreenChange}
+                           placeholder="Height (px)" type="number" className="border rounded px-3 py-2" />
+                    <input name="resolution" value={screenForm.resolution} onChange={handleScreenChange}
+                           placeholder="Resolution (e.g., 1920x1080)" className="border rounded px-3 py-2" />
+                    <select name="orientation" value={screenForm.orientation} onChange={handleScreenChange}
+                            className="border rounded px-3 py-2">
+                      <option value="landscape">Landscape</option>
+                      <option value="portrait">Portrait</option>
+                    </select>
+                    <select name="device_type" value={screenForm.device_type} onChange={handleScreenChange}
+                            className="border rounded px-3 py-2">
+                      <option value="smart_tv">Smart TV</option>
+                      <option value="media_player">Media Player</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                    <input name="device_model" value={screenForm.device_model} onChange={handleScreenChange}
+                           placeholder="Device Model" className="border rounded px-3 py-2" />
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" name="ads_enabled" checked={screenForm.ads_enabled}
+                             onChange={e => handleScreenChange({
+                               target: { name: 'ads_enabled', value: e.target.checked }
+                             } as any)} id="ads_enabled" />
+                      <label htmlFor="ads_enabled">Enable Ads</label>
+                    </div>
+                    <input name="ad_frequency" value={screenForm.ad_frequency} onChange={handleScreenChange}
+                           placeholder="Ad Frequency (%)" type="number" min="0" max="100" className="border rounded px-3 py-2" />
+                    <select name="viewing_distance" value={screenForm.viewing_distance} onChange={handleScreenChange}
+                            className="border rounded px-3 py-2">
+                      <option value="close">Close</option>
+                      <option value="medium">Medium</option>
+                      <option value="far">Far</option>
+                    </select>
+                    <input name="typical_viewer_duration" value={screenForm.typical_viewer_duration} onChange={handleScreenChange}
+                           placeholder="Typical Viewer Duration" className="border rounded px-3 py-2" />
+                  </div>
+                </div>
+
+                {/* Screen Assets */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Screen Assets</h3>
+                  <div className="space-y-3">
+                    {screenForm.assets.map((asset, index) => (
+                      <div key={index} className="flex gap-2">
+                        <select value={asset.asset_type} onChange={(e) => {
+                          const newAssets = [...screenForm.assets];
+                          newAssets[index] = { ...asset, asset_type: e.target.value as any };
+                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
+                        }} className="border rounded px-3 py-2">
+                          <option value="photo_day">Photo (Day)</option>
+                          <option value="photo_night">Photo (Night)</option>
+                          <option value="video">Video</option>
+                        </select>
+                        <input type="url" value={asset.url} onChange={(e) => {
+                          const newAssets = [...screenForm.assets];
+                          newAssets[index] = { ...asset, url: e.target.value };
+                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
+                        }} placeholder="Asset URL" className="border rounded px-3 py-2 flex-1" />
+                        <button type="button" onClick={() => {
+                          const newAssets = screenForm.assets.filter((_, i) => i !== index);
+                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
+                        }} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded">Remove</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => {
+                      handleScreenChange({
+                        target: {
+                          name: 'assets',
+                          value: [...screenForm.assets, { asset_type: 'photo_day', url: '' }]
+                        }
+                      } as any);
+                    }} className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded">+ Add Asset</button>
+                  </div>
+                </div>
+
+                {/* Pricing Information */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Pricing Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="number" value={screenForm.pricing.hourly_rate} onChange={(e) => {
+                      handleScreenChange({
+                        target: {
+                          name: 'pricing',
+                          value: { ...screenForm.pricing, hourly_rate: e.target.value }
+                        }
+                      } as any);
+                    }} placeholder="Hourly Rate" className="border rounded px-3 py-2" />
+                    <input type="number" value={screenForm.pricing.daily_rate} onChange={(e) => {
+                      handleScreenChange({
+                        target: {
+                          name: 'pricing',
+                          value: { ...screenForm.pricing, daily_rate: e.target.value }
+                        }
+                      } as any);
+                    }} placeholder="Daily Rate" className="border rounded px-3 py-2" />
+                    <input type="number" value={screenForm.pricing.weekly_rate} onChange={(e) => {
+                      handleScreenChange({
+                        target: {
+                          name: 'pricing',
+                          value: { ...screenForm.pricing, weekly_rate: e.target.value }
+                        }
+                      } as any);
+                    }} placeholder="Weekly Rate" className="border rounded px-3 py-2" />
+                    <select value={screenForm.pricing.currency} onChange={(e) => {
+                      handleScreenChange({
+                        target: {
+                          name: 'pricing',
+                          value: { ...screenForm.pricing, currency: e.target.value }
+                        }
+                      } as any);
+                    }} className="border rounded px-3 py-2">
+                      <option value="INR">INR</option>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="sticky bottom-0 bg-white py-4 border-t mt-6">
+                  <button type="submit" 
+                          className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors" 
+                          disabled={screenLoading}>
+                    {screenLoading ? 'Registering Screen...' : 'Register Screen'}
+                  </button>
+                  {screenMsg && (
+                    <div className={`mt-2 text-sm text-center ${
+                      screenMsg.includes('successfully') ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {screenMsg}
+                    </div>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Right pane content controlled by activeTab */}
+        <div className="mt-6">
+          {activeTab === 'overview' && (
+            <>
+              <h2 className="text-lg font-semibold mb-2">Overview</h2>
+              <p className="mb-4">Use the menu to manage your screens, bookings, assets and pricing.</p>
+              <AssetAndPricingForms />
+            </>
+          )}
+
+          {activeTab === 'screens' && (
+            <ScreenList />
+          )}
+
+          {activeTab === 'bookings' && (
+            <BookingList />
+          )}
+        </div>
       </main>
     </div>
   );

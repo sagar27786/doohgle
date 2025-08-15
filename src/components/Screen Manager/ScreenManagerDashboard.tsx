@@ -18,6 +18,7 @@ import {
   Building2,
   LogOut
 } from 'lucide-react';
+import BookingList from '../VenueDashboard/BookingList';
 interface NavigationItem {
   id: string;
   label: string;
@@ -102,8 +103,9 @@ const Sidebar: React.FC<{
   const navigationItems: NavigationItem[] = [
     { id: 'gallery', label: 'Gallery', icon: Grid },
     { id: 'discover', label: 'Discover', icon: Search },
-    { id: 'myscreens', label: 'My Screens', icon: Tv },
+  { id: 'your_screens', label: 'Your Screens', icon: Tv },
     { id: 'screens', label: 'Screens', icon: Monitor },
+  { id: 'your_bookings', label: 'Your Bookings', icon: Building2 },
     { id: 'locations', label: 'Locations', icon: MapPin },
     { id: 'earn', label: 'Earn Money', icon: DollarSign, hasSubmenu: true },
     { id: 'upgrade', label: 'Upgrade Plan', icon: ArrowUp },
@@ -203,41 +205,6 @@ const Sidebar: React.FC<{
   );
 };
 
-const Header: React.FC<{
-  activeFilter: string;
-  onFilterChange: (filter: string) => void;
-}> = ({ activeFilter, onFilterChange }) => {
-  const filters: TabItem[] = [
-    { id: 'all', label: 'Show all' },
-    { id: 'screen', label: 'Screen Manager' },
-    { id: 'ads', label: 'Ads Manager' },
-    { id: 'content', label: 'Content' },
-    { id: 'framen', label: 'Doohgle' },
-  ];
-
-  return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center space-x-6">
-        <span className="text-sm text-gray-500">Select:</span>
-        <div className="flex space-x-1">
-          {filters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => onFilterChange(filter.id)}
-              className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                activeFilter === filter.id
-                  ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const TABS = [
   { id: 'all', label: 'Show all' },
@@ -796,8 +763,14 @@ const ScreenManagerDashboard: React.FC = () => {
       <div className="flex-1 flex flex-col">
         {activeTab === 'screens' ? (
           <ScreenRegistrationForm />
-        ) : activeTab === 'myscreens' ? (
+        ) : activeTab === 'your_screens' ? (
           <MyScreensGrid />
+        ) : activeTab === 'your_bookings' ? (
+          <div className="flex-1 overflow-y-auto p-8 md:p-10 bg-gray-50">
+            <div className="max-w-6xl mx-auto">
+              <BookingList />
+            </div>
+          </div>
         ) : (
           <MainContent />
         )}
