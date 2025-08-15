@@ -17,7 +17,7 @@ import Contact from "./components/Home/Contact";
 import Footer from "./components/Home/Footer";
 
 // Screen Manager page components
-import ScreenManagerHero from "./components/Screen Manager/HeroSection";
+import ScreenManagerDashboard from "./components/Screen Manager/ScreenManagerDashboard";
 
 // Auth components
 import LoginSignup from "./components/Auth/LoginSignup";
@@ -99,11 +99,7 @@ const HomePage = () => {
 
 // Screen Manager page component
 const ScreenManagerPage = () => {
-  return (
-    <div className="h-screen bg-white">
-      <ScreenManagerHero />
-    </div>
-  );
+  return <ScreenManagerDashboard />;
 };
 
 // Ads Manager page component
@@ -141,13 +137,23 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/products/screen-manager" element={<ScreenManagerPage />} />
+          <Route path="/ScreenManagerDashboard" element={<ScreenManagerDashboard />} />
           <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+          {/* Auth Routes */}
           <Route path="/auth" element={<Login onSwitch={() => navigate("/auth/signup")} />} />
           <Route path="/auth/signup" element={<Signup onSwitch={() => navigate("/auth")} />} />
           <Route path="/auth/login" element={<LoginSignup />} />
           <Route path="/auth/select-role" element={<RoleSelect />} />
+          
+          {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={['venue_owner']} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
+          </Route>
+
+          {/* Protected Advertiser Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['advertiser']} />}>
+            <Route path="/ScreenManagerDashboard" element={<ScreenManagerDashboard />} />
+            <Route path="/products/ads-manager" element={<AdsManagerPage />} />
           </Route>
         </Routes>
       </div>

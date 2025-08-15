@@ -171,6 +171,25 @@ export const authService = {
   updateProfile,
   requestPasswordReset,
   resetPassword,
+  setRole: async (role: 'advertiser' | 'venue_owner'): Promise<AuthResponse> => {
+    const response = await axios.post<AuthResponse>(
+      `${API_URL}/auth/set-role`,
+      { role },
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
+    const { user, token } = response.data;
+    setAuthToken(token);
+    setCurrentUser(user);
+    return { user, token };
+  },
+  setAuthData: (token: string, user: User): void => {
+    setAuthToken(token);
+    setCurrentUser(user);
+  },
 };
 
 // Remove all code below this line (leftover interfaces, objects, and functions)

@@ -14,6 +14,6 @@ export const screensService = {
     if (!ok) {
       throw new Error(data.message || 'Failed to fetch screens.');
     }
-    return data;
+    return { screens: data.screens || [] };
   },
 };

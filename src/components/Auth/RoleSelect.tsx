@@ -24,9 +24,9 @@ export default function RoleSelect() {
       authService.setAuthData(token, user);
       // redirect based on role
       if (role === 'venue_owner') {
-        navigate('/products/screen-manager');
-      } else {
-        navigate('/products/ads-manager');
+        navigate('/venue-dashboard');
+      } else if (role === 'advertiser') {
+        navigate('/ScreenManagerDashboard');
       }
     } catch (err: any) {
       setMessage(err?.response?.data?.message || 'Failed to set role');

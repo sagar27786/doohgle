@@ -115,14 +115,114 @@ const AssetAndPricingForms = () => {
 };
 
 
+
+const screenInitialState = {
+  screen_name: '',
+  location_in_venue: '',
+  description: '',
+  address_line1: '',
+  address_line2: '',
+  city: '',
+  state: '',
+  country: '',
+  postal_code: '',
+  latitude: '',
+  longitude: '',
+  width_px: '',
+  height_px: '',
+  resolution: '',
+  orientation: '',
+};
+
 const VenueDashboard = () => {
+  const [showAddScreen, setShowAddScreen] = useState(false);
+  const [screenForm, setScreenForm] = useState(screenInitialState);
+  const [screenMsg, setScreenMsg] = useState('');
+  const [screenLoading, setScreenLoading] = useState(false);
+
+  const handleScreenChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setScreenForm({ ...screenForm, [e.target.name]: e.target.value });
+  };
+
+  const handleScreenSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setScreenMsg('');
+    setScreenLoading(true);
+    try {
+      await venueService.createScreen({
+        ...screenForm,
+        width_px: screenForm.width_px ? Number(screenForm.width_px) : undefined,
+        height_px: screenForm.height_px ? Number(screenForm.height_px) : undefined,
+        latitude: screenForm.latitude ? Number(screenForm.latitude) : undefined,
+        longitude: screenForm.longitude ? Number(screenForm.longitude) : undefined,
+        user_id: /* TODO: Replace with actual user id, e.g. from context or props */ 1,
+      });
+      setScreenMsg('Screen registered successfully!');
+      setScreenForm(screenInitialState);
+      setShowAddScreen(false);
+    } catch (err: any) {
+      setScreenMsg(err?.response?.data?.message || 'Failed to register screen');
+    } finally {
+      setScreenLoading(false);
+    }
+  };
+
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Venue Owner Dashboard</h1>
-      <p>Welcome to your dashboard. Here you can manage your screens, bookings, assets, pricing, and more.</p>
-      <AssetAndPricingForms />
-      <ScreenList />
-      <BookingList />
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-100 border-r flex flex-col p-6">
+        <h2 className="text-lg font-bold mb-6">Menu</h2>
+        <button
+          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          onClick={() => setShowAddScreen(true)}
+        >
+          Add Screens
+        </button>
+        {/* ...other sidebar options can go here... */}
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-8">
+        <h1 className="text-2xl font-bold">Venue Owner Dashboard</h1>
+        <p>Welcome to your dashboard. Here you can manage your screens, bookings, assets, pricing, and more.</p>
+
+        {showAddScreen && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                onClick={() => setShowAddScreen(false)}
+              >
+                &times;
+              </button>
+              <h2 className="text-xl font-semibold mb-4">Register New Screen</h2>
+              <form onSubmit={handleScreenSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input name="screen_name" value={screenForm.screen_name} onChange={handleScreenChange} placeholder="Screen Name" required className="border rounded px-2 py-1" />
+                <input name="location_in_venue" value={screenForm.location_in_venue} onChange={handleScreenChange} placeholder="Location in Venue" required className="border rounded px-2 py-1" />
+                <input name="description" value={screenForm.description} onChange={handleScreenChange} placeholder="Description" className="border rounded px-2 py-1" />
+                <input name="address_line1" value={screenForm.address_line1} onChange={handleScreenChange} placeholder="Address Line 1" className="border rounded px-2 py-1" />
+                <input name="address_line2" value={screenForm.address_line2} onChange={handleScreenChange} placeholder="Address Line 2" className="border rounded px-2 py-1" />
+                <input name="city" value={screenForm.city} onChange={handleScreenChange} placeholder="City" className="border rounded px-2 py-1" />
+                <input name="state" value={screenForm.state} onChange={handleScreenChange} placeholder="State" className="border rounded px-2 py-1" />
+                <input name="country" value={screenForm.country} onChange={handleScreenChange} placeholder="Country" className="border rounded px-2 py-1" />
+                <input name="postal_code" value={screenForm.postal_code} onChange={handleScreenChange} placeholder="Postal Code" className="border rounded px-2 py-1" />
+                <input name="latitude" value={screenForm.latitude} onChange={handleScreenChange} placeholder="Latitude" className="border rounded px-2 py-1" />
+                <input name="longitude" value={screenForm.longitude} onChange={handleScreenChange} placeholder="Longitude" className="border rounded px-2 py-1" />
+                <input name="width_px" value={screenForm.width_px} onChange={handleScreenChange} placeholder="Width (px)" className="border rounded px-2 py-1" />
+                <input name="height_px" value={screenForm.height_px} onChange={handleScreenChange} placeholder="Height (px)" className="border rounded px-2 py-1" />
+                <input name="resolution" value={screenForm.resolution} onChange={handleScreenChange} placeholder="Resolution" className="border rounded px-2 py-1" />
+                <input name="orientation" value={screenForm.orientation} onChange={handleScreenChange} placeholder="Orientation" className="border rounded px-2 py-1" />
+                <button type="submit" className="col-span-2 bg-green-600 text-white px-4 py-2 rounded mt-4" disabled={screenLoading}>Register Screen</button>
+                {screenMsg && <div className="col-span-2 text-sm text-red-500 mt-2">{screenMsg}</div>}
+              </form>
+            </div>
+          </div>
+        )}
+
+        <AssetAndPricingForms />
+        <ScreenList />
+        <BookingList />
+      </main>
     </div>
   );
 };

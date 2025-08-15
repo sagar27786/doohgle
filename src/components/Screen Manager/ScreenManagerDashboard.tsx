@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createScreen, getMyScreens } from '../../api/screens';
+import { createScreen, getMyScreens, ScreenPayload, ScreenAsset, ScreenPricing, ScreenAvailability } from '../../api/screens';
 import { 
   Grid, 
   Search, 
@@ -314,18 +314,30 @@ const MainContent: React.FC = () => {
 // Screen Registration Form
 const ScreenRegistrationForm: React.FC = () => {
   const [form, setForm] = useState({
+    // Basic Details
     screen_name: '',
     location_in_venue: '',
     screen_size_inches: '',
-    resolution: '1920x1080',
-    orientation: 'landscape',
-    device_type: 'smart_tv',
+    resolution: '',
+    orientation: 'landscape' as const,
+    device_type: 'smart_tv' as const,
     device_model: '',
-    ads_enabled: true,
-    ad_frequency: 20,
-    viewing_distance: 'close',
-    typical_viewer_duration: '2-5 minutes',
-    peak_viewing_hours: ['09:00-11:00'] as string[],
+    ads_enabled: false,
+    ad_frequency: 0,
+    viewing_distance: 'close' as const,
+    typical_viewer_duration: '',
+    peak_viewing_hours: [] as string[],
+    // Assets
+    assets: [] as Array<{ asset_type: 'photo_day' | 'photo_night' | 'video'; url: string }>,
+    // Pricing
+    pricing: {
+      hourly_rate: 0,
+      daily_rate: 0,
+      weekly_rate: 0,
+      currency: 'INR'
+    },
+    // Availability
+    availability: [] as Array<{ date: string; is_available: boolean }>
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ text: string; error: boolean } | null>(null);
@@ -356,19 +368,30 @@ const ScreenRegistrationForm: React.FC = () => {
     setSaving(true);
     setMsg(null);
     try {
-      const payload = {
-        screen_name: form.screen_name,
-        location_in_venue: form.location_in_venue,
+      const payload: ScreenPayload = {
+        screen_name: form.screen_name.trim(),
+        location_in_venue: form.location_in_venue.trim(),
         screen_size_inches: form.screen_size_inches ? Number(form.screen_size_inches) : null,
-        resolution: form.resolution,
-        orientation: form.orientation as 'landscape' | 'portrait',
-        device_type: form.device_type as 'smart_tv' | 'media_player' | 'custom',
-        device_model: form.device_model || undefined,
+        resolution: form.resolution.trim() || null,
+        orientation: form.orientation,
+        device_type: form.device_type,
+        device_model: form.device_model.trim() || null,
         ads_enabled: !!form.ads_enabled,
         ad_frequency: Number(form.ad_frequency) || 0,
-        viewing_distance: form.viewing_distance as 'close' | 'medium' | 'far',
-        typical_viewer_duration: form.typical_viewer_duration,
-        peak_viewing_hours: form.peak_viewing_hours,
+        viewing_distance: form.viewing_distance,
+        typical_viewer_duration: form.typical_viewer_duration.trim() || null,
+        peak_viewing_hours: form.peak_viewing_hours.filter(hour => hour.trim()),
+        assets: form.assets,
+        pricing: {
+          hourly_rate: form.pricing.hourly_rate || undefined,
+          daily_rate: form.pricing.daily_rate || undefined,
+          weekly_rate: form.pricing.weekly_rate || undefined,
+          currency: form.pricing.currency
+        },
+        availability: form.availability.map(a => ({
+          date: a.date,
+          is_available: a.is_available
+        }))
       };
       const { ok, data } = await createScreen(payload);
       if (ok) {
@@ -468,8 +491,193 @@ const ScreenRegistrationForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="md:col-span-2">
-            <button type="submit" disabled={saving} className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60">
+          {/* Assets Section */}
+          <div className="md:col-span-2 border-t pt-6 mt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Screen Assets</h3>
+            <div className="space-y-4">
+              {form.assets.map((asset, idx) => (
+                <div key={idx} className="flex items-center gap-4">
+                  <select 
+                    value={asset.asset_type}
+                    onChange={(e) => {
+                      const newAssets = [...form.assets];
+                      newAssets[idx] = { ...asset, asset_type: e.target.value as any };
+                      setForm(prev => ({ ...prev, assets: newAssets }));
+                    }}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                  >
+                    <option value="photo_day">Day Photo</option>
+                    <option value="photo_night">Night Photo</option>
+                    <option value="video">Video</option>
+                  </select>
+                  <input
+                    type="url"
+                    value={asset.url}
+                    onChange={(e) => {
+                      const newAssets = [...form.assets];
+                      newAssets[idx] = { ...asset, url: e.target.value };
+                      setForm(prev => ({ ...prev, assets: newAssets }));
+                    }}
+                    placeholder="Asset URL"
+                    className="flex-[2] rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm(prev => ({
+                        ...prev,
+                        assets: prev.assets.filter((_, i) => i !== idx)
+                      }));
+                    }}
+                    className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(prev => ({
+                    ...prev,
+                    assets: [...prev.assets, { asset_type: 'photo_day', url: '' }]
+                  }));
+                }}
+                className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+              >
+                + Add Asset
+              </button>
+            </div>
+          </div>
+
+          {/* Pricing Section */}
+          <div className="md:col-span-2 border-t pt-6 mt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Screen Pricing</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Hourly Rate</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.pricing.hourly_rate}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    pricing: { ...prev.pricing, hourly_rate: Number(e.target.value) }
+                  }))}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Daily Rate</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.pricing.daily_rate}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    pricing: { ...prev.pricing, daily_rate: Number(e.target.value) }
+                  }))}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Weekly Rate</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.pricing.weekly_rate}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    pricing: { ...prev.pricing, weekly_rate: Number(e.target.value) }
+                  }))}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Currency</label>
+                <select
+                  value={form.pricing.currency}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    pricing: { ...prev.pricing, currency: e.target.value }
+                  }))}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                >
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Availability Section */}
+          <div className="md:col-span-2 border-t pt-6 mt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Screen Availability</h3>
+            <div className="space-y-4">
+              {form.availability.map((avail, idx) => (
+                <div key={idx} className="flex items-center gap-4">
+                  <input
+                    type="date"
+                    value={avail.date}
+                    onChange={(e) => {
+                      const newAvail = [...form.availability];
+                      newAvail[idx] = { ...avail, date: e.target.value };
+                      setForm(prev => ({ ...prev, availability: newAvail }));
+                    }}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                  />
+                  <select
+                    value={avail.is_available.toString()}
+                    onChange={(e) => {
+                      const newAvail = [...form.availability];
+                      newAvail[idx] = { ...avail, is_available: e.target.value === 'true' };
+                      setForm(prev => ({ ...prev, availability: newAvail }));
+                    }}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+                  >
+                    <option value="true">Available</option>
+                    <option value="false">Not Available</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm(prev => ({
+                        ...prev,
+                        availability: prev.availability.filter((_, i) => i !== idx)
+                      }));
+                    }}
+                    className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  setForm(prev => ({
+                    ...prev,
+                    availability: [...prev.availability, { date: today, is_available: true }]
+                  }));
+                }}
+                className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+              >
+                + Add Date
+              </button>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 border-t pt-6 mt-6">
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
+            >
               {saving ? 'Saving...' : 'Register Screen'}
             </button>
           </div>
@@ -477,8 +685,8 @@ const ScreenRegistrationForm: React.FC = () => {
       </div>
     </div>
   );
-};
-
+}
+  
 // My Screens Grid
 const MyScreensGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -553,7 +761,6 @@ const MyScreensGrid: React.FC = () => {
 // Main Screen Manager Dashboard Component
 const ScreenManagerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('gallery');
-  const [activeFilter, setActiveFilter] = useState<string>('all');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
   return (

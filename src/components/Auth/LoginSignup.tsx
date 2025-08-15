@@ -24,8 +24,9 @@ const LoginSignup: React.FC = () => {
     setIsLoading(true);
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    // In a real app, you would set auth context or token here
-    navigate('/products/screen-manager');
+    const user = { email: DEMO_EMAIL, roles: ['venue_owner'] };
+    localStorage.setItem('user', JSON.stringify(user));
+    navigate('/venue-dashboard');
     setIsLoading(false);
   }
 

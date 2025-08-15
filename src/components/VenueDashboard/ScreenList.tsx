@@ -2,10 +2,22 @@ import { useState, useEffect } from 'react';
 import { screensService } from '../../services/screensService';
 
 interface Screen {
-  id: string;
+  id: number;
   screen_name: string;
   location_in_venue: string;
-  // Add other screen properties as needed
+  screen_size_inches: number | null;
+  resolution: string | null;
+  orientation: 'landscape' | 'portrait';
+  device_type: 'smart_tv' | 'media_player' | 'custom';
+  device_model: string | null;
+  ads_enabled: boolean;
+  ad_frequency: number;
+  viewing_distance: 'close' | 'medium' | 'far';
+  typical_viewer_duration: string | null;
+  peak_viewing_hours: string[];
+  created_at: string;
+  updated_at: string;
+  user_id: number;
 }
 
 const ScreenList = () => {
@@ -16,8 +28,8 @@ const ScreenList = () => {
   useEffect(() => {
     const fetchScreens = async () => {
       try {
-        const data = await screensService.getMyScreens();
-        setScreens(data);
+        const response = await screensService.getMyScreens();
+        setScreens(response.screens || []);
       } catch (err: any) {
         setError(err.message || 'An error occurred while fetching screens.');
       } finally {
