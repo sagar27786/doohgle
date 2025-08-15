@@ -26,7 +26,7 @@ export default function RoleSelect() {
       if (role === 'venue_owner') {
         navigate('/venue-dashboard');
       } else if (role === 'advertiser') {
-        navigate('/ScreenManagerDashboard');
+        navigate('/products/ads-manager');
       }
     } catch (err: any) {
       setMessage(err?.response?.data?.message || 'Failed to set role');

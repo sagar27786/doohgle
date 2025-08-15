@@ -63,12 +63,8 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
       localStorage.setItem('token', token);
       setMessage('Signup successful!');
       setIsError(false);
-      // Redirect based on user role
-      if (user && (user.role === 'venue_owner' || (user.roles && user.roles.includes('venue_owner')))) {
-        navigate('/VenueDashboard');
-      } else {
-        navigate('/role-select');
-      }
+      // Always redirect to role selection after signup
+      navigate('/auth/select-role');
     } catch (err: any) {
       // Show backend error if available (e.g., invalid OTP, forbidden)
       setMessage(err?.response?.data?.message || 'Failed to verify OTP or signup');

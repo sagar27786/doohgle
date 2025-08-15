@@ -24,15 +24,8 @@ export default function Login({ onSwitch }: { onSwitch: () => void }) {
         localStorage.setItem('token', res.data.token);
         if (res.data.user) {
           localStorage.setItem('user', JSON.stringify(res.data.user));
-          // Check user role and redirect accordingly
-          if (res.data.user.roles?.includes('venue_owner')) {
-            navigate('/venue-dashboard');
-          } else if (res.data.user.roles?.includes('advertiser')) {
-            navigate('/ScreenManagerDashboard');
-          } else {
-            // If no role is set, redirect to role selection
-            navigate('/auth/select-role');
-          }
+          // Always redirect to role selection after login
+          navigate('/auth/select-role');
         }
         setMessage('Logged in successfully!');
         setIsError(false);

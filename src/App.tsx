@@ -128,22 +128,32 @@ const AdsManagerPage = () => {
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hideHeaderRoutes = ["/auth/login", "/products/screen-manager"];
+  const hideHeaderRoutes = [
+    "/auth/login",
+    "/auth/signup",
+    "/auth/select-role",
+    "/products/screen-manager",
+    "/venue-dashboard",
+    "/products/ads-manager"
+  ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-white">
         {shouldShowHeader && <Header />}
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/products/screen-manager" element={<ScreenManagerPage />} />
-          <Route path="/ScreenManagerDashboard" element={<ScreenManagerDashboard />} />
-          <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+
           {/* Auth Routes */}
           <Route path="/auth" element={<Login onSwitch={() => navigate("/auth/signup")} />} />
           <Route path="/auth/signup" element={<Signup onSwitch={() => navigate("/auth")} />} />
           <Route path="/auth/login" element={<LoginSignup />} />
-          <Route path="/auth/select-role" element={<RoleSelect />} />
+
+          {/* Role Selection - Protected but accessible to all authenticated users */}
+          <Route element={<ProtectedRoute allowedRoles={['venue_owner', 'advertiser', '']} />}>
+            <Route path="/auth/select-role" element={<RoleSelect />} />
+          </Route>
           
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={['venue_owner']} />}>
@@ -152,7 +162,7 @@ function App() {
 
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={['advertiser']} />}>
-            <Route path="/ScreenManagerDashboard" element={<ScreenManagerDashboard />} />
+            <Route path="/products/screen-manager" element={<ScreenManagerPage />} />
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />
           </Route>
         </Routes>

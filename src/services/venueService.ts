@@ -5,7 +5,15 @@ function getAuthToken(): string | null {
   return localStorage.getItem('token');
 }
 
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
+let API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
+
+// Normalize API_URL: ensure it has a protocol. If someone sets VITE_API_URL without protocol
+// (e.g. "localhost:4000/api") the browser will treat it as a relative URL and requests
+// will break (you'll see requests to "4000/api/..."). Prepend http:// when missing.
+if (!/^https?:\/\//i.test(API_URL)) {
+  console.warn('VITE_API_URL does not include protocol; prepending http:// for development. Value:', API_URL);
+  API_URL = 'http://' + API_URL.replace(/^\/+/, '');
+}
 
 // Interfaces
 export interface Screen {
@@ -76,7 +84,12 @@ export interface ProofOfPlay {
 // Helper function to handle API requests
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const url = `${API_URL}${endpoint}`;
+  // Debug: show the final URL being requested to detect protocol-less values
+  // (will appear in browser console during development)
+  // eslint-disable-next-line no-console
+  console.debug('[apiRequest] ', (options as any).method || 'GET', url);
+  const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -97,57 +110,61 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 class VenueService {
   // Screen Management
   async createScreen(screenData: Omit<Screen, 'id' | 'created_at' | 'updated_at' | 'is_active'>): Promise<Screen> {
-    return apiRequest<Screen>('/venue/screens', {
+    // POST to the screens controller
+    return apiRequest<Screen>('/screens', {
       method: 'POST',
       body: JSON.stringify(screenData)
     });
   }
 
   async updateScreen(screenId: number, screenData: Partial<Screen>): Promise<Screen> {
-    return apiRequest<Screen>(`/venue/screens/${screenId}`, {
+    return apiRequest<Screen>(`/screens/${screenId}`, {
       method: 'PATCH',
       body: JSON.stringify(screenData)
     });
   }
 
   async deleteScreen(screenId: number): Promise<void> {
-    await apiRequest(`/venue/screens/${screenId}`, {
+    await apiRequest(`/screens/${screenId}`, {
       method: 'DELETE'
     });
   }
 
   async getVenueScreens(): Promise<Screen[]> {
-    return apiRequest<Screen[]>('/venue/screens');
+    // Use the screens "mine" endpoint to get screens for the authenticated user
+    return apiRequest<Screen[]>('/screens/mine');
   }
 
   async getScreenDetails(screenId: number): Promise<Screen> {
-    return apiRequest<Screen>(`/venue/screens/${screenId}`);
+    return apiRequest<Screen>(`/screens/${screenId}`);
   }
 
   // Screen Assets
   async uploadScreenAsset(screenId: number, assetData: { asset_type: string, url: string }): Promise<ScreenAsset> {
-    return apiRequest<ScreenAsset>(`/venue/screens/${screenId}/assets`, {
+    // Backend expects POST /api/venue/screens/assets with screen_id in body
+    return apiRequest<ScreenAsset>(`/venue/screens/assets`, {
       method: 'POST',
-      body: JSON.stringify(assetData)
+      body: JSON.stringify({ screen_id: String(screenId), ...assetData })
     });
   }
 
   // Screen Pricing
+  // For pricing, backend exposes /api/venue/screens/pricing which accepts screen_id in the body
   async updateScreenPricing(screenId: number, pricingData: { hourly_rate?: number, daily_rate?: number, weekly_rate?: number }): Promise<ScreenPricing> {
-    return apiRequest<ScreenPricing>(`/venue/screens/${screenId}/pricing`, {
-      method: 'PATCH',
-      body: JSON.stringify(pricingData)
+    return apiRequest<ScreenPricing>(`/venue/screens/pricing`, {
+      method: 'POST',
+      body: JSON.stringify({ screen_id: String(screenId), ...pricingData })
     });
   }
 
-  // Add setScreenPricing to match frontend usage
+  // Backwards-compatible helper matching previous frontend usage
   async setScreenPricing({ screen_id, hourly_rate, daily_rate, weekly_rate }: { screen_id: string, hourly_rate: string, daily_rate: string, weekly_rate: string }): Promise<ScreenPricing> {
-    const pricingData = {
+    const pricing = {
       hourly_rate: hourly_rate ? Number(hourly_rate) : undefined,
       daily_rate: daily_rate ? Number(daily_rate) : undefined,
       weekly_rate: weekly_rate ? Number(weekly_rate) : undefined,
     };
-    return this.updateScreenPricing(Number(screen_id), pricingData);
+    return this.updateScreenPricing(Number(screen_id), pricing);
   }
 
   // Bookings
