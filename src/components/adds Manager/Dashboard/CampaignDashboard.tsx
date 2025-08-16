@@ -264,12 +264,12 @@ const CampaignDashboard: React.FC<CampaignDashboardProps> = ({ onBack }) => {
           {/* Content Area */}
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {/* Venue Selection Card */}
+              {/* Venue Selection Card - Enhanced with Location Targeting */}
               <motion.div
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition-all duration-300"
                 whileHover={{ y: -4, scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/products/ads-manager/venues")}
+                onClick={() => setIsLocationManagerOpen(true)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -286,12 +286,18 @@ const CampaignDashboard: React.FC<CampaignDashboardProps> = ({ onBack }) => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
                   </div>
                   <div className="flex items-center text-purple-600">
-                    <span className="text-sm font-medium">4 Selected</span>
+                    <span className="text-sm font-medium">Location-Based</span>
                     <svg
                       className="w-4 h-4 ml-2"
                       fill="none"
@@ -308,20 +314,23 @@ const CampaignDashboard: React.FC<CampaignDashboardProps> = ({ onBack }) => {
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Select Venues
+                  Target Locations
                 </h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  Choose where your ads will be displayed
+                  Use your location and nearby areas for precise targeting
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {selectedVenues.map((venue, index) => (
+                  {selectedVenues.map((venue) => (
                     <span
-                      key={index}
+                      key={venue}
                       className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
                     >
                       {venue}
                     </span>
                   ))}
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    📍 Location-Based
+                  </span>
                 </div>
               </motion.div>
 
@@ -1283,13 +1292,23 @@ const CampaignDashboard: React.FC<CampaignDashboardProps> = ({ onBack }) => {
       <VenueSelectionModal
         isOpen={isVenueModalOpen}
         onClose={() => setIsVenueModalOpen(false)}
-        onSave={(venues) => setSelectedVenues(venues)}
+        onSave={(venues: any) => setSelectedVenues(venues)}
       />
 
       <CreativesManager
         isOpen={isCreativesModalOpen}
         onClose={() => setIsCreativesModalOpen(false)}
-        onSave={(creatives) => setSelectedCreatives(creatives)}
+        onSave={(creatives: any) => setSelectedCreatives(creatives)}
+      />
+
+      <LocationManager
+        isOpen={isLocationManagerOpen}
+        onClose={() => setIsLocationManagerOpen(false)}
+        onLocationSelect={(location) => {
+          console.log('Selected location:', location);
+          // You can handle the selected location here
+          // For example, add it to your campaign targeting
+        }}
       />
     </div>
   );
