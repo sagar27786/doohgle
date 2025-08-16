@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import VenueSelectionModal from "../VenueSelectionModal";
 import CreativesManager from "../CreativesManager";
+import LocationManager from "../../Location/LocationManager";
 
 interface CampaignDashboardProps {
   onBack?: () => void;
@@ -15,6 +16,7 @@ const CampaignDashboard: React.FC<CampaignDashboardProps> = ({ onBack }) => {
   const [isVenueModalOpen, setIsVenueModalOpen] = useState(false);
   const [isCreativesModalOpen, setIsCreativesModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isLocationManagerOpen, setIsLocationManagerOpen] = useState(false);
   const [selectedVenues, setSelectedVenues] = useState<string[]>([
     "Retail",
     "Health & Beauty",
