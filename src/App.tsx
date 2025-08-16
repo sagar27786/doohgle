@@ -36,6 +36,9 @@ import VisibilitySection from "./components/adds Manager/VisibilitySection";
 import YouTubeSection from "./components/adds Manager/YouTubeSection";
 import AdsManagerFooter from "./components/adds Manager/Footer";
 
+// Integrated Ads Manager Dashboard
+import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
+
 // ThemeProvider for dark mode
 interface ThemeContextType {
   theme: string;
@@ -102,7 +105,7 @@ const ScreenManagerPage = () => {
   return <ScreenManagerDashboard />;
 };
 
-// Ads Manager page component
+// Ads Manager page component - Marketing Landing
 const AdsManagerPage = () => {
   return (
     <div className="min-h-screen bg-white">
@@ -125,10 +128,19 @@ const AdsManagerPage = () => {
   );
 };
 
+// Ads Manager Dashboard - Full Backend Integration
+const AdsManagerDashboard = () => {
+  return <IntegratedAdsManager />;
+};
+
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const hideHeaderRoutes = ["/auth/login", "/products/screen-manager"];
+  const hideHeaderRoutes = [
+    "/auth/login",
+    "/products/screen-manager",
+    "/products/ads-manager/dashboard",
+  ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
   return (
     <ThemeProvider>
@@ -136,24 +148,50 @@ function App() {
         {shouldShowHeader && <Header />}
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products/screen-manager" element={<ScreenManagerPage />} />
-          <Route path="/ScreenManagerDashboard" element={<ScreenManagerDashboard />} />
+          <Route
+            path="/products/screen-manager"
+            element={<ScreenManagerPage />}
+          />
+          <Route
+            path="/ScreenManagerDashboard"
+            element={<ScreenManagerDashboard />}
+          />
+
+          {/* Ads Manager Routes */}
           <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+          <Route
+            path="/products/ads-manager/dashboard"
+            element={<AdsManagerDashboard />}
+          />
+
           {/* Auth Routes */}
-          <Route path="/auth" element={<Login onSwitch={() => navigate("/auth/signup")} />} />
-          <Route path="/auth/signup" element={<Signup onSwitch={() => navigate("/auth")} />} />
+          <Route
+            path="/auth"
+            element={<Login onSwitch={() => navigate("/auth/signup")} />}
+          />
+          <Route
+            path="/auth/signup"
+            element={<Signup onSwitch={() => navigate("/auth")} />}
+          />
           <Route path="/auth/login" element={<LoginSignup />} />
           <Route path="/auth/select-role" element={<RoleSelect />} />
-          
+
           {/* Protected Venue Owner Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['venue_owner']} />}>
+          <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
 
           {/* Protected Advertiser Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['advertiser']} />}>
-            <Route path="/ScreenManagerDashboard" element={<ScreenManagerDashboard />} />
+          <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
+            <Route
+              path="/ScreenManagerDashboard"
+              element={<ScreenManagerDashboard />}
+            />
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+            <Route
+              path="/products/ads-manager/dashboard"
+              element={<AdsManagerDashboard />}
+            />
           </Route>
         </Routes>
       </div>
