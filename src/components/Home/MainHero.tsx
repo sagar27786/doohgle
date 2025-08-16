@@ -1,46 +1,7 @@
-import {
-  ArrowUp,
-  ArrowDown,
-  CornerDownLeft,
-  Command,
-  MoveRight,
-} from "lucide-react";
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import HeroVideo from "./HeroVideo";
-
-const FloatingKey = ({
-  icon: Icon,
-  className,
-  ariaLabel,
-  offsetY = 0,
-}: {
-  icon: React.ElementType;
-  className: string;
-  ariaLabel: string;
-  offsetY?: number;
-}) => (
-  // Floating Key Component
-  <div
-    aria-hidden="true"
-    className={`
-    absolute hidden lg:flex items-center justify-center w-16 h-16 rounded-2xl 
-    bg-[#EBF0F5] text-slate-500 shadow-[7px_7px_15px_#bec4c9,_-7px_-7px_15px_#ffffff]
-    dark:bg-slate-800 dark:text-slate-400 dark:shadow-[7px_7px_15px_#1c1e22,_-7px_-7px_15px_#3a3e46]
-    transition-transform duration-500
-    hover:shadow-[0_0_20px_rgba(59,130,246,0.8)] dark:hover:shadow-[0_0_20px_rgba(168,85,247,0.8)]
-    ${className}
-    group
-  `}
-    style={{ transform: `translateY(${offsetY}px)` }}
-  >
-    <Icon
-      className="w-8 h-8 transition-all duration-300
-      group-hover:text-blue-500 group-hover:animate-glowPulse
-      dark:group-hover:text-purple-400 dark:group-hover:animate-glowPulseDark"
-    />
-  </div>
-);
+import { MoveRight } from "lucide-react";
 
 const MainHero = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -54,10 +15,9 @@ const MainHero = () => {
       setScrollY(y);
       setSearchExpanded(y > 20);
 
-      // Check if we've reached the next section
       if (nextSectionRef.current) {
         const nextTop = nextSectionRef.current.offsetTop;
-        setVisible(y + 200 < nextTop); // hides ~200px before section
+        setVisible(y + 400 < nextTop);
       }
     };
 
@@ -65,83 +25,68 @@ const MainHero = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleScrollDown = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: "smooth",
-    });
-  };
-
-  const keyOffset = scrollY * 0.3;
-
   return (
     <>
-      <main
-        className="relative flex items-center justify-center min-h-screen overflow-hidden 
-  bg-gradient-to-b from-gray-200 via-gray-300 to-blue-50
-  dark:bg-gradient-to-b dark:from-slate-950 dark:to-slate-900 
-  p-4 transition-colors duration-300"
-      >
-        <FloatingKey
-          icon={ArrowUp}
-          className="top-[25%] left-[10%]"
-          ariaLabel="Up arrow key"
-          offsetY={keyOffset}
-        />
-        <FloatingKey
-          icon={CornerDownLeft}
-          className="top-[30%] right-[12%]"
-          ariaLabel="Enter key"
-          offsetY={keyOffset * 1.2}
-        />
-        <FloatingKey
-          icon={Command}
-          className="bottom-[25%] right-[20%]"
-          ariaLabel="Command key"
-          offsetY={keyOffset * 0.8}
-        />
-        <div onClick={handleScrollDown}>
-          <FloatingKey
-            icon={ArrowDown}
-            className="bottom-[15%] left-[20%]"
-            ariaLabel="Down arrow key"
-            offsetY={keyOffset}
-          />
-        </div>
+      <main className="relative flex items-center justify-center min-h-screen overflow-hidden p-4 bg-black">
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/background.mp4" type="video/mp4" />
+        </video>
 
-        {/* Main content */}
-        <div className="relative z-10 text-center max-w-4xl mx-auto">
-          <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5
-    bg-gradient-to-r from-blue-500 via-gray-400 to-blue-700
-    bg-clip-text text-transparent
-    dark:from-purple-500 dark:to-pink-500"
-          >
-            Digital Out of Home Advertising in India
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-40 z-0 dark:bg-opacity-60" />
+
+        {/* Main Content */}
+        <div className="relative z-10 text-center max-w-4xl mx-auto text-white dark:text-slate-200">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5">
+            Connect{" "}
+            <span className="purple-gray-gradient">Digital Screens</span>
+          </h1>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5">
+            With <span className="purple-gray-gradient">Perfect Ads</span>
           </h1>
 
-          <p className="max-w-3xl mx-auto text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed mb-10">
-            Advertise anywhere in India - Find your perfect screen
+          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-2 text-gray-300">
+            The world's largest marketplace for{" "}
+            <span className="purple-gray-gradient">
+              digital out-of-home advertising.
+            </span>
+          </p>
+          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-2 text-gray-300">
+            List your screens,{" "}
+            <span className="purple-gray-gradient"> elevate your income.</span>
+          </p>
+          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-4 text-gray-300">
+            Book <span className="purple-gray-gradient">Premium location </span>
+            for your ad and maximize your reach with{" "}
+            <span className="purple-gray-gradient">AI driven insights.</span>
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Button 1: Gradient Border + Slide (Blue/Teal scheme) */}
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center h-14 w-full sm:w-auto px-8 text-lg font-semibold text-white bg-slate-800 dark:text-slate-900 dark:bg-slate-100 rounded-xl shadow-md hover:bg-slate-900 dark:hover:bg-white transition-all duration-300 transform hover:-translate-y-1"
+              className="group relative h-14 w-full sm:w-auto px-8 text-lg font-semibold text-white bg-slate-800 dark:text-slate-900 dark:bg-slate-100 rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg-gradient-to-r hover:text-gray-300 dark:hover:text-slate-800 hover:shadow-2xl hover:shadow-blue-500/25 transform hover:-rotate-1 hover:scale-105"
             >
-              <span>Start your Campaign</span>
-              <MoveRight className="w-5 h-5 ml-2 transform transition-transform duration-300 group-hover:translate-x-1" />
+              <span>List your Screen for Free</span>
             </Link>
 
+            {/* Button 2: Gradient Border + Slide (Indigo/Purple scheme) */}
             <Link
               to="/auth"
-              className="h-14 w-full sm:w-auto px-8 text-lg font-semibold text-slate-800 bg-slate-200 dark:text-slate-200 dark:bg-slate-700 rounded-xl shadow-md hover:bg-slate-300 dark:hover:bg-slate-600 transition-all duration-300 flex items-center justify-center"
+              className="group relative h-14 w-full sm:w-auto px-8 text-lg font-semibold text-slate-800 bg-slate-200 dark:text-slate-200 dark:bg-slate-700 rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-600 hover:text-white hover:shadow-2xl hover:shadow-purple-500/25 transform hover:-rotate-1 hover:scale-105"
             >
-              Get our Digital Signage
+              <span>Book Screen for Free</span>
             </Link>
           </div>
 
-          {/* AI Assistant Search Box */}
+          {/* Optional Floating Box */}
           <div
             className={`flex items-center justify-center transition-opacity duration-500 ${
               visible ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -179,7 +124,6 @@ const MainHero = () => {
         </div>
       </main>
 
-      {/* Next section for disappearing trigger */}
       <div ref={nextSectionRef}>
         <HeroVideo />
       </div>

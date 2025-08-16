@@ -592,138 +592,137 @@ export default function DOOHInteractiveMap() {
       screen.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
-    <div className="flex h-auto justify-between align-middle pl-[10%] bg-gray-200 dark:bg-slate-900 p-4">
-      {/* Sidebar */}
-      <div className="w-64 bg-white dark:bg-slate-800 shadow-md border-r border-gray-200 dark:border-slate-700 flex flex-col rounded-lg overflow-hidden">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-slate-700">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-            DOOH Platform
-          </h1>
-          <p className="text-xs text-gray-600 dark:text-gray-300">
-            Digital Out-of-Home Advertising
-          </p>
-        </div>
+  return;
+  <div className="flex h-auto justify-between align-middle pl-[10%] bg-gray-200 dark:bg-slate-900 p-4">
+    {/* Sidebar */}
+    <div className="w-64 bg-white dark:bg-slate-800 shadow-md border-r border-gray-200 dark:border-slate-700 flex flex-col rounded-lg overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 dark:border-slate-700">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+          DOOH Platform
+        </h1>
+        <p className="text-xs text-gray-600 dark:text-gray-300">
+          Digital Out-of-Home Advertising
+        </p>
+      </div>
 
-        {/* Country Selector */}
-        <div className="p-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Target Country
-          </label>
-          <select
-            value={selectedCountry.code}
-            onChange={(e) => {
-              const country = countries.find((c) => c.code === e.target.value);
-              if (country) {
-                handleCountryChange(country);
-              }
-            }}
-            className="w-full px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-white"
+      {/* Country Selector */}
+      <div className="p-4">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Target Country
+        </label>
+        <select
+          value={selectedCountry.code}
+          onChange={(e) => {
+            const country = countries.find((c) => c.code === e.target.value);
+            if (country) {
+              handleCountryChange(country);
+            }
+          }}
+          className="w-full px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-white"
+        >
+          {countries.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Location/Postal Code Search */}
+      <div className="p-4 border-t border-gray-200 dark:border-slate-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Search Location
+        </label>
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            placeholder="Enter location or postal code..."
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="flex-1 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+          />
+          <button
+            onClick={handleLocationSearch}
+            disabled={isSearching}
+            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
           >
-            {countries.map((country) => (
-              <option key={country.code} value={country.code}>
-                {country.name}
-              </option>
-            ))}
-          </select>
+            {isSearching ? "..." : <MapPin className="w-4 h-4" />}
+          </button>
         </div>
 
-        {/* Location/Postal Code Search */}
-        <div className="p-4 border-t border-gray-200 dark:border-slate-700">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Search Location
-          </label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="Enter location or postal code..."
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="flex-1 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            />
+        {searchError && (
+          <p className="text-xs text-red-600 dark:text-red-400 mb-2">
+            {searchError}
+          </p>
+        )}
+
+        {searchLocation && (
+          <div className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-200 dark:border-green-800">
+            <p className="text-green-800 dark:text-green-200 font-medium">
+              Found:
+            </p>
+            <p className="text-green-700 dark:text-green-300">
+              {searchLocation.place}
+            </p>
+            {"state" in searchLocation && searchLocation.state && (
+              <p className="text-green-600 dark:text-green-400">
+                {searchLocation.state}
+              </p>
+            )}
             <button
-              onClick={handleLocationSearch}
-              disabled={isSearching}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
+              onClick={clearSearch}
+              className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline"
             >
-              {isSearching ? "..." : <MapPin className="w-4 h-4" />}
+              Clear search
             </button>
           </div>
-
-          {searchError && (
-            <p className="text-xs text-red-600 dark:text-red-400 mb-2">
-              {searchError}
-            </p>
-          )}
-
-          {searchLocation && (
-            <div className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-200 dark:border-green-800">
-              <p className="text-green-800 dark:text-green-200 font-medium">
-                Found:
-              </p>
-              <p className="text-green-700 dark:text-green-300">
-                {searchLocation.place}
-              </p>
-              {"state" in searchLocation && searchLocation.state && (
-                <p className="text-green-600 dark:text-green-400">
-                  {searchLocation.state}
-                </p>
-              )}
-              <button
-                onClick={clearSearch}
-                className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline"
-              >
-                Clear search
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Map Container */}
-      <div className="flex-1 pl-4">
-        <div className="h-[600px] w-[70vw] rounded-lg shadow-md overflow-hidden">
-          <MapContainer
-            center={[selectedCountry.lat, selectedCountry.lng]}
-            zoom={selectedCountry.zoom}
-            className="h-full w-full"
-            zoomControl={true}
-          >
-            <TileLayer
-              url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-              subdomains={["mt0", "mt1", "mt2", "mt3"]}
-              attribution="&copy; Google Maps"
-            />
-            <MapController
-              selectedCountry={selectedCountry}
-              searchLocation={searchLocation}
-            />
-            {/* Screen markers */}
-            {filteredScreens.map((screen, idx) => (
-              <Marker key={idx} position={[screen.lat, screen.lng]}>
-                <Popup>
-                  <div className="p-1">
-                    <div className="flex items-center gap-1 mb-1">
-                      {getScreenTypeIcon(screen.type)}
-                      <h3 className="font-semibold text-gray-900 text-sm">
-                        {screen.name}
-                      </h3>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-1">
-                      {screen.location}
-                    </p>
-                    <span className="inline-block px-1 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-800">
-                      {screen.type}
-                    </span>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-        </div>
+        )}
       </div>
     </div>
-  );
+
+    {/* Map Container */}
+    <div className="flex-1 pl-4">
+      <div className="h-[600px] w-[70vw] rounded-lg shadow-md overflow-hidden">
+        <MapContainer
+          center={[selectedCountry.lat, selectedCountry.lng]}
+          zoom={selectedCountry.zoom}
+          className="h-full w-full"
+          zoomControl={true}
+        >
+          <TileLayer
+            url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+            subdomains={["mt0", "mt1", "mt2", "mt3"]}
+            attribution="&copy; Google Maps"
+          />
+          <MapController
+            selectedCountry={selectedCountry}
+            searchLocation={searchLocation}
+          />
+          {/* Screen markers */}
+          {filteredScreens.map((screen, idx) => (
+            <Marker key={idx} position={[screen.lat, screen.lng]}>
+              <Popup>
+                <div className="p-1">
+                  <div className="flex items-center gap-1 mb-1">
+                    {getScreenTypeIcon(screen.type)}
+                    <h3 className="font-semibold text-gray-900 text-sm">
+                      {screen.name}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-1">
+                    {screen.location}
+                  </p>
+                  <span className="inline-block px-1 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-800">
+                    {screen.type}
+                  </span>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+    </div>
+  </div>;
 }

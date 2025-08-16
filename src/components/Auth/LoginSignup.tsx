@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Eye, 
-  EyeOff, 
-  Grid, 
-  Mail, 
-  Lock, 
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Eye,
+  EyeOff,
+  Grid,
+  Mail,
+  Lock,
   ArrowRight,
   Sparkles,
   Shield,
-  Zap
-} from 'lucide-react';
+  Zap,
+} from "lucide-react";
 
-const DEMO_EMAIL = 'demo@demo.com';
-const DEMO_PASSWORD = 'demopassword';
+const DEMO_EMAIL = "demo@demo.com";
+const DEMO_PASSWORD = "demopassword";
 
 const LoginSignup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -23,9 +23,9 @@ const LoginSignup: React.FC = () => {
   async function handleDemoLogin() {
     setIsLoading(true);
     // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     // In a real app, you would set auth context or token here
-    navigate('/products/screen-manager');
+    navigate("/products/screen-manager");
     setIsLoading(false);
   }
 
@@ -33,7 +33,11 @@ const LoginSignup: React.FC = () => {
     <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
       {/* Subtle floating elements */}
       <div className="absolute top-20 left-20 text-gray-100">
-        <Grid size={24} className="animate-spin" style={{animationDuration: '20s'}} />
+        <Grid
+          size={24}
+          className="animate-spin"
+          style={{ animationDuration: "20s" }}
+        />
       </div>
       <div className="absolute bottom-20 right-20 text-gray-100">
         <Sparkles size={32} className="animate-bounce" />
@@ -51,7 +55,7 @@ const LoginSignup: React.FC = () => {
               <Grid className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Welcome to Doohgle
+              Welcome to Doohgle Media
             </h1>
             <p className="text-gray-600">
               Sign in to manage your digital screens
@@ -62,7 +66,9 @@ const LoginSignup: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-6 border border-blue-100">
             <div className="flex items-center space-x-2 mb-2">
               <Shield className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">Demo Credentials</span>
+              <span className="text-sm font-medium text-blue-800">
+                Demo Credentials
+              </span>
             </div>
             <p className="text-xs text-blue-700">
               Use the pre-filled credentials below to explore the platform
@@ -133,7 +139,10 @@ const LoginSignup: React.FC = () => {
               ) : (
                 <>
                   <span>Continue with Demo</span>
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight
+                    size={16}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
                 </>
               )}
             </button>
@@ -170,7 +179,7 @@ const LoginSignup: React.FC = () => {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-gray-500 text-sm">
-            © 2024 FRAMEN. All rights reserved.
+            © 2024 DOOHGLE. All rights reserved.
           </p>
         </div>
       </div>

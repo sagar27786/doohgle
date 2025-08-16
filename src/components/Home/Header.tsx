@@ -34,39 +34,6 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Scroll effect to hide/show navbar
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const screenHeight = window.innerHeight;
-
-      // If scrolled down more than screen height, hide navbar
-      if (currentScrollY > screenHeight && currentScrollY > lastScrollY) {
-        setIsVisible(false);
-      }
-      // If scrolling up or at top, show navbar
-      else if (currentScrollY < lastScrollY || currentScrollY < 100) {
-        setIsVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    // Throttle scroll events for better performance
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const throttledHandleScroll = () => {
-      if (timeoutId === null) {
-        timeoutId = setTimeout(() => {
-          handleScroll();
-          timeoutId = null;
-        }, 10);
-      }
-    };
-
-    window.addEventListener("scroll", throttledHandleScroll);
-    return () => window.removeEventListener("scroll", throttledHandleScroll);
-  }, [lastScrollY]);
-
   interface NavLinkProps {
     to: string;
     children: React.ReactNode;
@@ -109,7 +76,7 @@ const Header = () => {
 
   return (
     <header
-      className={`bg-white/80 dark:bg-slate-950 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out ${
+      className={`bg-[#babcce] dark:bg-slate-950 backdrop-blur-sm sticky top-0 z-[9999] border-b border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out ${
         isVisible ? "translate-y-0" : "-translate-y-full"
       }`}
     >
@@ -121,7 +88,7 @@ const Header = () => {
               to="/"
               className="text-2xl font-bold text-gray-900 dark:text-white"
             >
-              <span className="text-indigo-600">◊</span> DOOHGLE
+              <span className="text-indigo-600">◊</span> DOOHGLE MEDIA
             </Link>
           </div>
 
@@ -130,7 +97,7 @@ const Header = () => {
             <div className="relative" ref={productsMenuRef}>
               <button
                 onClick={toggleProductsMenu}
-                className="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-base font-medium transition-colors"
+                className="flex items-center text-black dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-base font-medium transition-colors"
               >
                 Products
                 <ChevronDown
@@ -168,16 +135,16 @@ const Header = () => {
             <div className="hidden md:flex items-center space-x-4">
               <NavLink to="/contact">Contact</NavLink>
               <button
-              onClick={() => navigate("/auth") }
-              className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
-            >
-              Login / Sign up
-            </button>
+                onClick={() => navigate("/auth")}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+              >
+                Login / Sign up
+              </button>
             </div>
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ml-4"
+              className="p-2 rounded-full text-black dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ml-4"
               aria-label="Toggle theme"
             >
               {theme === "light" ? (
@@ -190,7 +157,7 @@ const Header = () => {
             <div className="md:hidden ml-2">
               <button
                 onClick={toggleMenu}
-                className="p-2 rounded-md text-gray-700 dark:text-gray-300"
+                className="p-2 rounded-md text-black dark:text-gray-300"
               >
                 {isMenuOpen ? (
                   <X className="h-7 w-7" />
@@ -209,7 +176,7 @@ const Header = () => {
           <div className="px-2 pt-2 pb-3 space-y-1">
             <button
               onClick={toggleProductsMenu}
-              className="flex items-center justify-between w-full px-3 py-3 text-base font-medium text-gray-800 dark:text-gray-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="flex items-center justify-between w-full px-3 py-3 text-base font-medium text-black dark:text-gray-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Products
               <ChevronDown
@@ -237,28 +204,28 @@ const Header = () => {
             <Link
               to="/solutions"
               onClick={toggleMenu}
-              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-black dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Solutions
             </Link>
             <Link
               to="/pricing"
               onClick={toggleMenu}
-              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-black dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Pricing
             </Link>
             <Link
               to="/resources"
               onClick={toggleMenu}
-              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-black dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Resources
             </Link>
             <Link
               to="/contact"
               onClick={toggleMenu}
-              className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-3 rounded-md text-base font-medium text-black dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Contact
             </Link>

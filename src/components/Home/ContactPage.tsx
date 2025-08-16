@@ -182,28 +182,34 @@ const ContactPage = () => {
                   id="user_email"
                   required
                   className="mt-1 block w-full bg-gray-100 border-transparent rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="jane@framer.com"
+                  placeholder="jane@email.com"
                 />
               </div>
 
               {/* Industry Field */}
               <div>
-                <label
-                  htmlFor="industry"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Industry
-                </label>
-                <select
-                  name="industry"
-                  id="industry"
-                  className="mt-1 block w-full bg-gray-100 border-transparent rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none"
-                >
-                  <option>Select...</option>
-                  <option>Advertiser</option>
-                  <option>Screen Owner</option>
-                  <option>Other</option>
-                </select>
+                {/* Industry Field - Radio Buttons */}
+                <div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Industry
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+                    {["Advertiser", "Screen Owner", "Other"].map((option) => (
+                      <label key={option} className="relative block">
+                        <input
+                          type="radio"
+                          name="industry"
+                          value={option}
+                          className="peer sr-only"
+                          required
+                        />
+                        <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 text-center cursor-pointer peer-checked:bg-blue-600 peer-checked:text-white transition-all duration-200 shadow-sm hover:shadow-md">
+                          {option}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Message Field */}

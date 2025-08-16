@@ -19,6 +19,12 @@ body {
     transform: translateY(0);
   }
 }
+.purple-gray-gradient {
+  background-image: linear-gradient(to right, #e0aaff, #c77dff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 .animate-fade-in {
   animation: fade-in 0.6s ease-out;

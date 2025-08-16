@@ -50,6 +50,10 @@ const DOOHChatbot = () => {
       "Our screens are located in high-traffic venues across 32+ countries worldwide. We have premium DOOH locations in gyms, coworking spaces, retail locations, and other strategic venues.",
       "We're present in 32+ countries with screens in diverse venue types. Where are you looking to reach your target audience?",
     ],
+    start: [
+      "Kindly begin by logging in to your account to proceed with the available services.",
+      "To get started, please log in to your account to access all features.",
+    ],
     difference: [
       "Unlike traditional DOOH, DOOHGLE offers programmatic booking, real-time optimization, and detailed analytics. This means you get more control, better targeting, and measurable results from your campaigns.",
     ],
@@ -81,13 +85,18 @@ const DOOHChatbot = () => {
     }
 
     if (
-      lowerMessage.includes("free") ||
-      lowerMessage.includes("software") ||
-      (lowerMessage.includes("doohgle") &&
-        (lowerMessage.includes("free") || lowerMessage.includes("cost")))
-    ) {
-      return doohResponses.free[0];
-    }
+      lowerMessage.includes("started") ||
+      lowerMessage.includes("start") ||
+      lowerMessage.includes("begin")
+    )
+      if (
+        lowerMessage.includes("free") ||
+        lowerMessage.includes("software") ||
+        (lowerMessage.includes("doohgle") &&
+          (lowerMessage.includes("free") || lowerMessage.includes("cost")))
+      ) {
+        return doohResponses.free[0];
+      }
 
     if (
       lowerMessage.includes("campaign") ||
@@ -213,7 +222,7 @@ const DOOHChatbot = () => {
   };
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-[9999]">
         <button
           onClick={() => setIsOpen(true)}
           className="bg-indigo-500 hover:bg-indigo-600 text-white dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 group relative dark:shadow-indigo-500/50 shadow-indigo-300/50"
@@ -228,7 +237,7 @@ const DOOHChatbot = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80 h-96 bg-white dark:bg-slate-800 rounded-lg shadow-2xl dark:shadow-slate-900/50 border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden">
+    <div className="fixed bottom-6 right-6 z-[9999] w-80 h-96 bg-white dark:bg-slate-800 rounded-lg shadow-2xl dark:shadow-slate-900/50 border border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="bg-indigo-600 dark:bg-indigo-700 text-white p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -323,7 +332,7 @@ const DOOHChatbot = () => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask about DOOH campaigns, pricing, locations..."
+              placeholder="Ask about DOOH"
               className="w-full resize-none rounded-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white dark:placeholder-slate-400 px-4 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 focus:border-transparent max-h-20 min-h-[40px]"
               rows="1"
             />
