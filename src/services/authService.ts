@@ -1,10 +1,4 @@
-import axios from "axios";
-import apiClient from "../api/client";
-
-const API_URL =
-  (import.meta as any).env?.VITE_API_URL || "http://localhost:4000/api";
-
-// ...existing code...
+const API_URL = "http://localhost:4000/api";
 
 export interface User {
   id: number;
@@ -18,195 +12,210 @@ export interface User {
 export interface AuthResponse {
   user: User;
   token: string;
+  message?: string;
+  success?: boolean;
 }
 
-// Rename the local AuthResponse to AuthResponseV2 to avoid conflict
+export interface LoginData {
+  email?: string;
+  phone?: string;
+  password: string;
+}
 
-const getAuthToken = (): string | null => localStorage.getItem("token");
-const setAuthToken = (token: string): void =>
-  localStorage.setItem("token", token);
-const removeAuthToken = (): void => localStorage.removeItem("token");
-const isAuthenticated = (): boolean => !!getAuthToken();
-const getCurrentUser = (): User | null => {
-  const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
-};
-const setCurrentUser = (user: User): void =>
-  localStorage.setItem("user", JSON.stringify(user));
-const removeCurrentUser = (): void => localStorage.removeItem("user");
-const signUp = async (userData: {
+export interface SignupData {
   name: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  role: "advertiser" | "venue_owner" | "screen_manager";
-}): Promise<AuthResponse> => {
-  const response = await axios.post<AuthResponse>(
-    `${API_URL}/auth/signup`,
-    userData
-  );
-  const { user, token } = response.data;
-  setAuthToken(token);
-  setCurrentUser(user);
-  return { user, token };
-};
-
-const login = async (credentials: {
   email?: string;
   phone?: string;
   password: string;
-}): Promise<AuthResponse> => {
-  const response = await axios.post<AuthResponse>(
-    `${API_URL}/auth/login`,
-    credentials
-  );
-  const { user, token } = response.data;
-  setAuthToken(token);
-  setCurrentUser(user);
-  return { user, token };
-};
+  confirmPassword: string;
+  role: "advertiser" | "venue_owner" | "screen_manager" | "admin";
+}
 
-const logout = (): void => {
-  removeAuthToken();
-  removeCurrentUser();
-};
-
-const requestOTP = async (contact: {
-  email?: string;
-  phone?: string;
-}): Promise<{ message: string }> => {
-  const response = await axios.post<{ message: string }>(
-    `${API_URL}/auth/send-otp`,
-    contact
-  );
-  return response.data;
-};
-
-const verifyOTP = async (otpData: {
-  email?: string;
-  phone?: string;
-  otp: string;
-}): Promise<{ verified: boolean }> => {
-  const response = await axios.post<{ verified: boolean }>(
-    `${API_URL}/auth/verify-otp`,
-    otpData
-  );
-  return response.data;
-};
-
-const verifySignupOTP = async (otpData: {
-  email?: string;
-  phone?: string;
-  otp: string;
-  name: string;
+export interface PasswordResetData {
+  token: string;
   password: string;
   confirmPassword: string;
-  role: "advertiser" | "venue_owner" | "screen_manager";
-}): Promise<AuthResponse> => {
-  const response = await axios.post<AuthResponse>(
-    `${API_URL}/auth/verify-signup-otp`,
-    otpData
-  );
-  const { user, token } = response.data;
-  setAuthToken(token);
-  setCurrentUser(user);
-  return { user, token };
-};
+}
 
-const getProfile = async (): Promise<User> => {
-  const response = await apiClient.get<User>(`/auth/me`);
-  const user = response.data;
-  setCurrentUser(user);
-  return user;
-};
+// Simple fetch-based API calls
+async function makeRequest<T>(endpoint: string, data?: any): Promise<T> {
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
 
-const updateProfile = async (
-  updates: Partial<{
-    name: string;
-    email: string;
-    phone: string;
-    currentPassword: string;
-    newPassword: string;
-  }>
-): Promise<User> => {
-  const response = await apiClient.patch<User>(`/auth/me`, updates);
-  const user = response.data;
-  setCurrentUser(user);
-  return user;
-};
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-const requestPasswordReset = async (contact: {
-  email?: string;
-  phone?: string;
-}): Promise<void> => {
-  await axios.post(`${API_URL}/auth/request-password-reset`, contact);
-};
-
-const resetPassword = async (data: {
-  email?: string;
-  phone?: string;
-  otp: string;
-  newPassword: string;
-  confirmPassword: string;
-}): Promise<void> => {
-  await axios.post(`${API_URL}/auth/reset-password`, data);
-};
-
-const verifyOTPAndSignup = async (data: {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  otp: string;
-}): Promise<AuthResponse> => {
-  const response = await axios.post<AuthResponse>(
-    `${API_URL}/auth/verify-signup`,
-    data
-  );
-  const { user, token } = response.data;
-  setAuthToken(token);
-  setCurrentUser(user);
-  return { user, token };
-};
+    return await response.json();
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
+  }
+}
 
 export const authService = {
-  getAuthToken,
-  setAuthToken,
-  removeAuthToken,
-  isAuthenticated,
-  getCurrentUser,
-  setCurrentUser,
-  removeCurrentUser,
-  signUp,
-  login,
-  logout,
-  requestOTP,
-  verifyOTP,
-  verifySignupOTP,
-  verifyOTPAndSignup,
-  getProfile,
-  updateProfile,
-  requestPasswordReset,
-  resetPassword,
-  setRole: async (
-    role: "advertiser" | "venue_owner" | "screen_manager"
-  ): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>(`/auth/set-role`, {
-      role,
-    });
-    const { user, token } = response.data;
-    setAuthToken(token);
-    setCurrentUser(user);
-    return { user, token };
+  async login(loginData: LoginData): Promise<AuthResponse> {
+    try {
+      const response = await makeRequest<AuthResponse>(
+        "/auth/login",
+        loginData
+      );
+
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
   },
-  setAuthData: (token: string, user: User): void => {
-    setAuthToken(token);
-    setCurrentUser(user);
+
+  async signup(signupData: SignupData): Promise<AuthResponse> {
+    try {
+      const response = await makeRequest<AuthResponse>(
+        "/auth/signup",
+        signupData
+      );
+
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Signup failed:", error);
+      throw error;
+    }
+  },
+
+  async sendOTP(contact: { email?: string; phone?: string }): Promise<void> {
+    try {
+      await makeRequest<{ message: string }>(
+        "/auth/send-otp",
+        contact
+      );
+    } catch (error) {
+      console.error("Send OTP failed:", error);
+      throw error;
+    }
+  },
+
+  async verifyOTP(data: {
+    email?: string;
+    phone?: string;
+    otp: string;
+  }): Promise<boolean> {
+    try {
+      const response = await makeRequest<{ verified: boolean }>(
+        "/auth/verify-otp",
+        data
+      );
+      return response.verified;
+    } catch (error) {
+      console.error("OTP verification failed:", error);
+      throw error;
+    }
+  },
+
+  async completeProfile(profileData: {
+    name: string;
+    password: string;
+    confirmPassword: string;
+    role: "advertiser" | "venue_owner" | "screen_manager" | "admin";
+  }): Promise<AuthResponse> {
+    try {
+      const response = await makeRequest<AuthResponse>(
+        "/auth/complete-profile",
+        profileData
+      );
+
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Complete profile failed:", error);
+      throw error;
+    }
+  },
+
+  logout(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  },
+
+  getCurrentUser(): User | null {
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  getToken(): string | null {
+    return localStorage.getItem("token");
+  },
+
+  isAuthenticated(): boolean {
+    return !!this.getToken() && !!this.getCurrentUser();
+  },
+
+  async requestPasswordReset(contact: {
+    email?: string;
+    phone?: string;
+  }): Promise<void> {
+    try {
+      await makeRequest<void>("/auth/request-password-reset", contact);
+    } catch (error) {
+      console.error("Password reset request failed:", error);
+      throw error;
+    }
+  },
+
+  async resetPassword(data: PasswordResetData): Promise<void> {
+    try {
+      await makeRequest<void>("/auth/reset-password", data);
+    } catch (error) {
+      console.error("Password reset failed:", error);
+      throw error;
+    }
+  },
+
+  async socialLogin(data: {
+    provider: "google" | "facebook";
+    token: string;
+    role: "advertiser" | "venue_owner" | "screen_manager" | "admin";
+  }): Promise<AuthResponse> {
+    try {
+      const response = await makeRequest<AuthResponse>(
+        `/auth/social-login/${data.provider}`,
+        { token: data.token, role: data.role }
+      );
+
+      if (response.token) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Social login failed:", error);
+      throw error;
+    }
   },
 };
 
-// Remove all code below this line (leftover interfaces, objects, and functions)
-
-// Removed duplicate API_URL declaration
+export default authService;
