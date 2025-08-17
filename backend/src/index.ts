@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import screensRoutes from './routes/screens';
 import venueRoutes from './routes/venue';
+import earningsRoutes from './routes/earnings';
 
 // Load env vars
 dotenv.config();
@@ -24,6 +25,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/screens', screensRoutes);
 app.use('/api/venue', venueRoutes);
+app.use('/api/earnings', earningsRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

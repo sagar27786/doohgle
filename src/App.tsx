@@ -78,7 +78,6 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-white">
-      {/* <HeroCarousel />  */}
       <MainHero />
       <HeroVideo />
       <CompanyLogos />

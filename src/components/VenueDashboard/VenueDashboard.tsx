@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import ScreenList from './ScreenList';
 import BookingList from './BookingList';
+import EarningsList from './EarningsList';
 import { venueService } from '../../services/venueService';
+import { FaTv, FaCalendarCheck, FaMoneyBillWave, FaPlus } from 'react-icons/fa';
 
 const AssetAndPricingForms = () => {
   const [screenId, setScreenId] = useState('');
@@ -158,23 +160,105 @@ const screenInitialState = {
 };
 
 const VenueDashboard = () => {
-  const [showAddScreen, setShowAddScreen] = useState(false);
-  const [screenForm, setScreenForm] = useState(screenInitialState);
+  const [activeTab, setActiveTab] = useState('screens');
+  const [showAddScreen, setShowAddScreen] = useState(false); // To control the modal for adding screens
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setShowAddScreen(false); // Close the add screen modal if open when changing tabs
+  };
+
+  const handleAddScreenClick = () => {
+    setShowAddScreen(true);
+  };
+
+  const screenInitialState = {
+    // Basic Info
+    screen_name: '',
+    location_in_venue: '',
+    description: '',
+    
+    // Address
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    country: '',
+    postal_code: '',
+    latitude: '',
+    longitude: '',
+    
+    // Technical Specs
+    width_px: '',
+    height_px: '',
+    resolution: '',
+    orientation: 'landscape',
+    device_type: 'smart_tv',
+    device_model: '',
+    ads_enabled: false,
+    ad_frequency: 0,
+    viewing_distance: 'close',
+    typical_viewer_duration: '',
+    peak_viewing_hours: ['09:00-17:00'],
+    
+    // Assets
+    assets: [{ asset_type: 'photo_day', url: '' }],
+    
+    // Pricing
+    pricing: {
+      hourly_rate: '',
+      daily_rate: '',
+      weekly_rate: '',
+      currency: 'INR'
+    }
+  };
+
+  const [screen, setScreen] = useState(screenInitialState);
   const [screenMsg, setScreenMsg] = useState('');
   const [screenLoading, setScreenLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'add' | 'screens' | 'bookings'>('screens');
 
-  const handleScreenChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: any } }) => {
+  const handleScreenChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setScreenForm(prev => {
-      if (name === 'pricing') {
-        return { ...prev, pricing: { ...prev.pricing, ...value } };
-      }
-      if (name === 'assets') {
-        return { ...prev, assets: value };
-      }
-      return { ...prev, [name]: value };
-    });
+    setScreen(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePricingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setScreen(prev => ({
+      ...prev,
+      pricing: { ...prev.pricing, [name]: value }
+    }));
+  };
+
+  const handleAssetChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const newAssets = [...screen.assets];
+    // @ts-ignore
+    newAssets[index][name] = value;
+    setScreen(prev => ({ ...prev, assets: newAssets }));
+  };
+
+  const addAssetField = () => {
+    setScreen(prev => ({
+      ...prev,
+      assets: [...prev.assets, { asset_type: 'photo_day', url: '' }]
+    }));
+  };
+
+  const removeAssetField = (index: number) => {
+    setScreen(prev => ({
+      ...prev,
+      assets: prev.assets.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handlePeakViewingHoursChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value, selectedOptions } = e.target;
+    const selectedHours = Array.from(selectedOptions).map(option => option.value);
+    setScreen(prev => ({
+      ...prev,
+      peak_viewing_hours: selectedHours
+    }));
   };
 
   const handleScreenSubmit = async (e: React.FormEvent) => {
@@ -184,24 +268,25 @@ const VenueDashboard = () => {
     try {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
       const screenData = {
-        ...screenForm,
-        width_px: screenForm.width_px ? Number(screenForm.width_px) : undefined,
-        height_px: screenForm.height_px ? Number(screenForm.height_px) : undefined,
-        latitude: screenForm.latitude ? Number(screenForm.latitude) : undefined,
-        longitude: screenForm.longitude ? Number(screenForm.longitude) : undefined,
+        ...screen,
+        width_px: screen.width_px ? Number(screen.width_px) : undefined,
+        height_px: screen.height_px ? Number(screen.height_px) : undefined,
+        latitude: screen.latitude ? Number(screen.latitude) : undefined,
+        longitude: screen.longitude ? Number(screen.longitude) : undefined,
         user_id: userData.id,
         pricing: {
-          ...screenForm.pricing,
-          hourly_rate: screenForm.pricing.hourly_rate ? Number(screenForm.pricing.hourly_rate) : undefined,
-          daily_rate: screenForm.pricing.daily_rate ? Number(screenForm.pricing.daily_rate) : undefined,
-          weekly_rate: screenForm.pricing.weekly_rate ? Number(screenForm.pricing.weekly_rate) : undefined,
+          ...screen.pricing,
+          hourly_rate: screen.pricing.hourly_rate ? Number(screen.pricing.hourly_rate) : undefined,
+          daily_rate: screen.pricing.daily_rate ? Number(screen.pricing.daily_rate) : undefined,
+          weekly_rate: screen.pricing.weekly_rate ? Number(screen.pricing.weekly_rate) : undefined,
         },
-        assets: screenForm.assets.filter(asset => asset.url.trim() !== '')
+        assets: screen.assets.filter(asset => asset.url.trim() !== '')
       };
       await venueService.createScreen(screenData);
       setScreenMsg('Screen registered successfully!');
-      setScreenForm(screenInitialState);
-      setShowAddScreen(false);
+      setScreen(screenInitialState); // Reset form
+      setShowAddScreen(false); // Close modal on success
+      setActiveTab('screens'); // Go to screens list
     } catch (err: any) {
       setScreenMsg(err?.response?.data?.message || 'Failed to register screen');
     } finally {
@@ -210,434 +295,477 @@ const VenueDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-100 border-r flex flex-col p-6">
-        <h2 className="text-lg font-bold mb-6">Menu</h2>
-        <button
-          className={`mb-3 px-4 py-2 rounded text-left ${activeTab === 'add' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200'}`}
-          onClick={() => { setActiveTab('add'); setShowAddScreen(true); }}
-        >
-          Add Screen
-        </button>
-
-        <button
-          className={`mb-3 px-4 py-2 rounded text-left ${activeTab === 'screens' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200'}`}
-          onClick={() => { setActiveTab('screens'); setShowAddScreen(false); }}
-        >
-          Your Screens
-        </button>
-
-        <button
-          className={`mb-3 px-4 py-2 rounded text-left ${activeTab === 'bookings' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200'}`}
-          onClick={() => { setActiveTab('bookings'); setShowAddScreen(false); }}
-        >
-          Your Bookings
-        </button>
-
-  {/* bottom Add Screen removed - Add Screen moved to top of menu */}
+      <aside className="w-72 bg-white shadow-xl p-8 flex flex-col min-h-screen border-r border-blue-100">
+        <h2 className="text-2xl font-bold mb-10 text-blue-700 tracking-tight">Venue Dashboard</h2>
+        <nav>
+          <ul className="space-y-3">
+            <li>
+              <button
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${activeTab === 'screens' && !showAddScreen ? 'bg-blue-600 text-white shadow' : 'text-blue-700 hover:bg-blue-100'}`}
+                onClick={() => handleTabChange('screens')}
+              >
+                <FaTv size={24} /> My Screens
+              </button>
+            </li>
+            <li>
+              <button
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${activeTab === 'bookings' && !showAddScreen ? 'bg-blue-600 text-white shadow' : 'text-blue-700 hover:bg-blue-100'}`}
+                onClick={() => handleTabChange('bookings')}
+              >
+                <FaCalendarCheck size={24} /> My Bookings
+              </button>
+            </li>
+            <li>
+              <button
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${activeTab === 'earnings' && !showAddScreen ? 'bg-blue-600 text-white shadow' : 'text-blue-700 hover:bg-blue-100'}`}
+                onClick={() => handleTabChange('earnings')}
+              >
+                <FaMoneyBillWave size={24} /> My Earnings
+              </button>
+            </li>
+            <li>
+              <button
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${showAddScreen ? 'bg-green-600 text-white shadow' : 'text-green-700 hover:bg-green-100'}`}
+                onClick={handleAddScreenClick}
+              >
+                <FaPlus size={24} /> Register New Screen
+              </button>
+            </li>
+          </ul>
+        </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8">
-        <h1 className="text-2xl font-bold">Venue Owner Dashboard</h1>
-        <p>Welcome to your dashboard. Here you can manage your screens, bookings, assets, pricing, and more.</p>
+      <main className="flex-1 p-10 flex flex-col items-center">
+        <div className="w-full max-w-4xl">
+          <h1 className="text-3xl font-extrabold text-blue-800 mb-2">Venue Owner Dashboard</h1>
+          <p className="mb-8 text-gray-600">Welcome! Manage your screens, bookings, earnings, and more below.</p>
 
-        {showAddScreen && activeTab !== 'add' && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
-              <button
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                onClick={() => { setShowAddScreen(false); setActiveTab('overview'); }}
-              >
-                &times;
-              </button>
-              <h2 className="text-xl font-semibold mb-4">Register New Screen</h2>
-              <form onSubmit={handleScreenSubmit} className="max-h-[80vh] overflow-y-auto">
-                {/* Basic Information */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Basic Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="screen_name" value={screenForm.screen_name} onChange={handleScreenChange} 
-                           placeholder="Screen Name" required className="border rounded px-3 py-2" />
-                    <input name="location_in_venue" value={screenForm.location_in_venue} onChange={handleScreenChange}
-                           placeholder="Location in Venue" required className="border rounded px-3 py-2" />
-                    <textarea name="description" value={screenForm.description} onChange={handleScreenChange as any}
-                            placeholder="Description" className="border rounded px-3 py-2 md:col-span-2" rows={3} />
-                  </div>
-                </div>
-
-                {/* Address Information */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Address Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="address_line1" value={screenForm.address_line1} onChange={handleScreenChange}
-                           placeholder="Address Line 1" className="border rounded px-3 py-2 md:col-span-2" />
-                    <input name="address_line2" value={screenForm.address_line2} onChange={handleScreenChange}
-                           placeholder="Address Line 2" className="border rounded px-3 py-2 md:col-span-2" />
-                    <input name="city" value={screenForm.city} onChange={handleScreenChange}
-                           placeholder="City" className="border rounded px-3 py-2" />
-                    <input name="state" value={screenForm.state} onChange={handleScreenChange}
-                           placeholder="State" className="border rounded px-3 py-2" />
-                    <input name="country" value={screenForm.country} onChange={handleScreenChange}
-                           placeholder="Country" className="border rounded px-3 py-2" />
-                    <input name="postal_code" value={screenForm.postal_code} onChange={handleScreenChange}
-                           placeholder="Postal Code" className="border rounded px-3 py-2" />
-                    <input name="latitude" value={screenForm.latitude} onChange={handleScreenChange}
-                           placeholder="Latitude" type="number" step="any" className="border rounded px-3 py-2" />
-                    <input name="longitude" value={screenForm.longitude} onChange={handleScreenChange}
-                           placeholder="Longitude" type="number" step="any" className="border rounded px-3 py-2" />
-                  </div>
-                </div>
-
-                {/* Technical Specifications */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Technical Specifications</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="width_px" value={screenForm.width_px} onChange={handleScreenChange}
-                           placeholder="Width (px)" type="number" className="border rounded px-3 py-2" />
-                    <input name="height_px" value={screenForm.height_px} onChange={handleScreenChange}
-                           placeholder="Height (px)" type="number" className="border rounded px-3 py-2" />
-                    <input name="resolution" value={screenForm.resolution} onChange={handleScreenChange}
-                           placeholder="Resolution (e.g., 1920x1080)" className="border rounded px-3 py-2" />
-                    <select name="orientation" value={screenForm.orientation} onChange={handleScreenChange}
-                            className="border rounded px-3 py-2">
-                      <option value="landscape">Landscape</option>
-                      <option value="portrait">Portrait</option>
-                    </select>
-                    <select name="device_type" value={screenForm.device_type} onChange={handleScreenChange}
-                            className="border rounded px-3 py-2">
-                      <option value="smart_tv">Smart TV</option>
-                      <option value="media_player">Media Player</option>
-                      <option value="custom">Custom</option>
-                    </select>
-                    <input name="device_model" value={screenForm.device_model} onChange={handleScreenChange}
-                           placeholder="Device Model" className="border rounded px-3 py-2" />
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" name="ads_enabled" checked={screenForm.ads_enabled}
-                             onChange={e => handleScreenChange({
-                               target: { name: 'ads_enabled', value: e.target.checked }
-                             } as any)} id="ads_enabled" />
-                      <label htmlFor="ads_enabled">Enable Ads</label>
+          {/* Registration form as right pane content, not modal */}
+          <div className="mt-2">
+            {showAddScreen ? (
+              <div className="bg-white rounded-2xl shadow-2xl p-10 w-full relative border border-blue-100 animate-fade-in">
+                <button
+                  className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl"
+                  onClick={() => setShowAddScreen(false)}
+                  aria-label="Close registration form"
+                >
+                  &times;
+                </button>
+                <h2 className="text-2xl font-bold mb-6 text-blue-700">Register New Screen</h2>
+                <form onSubmit={handleScreenSubmit} className="space-y-8">
+                  {/* Basic Info */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Basic Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="screen_name" className="block text-sm font-medium text-gray-700">Screen Name</label>
+                        <input
+                          type="text"
+                          id="screen_name"
+                          name="screen_name"
+                          value={screen.screen_name}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="location_in_venue" className="block text-sm font-medium text-gray-700">Location in Venue</label>
+                        <input
+                          type="text"
+                          id="location_in_venue"
+                          name="location_in_venue"
+                          value={screen.location_in_venue}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
                     </div>
-                    <input name="ad_frequency" value={screenForm.ad_frequency} onChange={handleScreenChange}
-                           placeholder="Ad Frequency (%)" type="number" min="0" max="100" className="border rounded px-3 py-2" />
-                    <select name="viewing_distance" value={screenForm.viewing_distance} onChange={handleScreenChange}
-                            className="border rounded px-3 py-2">
-                      <option value="close">Close</option>
-                      <option value="medium">Medium</option>
-                      <option value="far">Far</option>
-                    </select>
-                    <input name="typical_viewer_duration" value={screenForm.typical_viewer_duration} onChange={handleScreenChange}
-                           placeholder="Typical Viewer Duration" className="border rounded px-3 py-2" />
+                    <div className="mt-4">
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={screen.description}
+                        onChange={handleScreenChange}
+                        rows={3}
+                        className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                      ></textarea>
+                    </div>
                   </div>
-                </div>
-
-                {/* Screen Assets */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Screen Assets</h3>
-                  <div className="space-y-3">
-                    {screenForm.assets.map((asset, index) => (
-                      <div key={index} className="flex gap-2">
-                        <select value={asset.asset_type} onChange={(e) => {
-                          const newAssets = [...screenForm.assets];
-                          newAssets[index] = { ...asset, asset_type: e.target.value as any };
-                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
-                        }} className="border rounded px-3 py-2">
-                          <option value="photo_day">Photo (Day)</option>
-                          <option value="photo_night">Photo (Night)</option>
-                          <option value="video">Video</option>
+                  <hr className="my-4 border-blue-100" />
+                  {/* Address Info */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Address Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="address_line1" className="block text-sm font-medium text-gray-700">Address Line 1</label>
+                        <input
+                          type="text"
+                          id="address_line1"
+                          name="address_line1"
+                          value={screen.address_line1}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="address_line2" className="block text-sm font-medium text-gray-700">Address Line 2</label>
+                        <input
+                          type="text"
+                          id="address_line2"
+                          name="address_line2"
+                          value={screen.address_line2}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label>
+                        <input
+                          type="text"
+                          id="city"
+                          name="city"
+                          value={screen.city}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label>
+                        <input
+                          type="text"
+                          id="state"
+                          name="state"
+                          value={screen.state}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="country" className="block text-sm font-medium text-gray-700">Country</label>
+                        <input
+                          type="text"
+                          id="country"
+                          name="country"
+                          value={screen.country}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="postal_code" className="block text-sm font-medium text-gray-700">Postal Code</label>
+                        <input
+                          type="text"
+                          id="postal_code"
+                          name="postal_code"
+                          value={screen.postal_code}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">Latitude</label>
+                        <input
+                          type="text"
+                          id="latitude"
+                          name="latitude"
+                          value={screen.latitude}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">Longitude</label>
+                        <input
+                          type="text"
+                          id="longitude"
+                          name="longitude"
+                          value={screen.longitude}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <hr className="my-4 border-blue-100" />
+                  {/* Technical Specs */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Technical Specifications</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="width_px" className="block text-sm font-medium text-gray-700">Width (px)</label>
+                        <input
+                          type="number"
+                          id="width_px"
+                          name="width_px"
+                          value={screen.width_px}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="height_px" className="block text-sm font-medium text-gray-700">Height (px)</label>
+                        <input
+                          type="number"
+                          id="height_px"
+                          name="height_px"
+                          value={screen.height_px}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="resolution" className="block text-sm font-medium text-gray-700">Resolution</label>
+                        <input
+                          type="text"
+                          id="resolution"
+                          name="resolution"
+                          value={screen.resolution}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          placeholder="e.g., 1920x1080"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="orientation" className="block text-sm font-medium text-gray-700">Orientation</label>
+                        <select
+                          id="orientation"
+                          name="orientation"
+                          value={screen.orientation}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        >
+                          <option value="landscape">Landscape</option>
+                          <option value="portrait">Portrait</option>
                         </select>
-                        <input type="url" value={asset.url} onChange={(e) => {
-                          const newAssets = [...screenForm.assets];
-                          newAssets[index] = { ...asset, url: e.target.value };
-                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
-                        }} placeholder="Asset URL" className="border rounded px-3 py-2 flex-1" />
-                        <button type="button" onClick={() => {
-                          const newAssets = screenForm.assets.filter((_, i) => i !== index);
-                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
-                        }} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded">Remove</button>
+                      </div>
+                      <div>
+                        <label htmlFor="device_type" className="block text-sm font-medium text-gray-700">Device Type</label>
+                        <input
+                          type="text"
+                          id="device_type"
+                          name="device_type"
+                          value={screen.device_type}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="device_model" className="block text-sm font-medium text-gray-700">Device Model</label>
+                        <input
+                          type="text"
+                          id="device_model"
+                          name="device_model"
+                          value={screen.device_model}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div className="flex items-center mt-2">
+                        <input
+                          type="checkbox"
+                          id="ads_enabled"
+                          name="ads_enabled"
+                          checked={screen.ads_enabled}
+                          onChange={(e) => setScreen(prev => ({ ...prev, ads_enabled: e.target.checked }))}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-400"
+                        />
+                        <label htmlFor="ads_enabled" className="ml-2 block text-sm font-medium text-gray-700">Ads Enabled</label>
+                      </div>
+                      <div>
+                        <label htmlFor="ad_frequency" className="block text-sm font-medium text-gray-700">Ad Frequency (per hour)</label>
+                        <input
+                          type="number"
+                          id="ad_frequency"
+                          name="ad_frequency"
+                          value={screen.ad_frequency}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="viewing_distance" className="block text-sm font-medium text-gray-700">Viewing Distance</label>
+                        <input
+                          type="text"
+                          id="viewing_distance"
+                          name="viewing_distance"
+                          value={screen.viewing_distance}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="typical_viewer_duration" className="block text-sm font-medium text-gray-700">Typical Viewer Duration</label>
+                        <input
+                          type="text"
+                          id="typical_viewer_duration"
+                          name="typical_viewer_duration"
+                          value={screen.typical_viewer_duration}
+                          onChange={handleScreenChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="peak_viewing_hours" className="block text-sm font-medium text-gray-700">Peak Viewing Hours</label>
+                        <select
+                          id="peak_viewing_hours"
+                          name="peak_viewing_hours"
+                          multiple
+                          value={screen.peak_viewing_hours}
+                          onChange={handlePeakViewingHoursChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 h-24 focus:ring-2 focus:ring-blue-400"
+                        >
+                          <option value="00:00-01:00">00:00-01:00</option>
+                          <option value="01:00-02:00">01:00-02:00</option>
+                          <option value="02:00-03:00">02:00-03:00</option>
+                          <option value="03:00-04:00">03:00-04:00</option>
+                          <option value="04:00-05:00">04:00-05:00</option>
+                          <option value="05:00-06:00">05:00-06:00</option>
+                          <option value="06:00-07:00">06:00-07:00</option>
+                          <option value="07:00-08:00">07:00-08:00</option>
+                          <option value="08:00-09:00">08:00-09:00</option>
+                          <option value="09:00-10:00">09:00-10:00</option>
+                          <option value="10:00-11:00">10:00-11:00</option>
+                          <option value="11:00-12:00">11:00-12:00</option>
+                          <option value="12:00-13:00">12:00-13:00</option>
+                          <option value="13:00-14:00">13:00-14:00</option>
+                          <option value="14:00-15:00">14:00-15:00</option>
+                          <option value="15:00-16:00">15:00-16:00</option>
+                          <option value="16:00-17:00">16:00-17:00</option>
+                          <option value="17:00-18:00">17:00-18:00</option>
+                          <option value="18:00-19:00">18:00-19:00</option>
+                          <option value="19:00-20:00">19:00-20:00</option>
+                          <option value="20:00-21:00">20:00-21:00</option>
+                          <option value="21:00-22:00">21:00-22:00</option>
+                          <option value="22:00-23:00">22:00-23:00</option>
+                          <option value="23:00-24:00">23:00-24:00</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <hr className="my-4 border-blue-100" />
+                  {/* Assets */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Assets</h3>
+                    {screen.assets.map((asset, index) => (
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+                        <div>
+                          <label htmlFor={`asset_type_${index}`} className="block text-sm font-medium text-gray-700">Asset Type</label>
+                          <select
+                            id={`asset_type_${index}`}
+                            name="asset_type"
+                            value={asset.asset_type}
+                            onChange={(e) => handleAssetChange(index, e)}
+                            className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          >
+                            <option value="photo_day">Photo (Day)</option>
+                            <option value="photo_night">Photo (Night)</option>
+                            <option value="video">Video</option>
+                          </select>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label htmlFor={`asset_url_${index}`} className="block text-sm font-medium text-gray-700">Asset URL</label>
+                          <input
+                            type="url"
+                            id={`asset_url_${index}`}
+                            name="url"
+                            value={asset.url}
+                            onChange={(e) => handleAssetChange(index, e)}
+                            className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                            required
+                          />
+                        </div>
+                        {screen.assets.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeAssetField(index)}
+                            className="ml-2 p-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     ))}
-                    <button type="button" onClick={() => {
-                      handleScreenChange({
-                        target: {
-                          name: 'assets',
-                          value: [...screenForm.assets, { asset_type: 'photo_day', url: '' }]
-                        }
-                      } as any);
-                    }} className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded">+ Add Asset</button>
+                    <button
+                      type="button"
+                      onClick={addAssetField}
+                      className="mb-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                    >
+                      Add Asset
+                    </button>
                   </div>
-                </div>
-
-                {/* Pricing Information */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Pricing Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="number" value={screenForm.pricing.hourly_rate} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, hourly_rate: e.target.value }
-                        }
-                      } as any);
-                    }} placeholder="Hourly Rate" className="border rounded px-3 py-2" />
-                    <input type="number" value={screenForm.pricing.daily_rate} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, daily_rate: e.target.value }
-                        }
-                      } as any);
-                    }} placeholder="Daily Rate" className="border rounded px-3 py-2" />
-                    <input type="number" value={screenForm.pricing.weekly_rate} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, weekly_rate: e.target.value }
-                        }
-                      } as any);
-                    }} placeholder="Weekly Rate" className="border rounded px-3 py-2" />
-                    <select value={screenForm.pricing.currency} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, currency: e.target.value }
-                        }
-                      } as any);
-                    }} className="border rounded px-3 py-2">
-                      <option value="INR">INR</option>
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="sticky bottom-0 bg-white py-4 border-t mt-6">
-                  <button type="submit" 
-                          className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors" 
-                          disabled={screenLoading}>
-                    {screenLoading ? 'Registering Screen...' : 'Register Screen'}
-                  </button>
-                  {screenMsg && (
-                    <div className={`mt-2 text-sm text-center ${
-                      screenMsg.includes('successfully') ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {screenMsg}
-                    </div>
-                  )}
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'add' && (
-          <div className="mt-6">
-            <div className="bg-white rounded-lg shadow-lg p-8 w-full">
-              <button
-                className="float-right text-gray-500 hover:text-gray-700"
-                onClick={() => { setShowAddScreen(false); setActiveTab('overview'); }}
-              >
-                &times;
-              </button>
-              <h2 className="text-xl font-semibold mb-4">Register New Screen</h2>
-              <form onSubmit={handleScreenSubmit} className="max-h-[80vh] overflow-y-auto">
-                {/* Basic Information */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Basic Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="screen_name" value={screenForm.screen_name} onChange={handleScreenChange} 
-                           placeholder="Screen Name" required className="border rounded px-3 py-2" />
-                    <input name="location_in_venue" value={screenForm.location_in_venue} onChange={handleScreenChange}
-                           placeholder="Location in Venue" required className="border rounded px-3 py-2" />
-                    <textarea name="description" value={screenForm.description} onChange={handleScreenChange as any}
-                            placeholder="Description" className="border rounded px-3 py-2 md:col-span-2" rows={3} />
-                  </div>
-                </div>
-
-                {/* Address Information */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Address Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="address_line1" value={screenForm.address_line1} onChange={handleScreenChange}
-                           placeholder="Address Line 1" className="border rounded px-3 py-2 md:col-span-2" />
-                    <input name="address_line2" value={screenForm.address_line2} onChange={handleScreenChange}
-                           placeholder="Address Line 2" className="border rounded px-3 py-2 md:col-span-2" />
-                    <input name="city" value={screenForm.city} onChange={handleScreenChange}
-                           placeholder="City" className="border rounded px-3 py-2" />
-                    <input name="state" value={screenForm.state} onChange={handleScreenChange}
-                           placeholder="State" className="border rounded px-3 py-2" />
-                    <input name="country" value={screenForm.country} onChange={handleScreenChange}
-                           placeholder="Country" className="border rounded px-3 py-2" />
-                    <input name="postal_code" value={screenForm.postal_code} onChange={handleScreenChange}
-                           placeholder="Postal Code" className="border rounded px-3 py-2" />
-                    <input name="latitude" value={screenForm.latitude} onChange={handleScreenChange}
-                           placeholder="Latitude" type="number" step="any" className="border rounded px-3 py-2" />
-                    <input name="longitude" value={screenForm.longitude} onChange={handleScreenChange}
-                           placeholder="Longitude" type="number" step="any" className="border rounded px-3 py-2" />
-                  </div>
-                </div>
-
-                {/* Technical Specifications */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Technical Specifications</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="width_px" value={screenForm.width_px} onChange={handleScreenChange}
-                           placeholder="Width (px)" type="number" className="border rounded px-3 py-2" />
-                    <input name="height_px" value={screenForm.height_px} onChange={handleScreenChange}
-                           placeholder="Height (px)" type="number" className="border rounded px-3 py-2" />
-                    <input name="resolution" value={screenForm.resolution} onChange={handleScreenChange}
-                           placeholder="Resolution (e.g., 1920x1080)" className="border rounded px-3 py-2" />
-                    <select name="orientation" value={screenForm.orientation} onChange={handleScreenChange}
-                            className="border rounded px-3 py-2">
-                      <option value="landscape">Landscape</option>
-                      <option value="portrait">Portrait</option>
-                    </select>
-                    <select name="device_type" value={screenForm.device_type} onChange={handleScreenChange}
-                            className="border rounded px-3 py-2">
-                      <option value="smart_tv">Smart TV</option>
-                      <option value="media_player">Media Player</option>
-                      <option value="custom">Custom</option>
-                    </select>
-                    <input name="device_model" value={screenForm.device_model} onChange={handleScreenChange}
-                           placeholder="Device Model" className="border rounded px-3 py-2" />
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" name="ads_enabled" checked={screenForm.ads_enabled}
-                             onChange={e => handleScreenChange({
-                               target: { name: 'ads_enabled', value: e.target.checked }
-                             } as any)} id="ads_enabled" />
-                      <label htmlFor="ads_enabled">Enable Ads</label>
-                    </div>
-                    <input name="ad_frequency" value={screenForm.ad_frequency} onChange={handleScreenChange}
-                           placeholder="Ad Frequency (%)" type="number" min="0" max="100" className="border rounded px-3 py-2" />
-                    <select name="viewing_distance" value={screenForm.viewing_distance} onChange={handleScreenChange}
-                            className="border rounded px-3 py-2">
-                      <option value="close">Close</option>
-                      <option value="medium">Medium</option>
-                      <option value="far">Far</option>
-                    </select>
-                    <input name="typical_viewer_duration" value={screenForm.typical_viewer_duration} onChange={handleScreenChange}
-                           placeholder="Typical Viewer Duration" className="border rounded px-3 py-2" />
-                  </div>
-                </div>
-
-                {/* Screen Assets */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Screen Assets</h3>
-                  <div className="space-y-3">
-                    {screenForm.assets.map((asset, index) => (
-                      <div key={index} className="flex gap-2">
-                        <select value={asset.asset_type} onChange={(e) => {
-                          const newAssets = [...screenForm.assets];
-                          newAssets[index] = { ...asset, asset_type: e.target.value as any };
-                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
-                        }} className="border rounded px-3 py-2">
-                          <option value="photo_day">Photo (Day)</option>
-                          <option value="photo_night">Photo (Night)</option>
-                          <option value="video">Video</option>
-                        </select>
-                        <input type="url" value={asset.url} onChange={(e) => {
-                          const newAssets = [...screenForm.assets];
-                          newAssets[index] = { ...asset, url: e.target.value };
-                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
-                        }} placeholder="Asset URL" className="border rounded px-3 py-2 flex-1" />
-                        <button type="button" onClick={() => {
-                          const newAssets = screenForm.assets.filter((_, i) => i !== index);
-                          handleScreenChange({ target: { name: 'assets', value: newAssets } } as any);
-                        }} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded">Remove</button>
+                  <hr className="my-4 border-blue-100" />
+                  {/* Pricing */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Pricing</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <label htmlFor="hourly_rate" className="block text-sm font-medium text-gray-700">Hourly Rate</label>
+                        <input
+                          type="number"
+                          id="hourly_rate"
+                          name="hourly_rate"
+                          value={screen.pricing.hourly_rate}
+                          onChange={handlePricingChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
                       </div>
-                    ))}
-                    <button type="button" onClick={() => {
-                      handleScreenChange({
-                        target: {
-                          name: 'assets',
-                          value: [...screenForm.assets, { asset_type: 'photo_day', url: '' }]
-                        }
-                      } as any);
-                    }} className="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded">+ Add Asset</button>
-                  </div>
-                </div>
-
-                {/* Pricing Information */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-700">Pricing Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="number" value={screenForm.pricing.hourly_rate} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, hourly_rate: e.target.value }
-                        }
-                      } as any);
-                    }} placeholder="Hourly Rate" className="border rounded px-3 py-2" />
-                    <input type="number" value={screenForm.pricing.daily_rate} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, daily_rate: e.target.value }
-                        }
-                      } as any);
-                    }} placeholder="Daily Rate" className="border rounded px-3 py-2" />
-                    <input type="number" value={screenForm.pricing.weekly_rate} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, weekly_rate: e.target.value }
-                        }
-                      } as any);
-                    }} placeholder="Weekly Rate" className="border rounded px-3 py-2" />
-                    <select value={screenForm.pricing.currency} onChange={(e) => {
-                      handleScreenChange({
-                        target: {
-                          name: 'pricing',
-                          value: { ...screenForm.pricing, currency: e.target.value }
-                        }
-                      } as any);
-                    }} className="border rounded px-3 py-2">
-                      <option value="INR">INR</option>
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="sticky bottom-0 bg-white py-4 border-t mt-6">
-                  <button type="submit" 
-                          className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors" 
-                          disabled={screenLoading}>
-                    {screenLoading ? 'Registering Screen...' : 'Register Screen'}
-                  </button>
-                  {screenMsg && (
-                    <div className={`mt-2 text-sm text-center ${
-                      screenMsg.includes('successfully') ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {screenMsg}
+                      <div>
+                        <label htmlFor="daily_rate" className="block text-sm font-medium text-gray-700">Daily Rate</label>
+                        <input
+                          type="number"
+                          id="daily_rate"
+                          name="daily_rate"
+                          value={screen.pricing.daily_rate}
+                          onChange={handlePricingChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="weekly_rate" className="block text-sm font-medium text-gray-700">Weekly Rate</label>
+                        <input
+                          type="number"
+                          id="weekly_rate"
+                          name="weekly_rate"
+                          value={screen.pricing.weekly_rate}
+                          onChange={handlePricingChange}
+                          className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
+                          required
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
-              </form>
-            </div>
+                  </div>
+                  {screenMsg && <div className="mt-4 p-2 text-center text-green-700 bg-green-100 rounded-md">{screenMsg}</div>}
+                  <button
+                    type="submit"
+                    className="mt-6 w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition duration-300 shadow"
+                    disabled={screenLoading}
+                  >
+                    {screenLoading ? 'Registering...' : 'Register Screen'}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <>
+                {activeTab === 'screens' && <ScreenList />}
+                {activeTab === 'bookings' && <BookingList />}
+                {activeTab === 'earnings' && <EarningsList />}
+              </>
+            )}
           </div>
-        )}
-
-        {/* Right pane content controlled by activeTab */}
-        <div className="mt-6">
-          {activeTab === 'overview' && (
-            <>
-              <h2 className="text-lg font-semibold mb-2">Overview</h2>
-              <p className="mb-4">Use the menu to manage your screens, bookings, assets and pricing.</p>
-              <AssetAndPricingForms />
-            </>
-          )}
-
-          {activeTab === 'screens' && (
-            <ScreenList />
-          )}
-
-          {activeTab === 'bookings' && (
-            <BookingList />
-          )}
         </div>
       </main>
     </div>
