@@ -71,30 +71,7 @@ const CampaignCreationWorkflow: React.FC = () => {
 
   // Sample screens data
   const availableScreens: SelectedScreen[] = [
-    {
-      id: 1,
-      name: "Times Square Mall LED",
-      location: "Andheri West, Mumbai",
-      pricing: { hourly: 500, daily: 8000, weekly: 45000 },
-      size: "10x20 ft",
-      traffic: 25000,
-    },
-    {
-      id: 2,
-      name: "CP Metro Station Digital",
-      location: "Connaught Place, Delhi",
-      pricing: { hourly: 750, daily: 12000, weekly: 65000 },
-      size: "8x12 ft",
-      traffic: 45000,
-    },
-    {
-      id: 3,
-      name: "Electronic City Tech Hub",
-      location: "Electronic City, Bangalore",
-      pricing: { hourly: 400, daily: 6000, weekly: 35000 },
-      size: "12x8 ft",
-      traffic: 18000,
-    },
+    
   ];
 
   const steps = [

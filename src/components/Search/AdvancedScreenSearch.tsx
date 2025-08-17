@@ -15,7 +15,9 @@ import {
   Eye,
   Wifi,
   Zap,
+  Loader2
 } from "lucide-react";
+import { searchScreensByCity } from "../../api/screens";
 
 // Enhanced Screen Interface
 export interface EnhancedScreen {
@@ -55,140 +57,140 @@ export interface EnhancedScreen {
 }
 
 // Sample enhanced data for Indian cities
-const sampleScreens: EnhancedScreen[] = [
-  {
-    id: 1,
-    name: "Times Square Mall LED",
-    location: {
-      city: "Mumbai",
-      area: "Andheri West",
-      address: "Times Square Mall, SV Road, Andheri West, Mumbai",
-      coordinates: { lat: 19.1136, lng: 72.8697 },
-    },
-    pricing: { hourly: 500, daily: 8000, weekly: 45000 },
-    availability: [
-      {
-        date: "2025-08-16",
-        timeSlots: ["09:00-12:00", "14:00-18:00", "20:00-22:00"],
-      },
-      { date: "2025-08-17", timeSlots: ["10:00-16:00", "18:00-22:00"] },
-    ],
-    traffic: {
-      dailyFootfall: 25000,
-      vehicleCount: 15000,
-      peakHours: ["18:00-21:00", "12:00-14:00"],
-    },
-    specifications: {
-      size: "10x20 ft",
-      resolution: "1920x1080",
-      orientation: "landscape",
-      screenType: "LED",
-    },
-    features: [
-      "WiFi Control",
-      "Real-time Analytics",
-      "Weather Proof",
-      "4K Support",
-    ],
-    rating: 4.8,
-    totalBookings: 156,
-    imageUrl: "/api/placeholder/400/300",
-    isVerified: true,
-  },
-  {
-    id: 2,
-    name: "CP Metro Station Digital",
-    location: {
-      city: "Delhi",
-      area: "Connaught Place",
-      address: "Rajiv Chowk Metro Station, Connaught Place, New Delhi",
-      coordinates: { lat: 28.6328, lng: 77.2197 },
-    },
-    pricing: { hourly: 750, daily: 12000, weekly: 65000 },
-    availability: [
-      { date: "2025-08-16", timeSlots: ["06:00-11:00", "16:00-22:00"] },
-      { date: "2025-08-17", timeSlots: ["08:00-20:00"] },
-    ],
-    traffic: {
-      dailyFootfall: 45000,
-      vehicleCount: 8000,
-      peakHours: ["08:00-10:00", "17:00-20:00"],
-    },
-    specifications: {
-      size: "8x12 ft",
-      resolution: "1920x1080",
-      orientation: "landscape",
-      screenType: "LCD",
-    },
-    features: ["High Brightness", "Metro Integration", "Digital Audio"],
-    rating: 4.6,
-    totalBookings: 89,
-    imageUrl: "/api/placeholder/400/300",
-    isVerified: true,
-  },
-  {
-    id: 3,
-    name: "Electronic City Tech Hub",
-    location: {
-      city: "Bangalore",
-      area: "Electronic City",
-      address: "Electronic City Phase 1, Bangalore",
-      coordinates: { lat: 12.8456, lng: 77.6603 },
-    },
-    pricing: { hourly: 400, daily: 6000, weekly: 35000 },
-    availability: [
-      { date: "2025-08-16", timeSlots: ["09:00-18:00", "19:00-21:00"] },
-      { date: "2025-08-17", timeSlots: ["10:00-22:00"] },
-    ],
-    traffic: {
-      dailyFootfall: 18000,
-      vehicleCount: 12000,
-      peakHours: ["09:00-11:00", "18:00-20:00"],
-    },
-    specifications: {
-      size: "12x8 ft",
-      resolution: "1920x1080",
-      orientation: "landscape",
-      screenType: "LED",
-    },
-    features: ["Smart Scheduling", "Weather Resistant", "Remote Monitoring"],
-    rating: 4.7,
-    totalBookings: 134,
-    imageUrl: "/api/placeholder/400/300",
-    isVerified: true,
-  },
-  {
-    id: 4,
-    name: "FC Road Shopping Hub",
-    location: {
-      city: "Pune",
-      area: "Fergusson College Road",
-      address: "FC Road, Near Deccan Gymkhana, Pune",
-      coordinates: { lat: 18.5089, lng: 73.8239 },
-    },
-    pricing: { hourly: 350, daily: 5500, weekly: 30000 },
-    availability: [
-      { date: "2025-08-16", timeSlots: ["11:00-16:00", "18:00-22:00"] },
-      { date: "2025-08-17", timeSlots: ["09:00-21:00"] },
-    ],
-    traffic: {
-      dailyFootfall: 12000,
-      vehicleCount: 8000,
-      peakHours: ["11:00-14:00", "18:00-21:00"],
-    },
-    specifications: {
-      size: "6x10 ft",
-      resolution: "1280x720",
-      orientation: "portrait",
-      screenType: "LCD",
-    },
-    features: ["Mobile Integration", "QR Code Support", "Local Language"],
-    rating: 4.4,
-    totalBookings: 67,
-    imageUrl: "/api/placeholder/400/300",
-    isVerified: false,
-  },
-];
+// const sampleScreens: EnhancedScreen[] = [
+//   {
+//   //   id: 1,
+//   //   name: "Times Square Mall LED",
+//   //   location: {
+//   //     city: "Mumbai",
+//   //     area: "Andheri West",
+//   //     address: "Times Square Mall, SV Road, Andheri West, Mumbai",
+//   //     coordinates: { lat: 19.1136, lng: 72.8697 },
+//   //   },
+//   //   pricing: { hourly: 500, daily: 8000, weekly: 45000 },
+//   //   availability: [
+//   //     {
+//   //       date: "2025-08-16",
+//   //       timeSlots: ["09:00-12:00", "14:00-18:00", "20:00-22:00"],
+//   //     },
+//   //     { date: "2025-08-17", timeSlots: ["10:00-16:00", "18:00-22:00"] },
+//   //   ],
+//   //   traffic: {
+//   //     dailyFootfall: 25000,
+//   //     vehicleCount: 15000,
+//   //     peakHours: ["18:00-21:00", "12:00-14:00"],
+//   //   },
+//   //   specifications: {
+//   //     size: "10x20 ft",
+//   //     resolution: "1920x1080",
+//   //     orientation: "landscape",
+//   //     screenType: "LED",
+//   //   },
+//   //   features: [
+//   //     "WiFi Control",
+//   //     "Real-time Analytics",
+//   //     "Weather Proof",
+//   //     "4K Support",
+//   //   ],
+//   //   rating: 4.8,
+//   //   totalBookings: 156,
+//   //   imageUrl: "/api/placeholder/400/300",
+//   //   isVerified: true,
+//   // },
+//   // {
+//   //   id: 2,
+//   //   name: "CP Metro Station Digital",
+//   //   location: {
+//   //     city: "Delhi",
+//   //     area: "Connaught Place",
+//   //     address: "Rajiv Chowk Metro Station, Connaught Place, New Delhi",
+//   //     coordinates: { lat: 28.6328, lng: 77.2197 },
+//   //   },
+//   //   pricing: { hourly: 750, daily: 12000, weekly: 65000 },
+//   //   availability: [
+//   //     { date: "2025-08-16", timeSlots: ["06:00-11:00", "16:00-22:00"] },
+//   //     { date: "2025-08-17", timeSlots: ["08:00-20:00"] },
+//   //   ],
+//   //   traffic: {
+//   //     dailyFootfall: 45000,
+//   //     vehicleCount: 8000,
+//   //     peakHours: ["08:00-10:00", "17:00-20:00"],
+//   //   },
+//   //   specifications: {
+//   //     size: "8x12 ft",
+//   //     resolution: "1920x1080",
+//   //     orientation: "landscape",
+//   //     screenType: "LCD",
+//   //   },
+//   //   features: ["High Brightness", "Metro Integration", "Digital Audio"],
+//   //   rating: 4.6,
+//   //   totalBookings: 89,
+//   //   imageUrl: "/api/placeholder/400/300",
+//   //   isVerified: true,
+//   // },
+//   // {
+//   //   id: 3,
+//   //   name: "Electronic City Tech Hub",
+//   //   location: {
+//   //     city: "Bangalore",
+//   //     area: "Electronic City",
+//   //     address: "Electronic City Phase 1, Bangalore",
+//   //     coordinates: { lat: 12.8456, lng: 77.6603 },
+//   //   },
+//   //   pricing: { hourly: 400, daily: 6000, weekly: 35000 },
+//   //   availability: [
+//   //     { date: "2025-08-16", timeSlots: ["09:00-18:00", "19:00-21:00"] },
+//   //     { date: "2025-08-17", timeSlots: ["10:00-22:00"] },
+//   //   ],
+//   //   traffic: {
+//   //     dailyFootfall: 18000,
+//   //     vehicleCount: 12000,
+//   //     peakHours: ["09:00-11:00", "18:00-20:00"],
+//   //   },
+//   //   specifications: {
+//   //     size: "12x8 ft",
+//   //     resolution: "1920x1080",
+//   //     orientation: "landscape",
+//   //     screenType: "LED",
+//   //   },
+//   //   features: ["Smart Scheduling", "Weather Resistant", "Remote Monitoring"],
+//   //   rating: 4.7,
+//   //   totalBookings: 134,
+//   //   imageUrl: "/api/placeholder/400/300",
+//   //   isVerified: true,
+//   // },
+//   // {
+//   //   id: 4,
+//   //   name: "FC Road Shopping Hub",
+//   //   location: {
+//   //     city: "Pune",
+//   //     area: "Fergusson College Road",
+//   //     address: "FC Road, Near Deccan Gymkhana, Pune",
+//   //     coordinates: { lat: 18.5089, lng: 73.8239 },
+//   //   },
+//   //   pricing: { hourly: 350, daily: 5500, weekly: 30000 },
+//   //   availability: [
+//   //     { date: "2025-08-16", timeSlots: ["11:00-16:00", "18:00-22:00"] },
+//   //     { date: "2025-08-17", timeSlots: ["09:00-21:00"] },
+//   //   ],
+//   //   traffic: {
+//   //     dailyFootfall: 12000,
+//   //     vehicleCount: 8000,
+//   //     peakHours: ["11:00-14:00", "18:00-21:00"],
+//   //   },
+//   //   specifications: {
+//   //     size: "6x10 ft",
+//   //     resolution: "1280x720",
+//   //     orientation: "portrait",
+//   //     screenType: "LCD",
+//   //   },
+//   //   features: ["Mobile Integration", "QR Code Support", "Local Language"],
+//   //   rating: 4.4,
+//   //   totalBookings: 67,
+//   //   imageUrl: "/api/placeholder/400/300",
+//   //   isVerified: false,
+//   // },
+// ];
 
 const AdvancedScreenSearch: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -202,33 +204,95 @@ const AdvancedScreenSearch: React.FC = () => {
   });
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
-  const [filteredScreens, setFilteredScreens] =
-    useState<EnhancedScreen[]>(sampleScreens);
+  const [filteredScreens, setFilteredScreens] = useState<EnhancedScreen[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const cities = ["Mumbai", "Delhi", "Bangalore", "Pune"];
+  const cities = ["Mumbai", "Delhi", "Bangalore", "Pune", "Hyderabad", "Chennai", "Kolkata"];
 
-  useEffect(() => {
-    let filtered = sampleScreens;
+  const fetchScreensByCity = async (city: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const screens = await searchScreensByCity(city);
+      
+      // Transform the API response to match the EnhancedScreen interface
+      const transformedScreens: EnhancedScreen[] = screens.map((screen) => ({
+        id: screen.id,
+        name: screen.name || `${screen.screen_type} Screen`,
+        location: {
+          city: screen.city,
+          area: screen.location_name || '',
+          address: screen.address || '',
+          coordinates: {
+            lat: screen.latitude || 0,
+            lng: screen.longitude || 0
+          }
+        },
+        pricing: {
+          hourly: screen.cost_per_10_seconds ? screen.cost_per_10_seconds * 360 : 1000, // Convert to hourly rate
+          daily: screen.cost_per_10_seconds ? screen.cost_per_10_seconds * 8640 : 10000, // Convert to daily rate
+          weekly: screen.cost_per_10_seconds ? screen.cost_per_10_seconds * 60480 : 70000 // Convert to weekly rate
+        },
+        specifications: {
+          size: screen.screen_size_width && screen.screen_size_height 
+            ? `${screen.screen_size_width}x${screen.screen_size_height} ft` 
+            : 'Not specified',
+          resolution: screen.resolution_width && screen.resolution_height
+            ? `${screen.resolution_width}x${screen.resolution_height}`
+            : 'HD',
+          orientation: 'landscape', // Default value
+          screenType: screen.screen_type || 'LED Display'
+        },
+        availability: [{
+          date: new Date().toISOString().split('T')[0],
+          timeSlots: ['09:00-12:00', '14:00-18:00']
+        }],
+        traffic: {
+          dailyFootfall: screen.daily_footfall || 1000,
+          vehicleCount: screen.vehicle_count || 500,
+          peakHours: Array.isArray(screen.peak_hours) 
+            ? screen.peak_hours 
+            : screen.peak_hours 
+              ? [screen.peak_hours] 
+              : ['08:00-10:00', '17:00-20:00']
+        },
+        features: ['HD Display', '24/7 Operation'],
+        rating: 4.5,
+        totalBookings: 42,
+        imageUrl: screen.image_url || 'https://via.placeholder.com/400x300',
+        isVerified: true
+      }));
 
-    // City filter
+      setFilteredScreens(transformedScreens);
+    } catch (err) {
+      console.error('Error fetching screens:', err);
+      setError('Failed to load screens. Please try again.');
+      // setFilteredScreens(sampleScreens); // Fallback to sample data
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
     if (selectedCity) {
-      filtered = filtered.filter(
-        (screen) =>
-          screen.location.city.toLowerCase() === selectedCity.toLowerCase()
-      );
+      fetchScreensByCity(selectedCity);
+    } else if (searchQuery) {
+      // If no city is selected but there's a search query, use that
+      fetchScreensByCity(searchQuery);
     }
+  };
 
-    // Search query filter
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (screen) =>
-          screen.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          screen.location.city
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          screen.location.area.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Load sample data on initial render
+  useEffect(() => {
+    if (filteredScreens.length === 0) {
+      // setFilteredScreens(sampleScreens);
     }
+  }, []);
+
+  // Apply filters to the fetched screens
+  useEffect(() => {
+    let filtered = [...filteredScreens];
 
     // Price filter
     filtered = filtered.filter(
@@ -242,8 +306,14 @@ const AdvancedScreenSearch: React.FC = () => {
       filtered = filtered.filter((screen) => screen.rating >= filters.rating);
     }
 
-    setFilteredScreens(filtered);
-  }, [searchQuery, selectedCity, filters]);
+    setFilteredScreens(prev => {
+      // Only update if there are actual changes to prevent infinite loops
+      if (JSON.stringify(prev) !== JSON.stringify(filtered)) {
+        return filtered;
+      }
+      return prev;
+    });
+  }, [filters]);
 
   const ScreenCard: React.FC<{ screen: EnhancedScreen }> = ({ screen }) => (
     <motion.div
@@ -432,8 +502,19 @@ const AdvancedScreenSearch: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-r-lg font-medium transition-colors">
-                Search
+              <button 
+                onClick={handleSearch}
+                disabled={isLoading}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-r-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin h-5 w-5" />
+                    Searching...
+                  </>
+                ) : (
+                  'Search'
+                )}
               </button>
             </div>
           </div>

@@ -12,6 +12,9 @@ export async function createScreen(
   const {
     screen_name,
     location_in_venue,
+    city,
+    latitude,
+    longitude,
     screen_size_inches,
     resolution,
     orientation,
@@ -33,14 +36,18 @@ export async function createScreen(
   try {
     const result = await pool.query(
       `INSERT INTO screens
-       (user_id, screen_name, location_in_venue, screen_size_inches, resolution, orientation, device_type,
-        device_model, ads_enabled, ad_frequency, viewing_distance, typical_viewer_duration, peak_viewing_hours)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::text[])
+       (user_id, screen_name, location_in_venue, city, latitude, longitude, screen_size_inches, resolution, 
+        orientation, device_type, device_model, ads_enabled, ad_frequency, viewing_distance, 
+        typical_viewer_duration, peak_viewing_hours)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::text[])
        RETURNING *`,
       [
         userId,
         screen_name,
         location_in_venue,
+        city || null,
+        latitude ? Number(latitude) : null,
+        longitude ? Number(longitude) : null,
         screen_size_inches ?? null,
         resolution ?? null,
         orientation ?? "landscape",
@@ -156,17 +163,28 @@ export async function getAllScreens(req: Request, res: Response) {
 // Search screens for ads manager
 export async function searchScreens(req: Request, res: Response) {
   try {
-    const { city, state, screen_type, min_footfall, max_budget } = req.query;
+    const { city } = req.query;
 
     let query = `
       SELECT 
-        id, name, description, screen_type, location_name, address, 
-        city, state, pincode, latitude, longitude, screen_size_width, 
-        screen_size_height, resolution_width, resolution_height, 
-        daily_footfall, vehicle_count, peak_hours, demographics, 
-        cost_per_10_seconds, image_url, video_url
+        id, 
+        screen_name as name,
+        location_in_venue as location_name,
+        city,
+        screen_size_inches,
+        resolution,
+        orientation,
+        device_type,
+        device_model,
+        ads_enabled,
+        ad_frequency,
+        viewing_distance,
+        typical_viewer_duration,
+        peak_viewing_hours as peak_hours,
+        created_at,
+        updated_at
       FROM screens 
-      WHERE is_active = true
+      WHERE 1=1
     `;
 
     const params: any[] = [];
@@ -178,31 +196,7 @@ export async function searchScreens(req: Request, res: Response) {
       paramIndex++;
     }
 
-    if (state) {
-      query += ` AND LOWER(state) LIKE LOWER($${paramIndex})`;
-      params.push(`%${state}%`);
-      paramIndex++;
-    }
-
-    if (screen_type) {
-      query += ` AND screen_type = $${paramIndex}`;
-      params.push(screen_type);
-      paramIndex++;
-    }
-
-    if (min_footfall) {
-      query += ` AND daily_footfall >= $${paramIndex}`;
-      params.push(min_footfall);
-      paramIndex++;
-    }
-
-    if (max_budget) {
-      query += ` AND cost_per_10_seconds <= $${paramIndex}`;
-      params.push(parseFloat(max_budget as string) / 8640);
-      paramIndex++;
-    }
-
-    query += " ORDER BY daily_footfall DESC LIMIT 50";
+    query += " ORDER BY created_at DESC LIMIT 50";
 
     const result = await pool.query(query, params);
 

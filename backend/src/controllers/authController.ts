@@ -176,17 +176,55 @@ export async function login(req: Request, res: Response) {
 // After signup: set role for the current user
 export async function setRole(req: Request, res: Response) {
   try {
-    const userId = (req as any).user?.id as number | undefined;
+    const userId = (req as any).user?.id;
     const { role } = req.body as { role?: 'advertiser' | 'venue_owner' };
-    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-    if (role !== 'advertiser' && role !== 'venue_owner') {
-      return res.status(400).json({ message: 'Invalid role' });
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
     }
-    const result = await pool.query('UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, phone, role', [role, userId]);
-    const user = result.rows[0];
-    const roles: string[] = user.role ? [user.role] : [];
-    const token = jwt.sign({ id: user.id, email: user.email, phone: user.phone, roles }, JWT_SECRET, { expiresIn: '1d' });
-    return res.json({ token, user: { id: user.id, email: user.email, phone: user.phone, roles } });
+    
+    if (!role || (role !== 'advertiser' && role !== 'venue_owner')) {
+      return res.status(400).json({ message: 'Invalid or missing role' });
+    }
+    
+    // First verify the user exists
+    const userCheck = await pool.query('SELECT id, email, phone FROM users WHERE id = $1', [userId]);
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Update the user's role
+    const result = await pool.query(
+      'UPDATE users SET role = $1 WHERE id = $2 RETURNING id, email, phone, role', 
+      [role, userId]
+    );
+    
+    const updatedUser = result.rows[0];
+    if (!updatedUser) {
+      return res.status(500).json({ message: 'Failed to update user role' });
+    }
+    
+    const roles: string[] = updatedUser.role ? [updatedUser.role] : [];
+    const token = jwt.sign(
+      { 
+        id: updatedUser.id, 
+        email: updatedUser.email, 
+        phone: updatedUser.phone, 
+        roles 
+      }, 
+      JWT_SECRET, 
+      { expiresIn: '1d' }
+    );
+    
+    return res.json({ 
+      token, 
+      user: { 
+        id: updatedUser.id, 
+        email: updatedUser.email, 
+        phone: updatedUser.phone, 
+        roles 
+      } 
+    });
   } catch (err) {
     console.error('Error setting role:', err);
     return res.status(500).json({ message: 'Failed to set role', error: err });

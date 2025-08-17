@@ -625,8 +625,9 @@ const VenueSelection: React.FC<VenueSelectionProps> = ({ onBack }) => {
                               {generateCalendarDays().map((date, index) => {
                                 const isCurrentMonth =
                                   date.getMonth() === new Date().getMonth();
-                                const isPast =
-                                  date < new Date().setHours(0, 0, 0, 0);
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                const isPast = date < today;
                                 const isSelected =
                                   selectedDate?.toDateString() ===
                                   date.toDateString();
