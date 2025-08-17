@@ -1,17 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { motion } from 'framer-motion';
-import { MapPin, Users, Navigation, Crosshair, Search } from 'lucide-react';
-import LocationService, { LocationData, NearbyLocation } from '../../services/locationService';
-import GeolocationService from '../../services/geolocationService';
+import React, { useEffect, useRef, useState } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { motion } from "framer-motion";
+import { MapPin, Users, Navigation, Crosshair, Search } from "lucide-react";
+import LocationService, {
+  LocationData,
+  NearbyLocation,
+} from "../../services/locationService";
+import GeolocationService from "../../services/geolocationService";
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
 interface IndianMapProps {
@@ -26,19 +32,19 @@ const IndianMap: React.FC<IndianMapProps> = ({
   showUserLocation = true,
   showNearbyUsers = false,
   onLocationSelect,
-  height = '600px',
-  className = ''
+  height = "600px",
+  className = "",
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const userMarker = useRef<L.Marker | null>(null);
   const nearbyMarkers = useRef<L.Marker[]>([]);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<LocationData | null>(null);
   const [nearbyLocations, setNearbyLocations] = useState<NearbyLocation[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [mapReady, setMapReady] = useState(false);
 
   const geolocationService = GeolocationService.getInstance();
@@ -51,29 +57,35 @@ const IndianMap: React.FC<IndianMapProps> = ({
     const map = L.map(mapRef.current).setView([20.5937, 78.9629], 5);
 
     // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
       maxZoom: 18,
       minZoom: 4,
     }).addTo(map);
 
     // Add satellite view option
-    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
-      maxZoom: 18,
-    });
+    const satellite = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution:
+          "Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community",
+        maxZoom: 18,
+      }
+    );
 
     // Add layer control
     const baseLayers = {
-      'Street Map': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
-      'Satellite': satellite
+      "Street Map": L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      ),
+      Satellite: satellite,
     };
 
     L.control.layers(baseLayers).addTo(map);
 
     // Add click handler for location selection
     if (onLocationSelect) {
-      map.on('click', (e) => {
+      map.on("click", (e) => {
         const { lat, lng } = e.latlng;
         onLocationSelect(lat, lng);
       });
@@ -93,17 +105,17 @@ const IndianMap: React.FC<IndianMapProps> = ({
   // Load user location
   const loadUserLocation = async () => {
     if (!mapInstance.current) return;
-    
+
     setIsLoading(true);
     setError(null);
 
     try {
       const locationData = await LocationService.getUserLocation();
       const primaryLocation = locationData.primary;
-      
+
       if (primaryLocation) {
         setUserLocation(primaryLocation);
-        
+
         // Add/update user marker
         if (userMarker.current) {
           mapInstance.current.removeLayer(userMarker.current);
@@ -121,31 +133,36 @@ const IndianMap: React.FC<IndianMapProps> = ({
               box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             "></div>
           `,
-          className: 'user-location-marker',
+          className: "user-location-marker",
           iconSize: [20, 20],
-          iconAnchor: [10, 10]
+          iconAnchor: [10, 10],
         });
 
         userMarker.current = L.marker(
           [primaryLocation.latitude, primaryLocation.longitude],
           { icon: userIcon }
-        )
-        .addTo(mapInstance.current)
-        .bindPopup(`
+        ).addTo(mapInstance.current).bindPopup(`
           <div class="p-2">
             <h4 class="font-semibold text-blue-600">Your Location</h4>
-            <p class="text-sm text-gray-600">${LocationService.formatLocationDisplay(primaryLocation)}</p>
+            <p class="text-sm text-gray-600">${LocationService.formatLocationDisplay(
+              primaryLocation
+            )}</p>
             <p class="text-xs text-gray-500 mt-1">
-              Accuracy: ${geolocationService.getAccuracyDescription(primaryLocation.accuracy || 0)}
+              Accuracy: ${geolocationService.getAccuracyDescription(
+                primaryLocation.accuracy || 0
+              )}
             </p>
           </div>
         `);
 
         // Center map on user location
-        mapInstance.current.setView([primaryLocation.latitude, primaryLocation.longitude], 12);
+        mapInstance.current.setView(
+          [primaryLocation.latitude, primaryLocation.longitude],
+          12
+        );
       }
     } catch (err: any) {
-      console.error('Error loading user location:', err);
+      console.error("Error loading user location:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -162,11 +179,11 @@ const IndianMap: React.FC<IndianMapProps> = ({
         userLocation.longitude,
         50 // 50km radius
       );
-      
+
       setNearbyLocations(nearby.locations);
 
       // Clear existing nearby markers
-      nearbyMarkers.current.forEach(marker => {
+      nearbyMarkers.current.forEach((marker) => {
         mapInstance.current?.removeLayer(marker);
       });
       nearbyMarkers.current = [];
@@ -184,17 +201,19 @@ const IndianMap: React.FC<IndianMapProps> = ({
               box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             "></div>
           `,
-          className: 'nearby-user-marker',
+          className: "nearby-user-marker",
           iconSize: [16, 16],
-          iconAnchor: [8, 8]
+          iconAnchor: [8, 8],
         });
 
-        const marker = L.marker([location.latitude, location.longitude], { icon: nearbyIcon })
-          .addTo(mapInstance.current!)
-          .bindPopup(`
+        const marker = L.marker([location.latitude, location.longitude], {
+          icon: nearbyIcon,
+        }).addTo(mapInstance.current!).bindPopup(`
             <div class="p-2">
               <h4 class="font-semibold text-green-600">User Location</h4>
-              <p class="text-sm text-gray-600">${location.city || 'Unknown City'}</p>
+              <p class="text-sm text-gray-600">${
+                location.city || "Unknown City"
+              }</p>
               <p class="text-xs text-gray-500">
                 Distance: ${location.distance.toFixed(1)} km
               </p>
@@ -203,9 +222,8 @@ const IndianMap: React.FC<IndianMapProps> = ({
 
         nearbyMarkers.current.push(marker);
       });
-
     } catch (err) {
-      console.error('Error loading nearby locations:', err);
+      console.error("Error loading nearby locations:", err);
     }
   };
 
@@ -218,7 +236,7 @@ const IndianMap: React.FC<IndianMapProps> = ({
       await LocationService.getCurrentLocationAndSave();
       await loadUserLocation();
     } catch (err: any) {
-      console.error('Error getting current location:', err);
+      console.error("Error getting current location:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -233,7 +251,9 @@ const IndianMap: React.FC<IndianMapProps> = ({
     try {
       // Use Nominatim for geocoding
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&countrycodes=IN`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          searchQuery
+        )}&limit=1&countrycodes=IN`
       );
       const results = await response.json();
 
@@ -243,7 +263,7 @@ const IndianMap: React.FC<IndianMapProps> = ({
         const lon = parseFloat(result.lon);
 
         mapInstance.current.setView([lat, lon], 12);
-        
+
         // Add temporary search marker
         const searchIcon = L.divIcon({
           html: `
@@ -256,19 +276,21 @@ const IndianMap: React.FC<IndianMapProps> = ({
               box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             "></div>
           `,
-          className: 'search-result-marker',
+          className: "search-result-marker",
           iconSize: [24, 24],
-          iconAnchor: [12, 12]
+          iconAnchor: [12, 12],
         });
 
         const searchMarker = L.marker([lat, lon], { icon: searchIcon })
           .addTo(mapInstance.current)
-          .bindPopup(`
+          .bindPopup(
+            `
             <div class="p-2">
               <h4 class="font-semibold text-red-600">Search Result</h4>
               <p class="text-sm text-gray-600">${result.display_name}</p>
             </div>
-          `)
+          `
+          )
           .openPopup();
 
         // Remove search marker after 5 seconds
@@ -280,10 +302,10 @@ const IndianMap: React.FC<IndianMapProps> = ({
           onLocationSelect(lat, lon);
         }
       } else {
-        setError('Location not found in India');
+        setError("Location not found in India");
       }
     } catch (err) {
-      setError('Search failed. Please try again.');
+      setError("Search failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -326,7 +348,7 @@ const IndianMap: React.FC<IndianMapProps> = ({
             placeholder="Search locations in India..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && searchLocation()}
+            onKeyPress={(e) => e.key === "Enter" && searchLocation()}
             className="flex-1 text-sm outline-none"
             disabled={isLoading}
           />
@@ -353,7 +375,12 @@ const IndianMap: React.FC<IndianMapProps> = ({
 
           {userLocation && (
             <motion.button
-              onClick={() => mapInstance.current?.setView([userLocation.latitude, userLocation.longitude], 12)}
+              onClick={() =>
+                mapInstance.current?.setView(
+                  [userLocation.latitude, userLocation.longitude],
+                  12
+                )
+              }
               className="bg-green-600 text-white p-2 rounded-lg shadow-lg hover:bg-green-700 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -402,7 +429,10 @@ const IndianMap: React.FC<IndianMapProps> = ({
               </p>
               <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                 <span>
-                  Accuracy: {geolocationService.getAccuracyDescription(userLocation.accuracy || 0)}
+                  Accuracy:{" "}
+                  {geolocationService.getAccuracyDescription(
+                    userLocation.accuracy || 0
+                  )}
                 </span>
                 {showNearbyUsers && nearbyLocations.length > 0 && (
                   <span className="flex items-center space-x-1">

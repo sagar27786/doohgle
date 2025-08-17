@@ -24,9 +24,9 @@ const LoginSignup: React.FC = () => {
     setIsLoading(true);
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    const user = { email: DEMO_EMAIL, roles: ['venue_owner'] };
+    const user = { email: DEMO_EMAIL };
     localStorage.setItem('user', JSON.stringify(user));
-    navigate('/venue-dashboard');
+    navigate('/auth/select-role');
     setIsLoading(false);
   }
 

@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = "http://localhost:4000/api";
 
 // Location data interfaces
 export interface LocationData {
@@ -68,7 +68,7 @@ export interface ReverseGeocodeResult {
 
 class LocationService {
   private getAuthHeader() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
@@ -83,7 +83,9 @@ class LocationService {
       });
       return (response.data as any).data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch user location');
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch user location"
+      );
     }
   }
 
@@ -106,13 +108,15 @@ class LocationService {
         {
           headers: {
             ...this.getAuthHeader(),
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
       return (response.data as any).data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to update location');
+      throw new Error(
+        error.response?.data?.message || "Failed to update location"
+      );
     }
   }
 
@@ -133,7 +137,9 @@ class LocationService {
       });
       return (response.data as any).data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch nearby locations');
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch nearby locations"
+      );
     }
   }
 
@@ -143,12 +149,17 @@ class LocationService {
     longitude: number
   ): Promise<ReverseGeocodeResult> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/locations/reverse-geocode`, {
-        params: { latitude, longitude },
-      });
+      const response = await axios.get(
+        `${API_BASE_URL}/locations/reverse-geocode`,
+        {
+          params: { latitude, longitude },
+        }
+      );
       return (response.data as any).data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Reverse geocoding failed');
+      throw new Error(
+        error.response?.data?.message || "Reverse geocoding failed"
+      );
     }
   }
 
@@ -172,7 +183,9 @@ class LocationService {
       });
       return (response.data as any).data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch location history');
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch location history"
+      );
     }
   }
 
@@ -183,7 +196,9 @@ class LocationService {
         headers: this.getAuthHeader(),
       });
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to delete location');
+      throw new Error(
+        error.response?.data?.message || "Failed to delete location"
+      );
     }
   }
 
@@ -204,7 +219,9 @@ class LocationService {
       const response = await axios.get(`${API_BASE_URL}/locations/public`);
       return (response.data as any).data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch public locations');
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch public locations"
+      );
     }
   }
 
@@ -231,24 +248,28 @@ class LocationService {
       });
       return (response.data as any).data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch location statistics');
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch location statistics"
+      );
     }
   }
 
   // Helper method to get current location and save to database
   async getCurrentLocationAndSave(
-    locationType: string = 'current',
-    locationSource: string = 'gps'
+    locationType: string = "current",
+    locationSource: string = "gps"
   ): Promise<LocationData> {
     try {
       // Get current position from browser
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 300000,
-        });
-      });
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 300000,
+          });
+        }
+      );
 
       const { latitude, longitude, accuracy } = position.coords;
 
@@ -257,7 +278,10 @@ class LocationService {
       try {
         addressData = await this.reverseGeocode(latitude, longitude);
       } catch (error) {
-        console.warn('Reverse geocoding failed, saving without address:', error);
+        console.warn(
+          "Reverse geocoding failed, saving without address:",
+          error
+        );
       }
 
       // Save to database
@@ -267,21 +291,25 @@ class LocationService {
         accuracy: accuracy || undefined,
         city: addressData.city,
         state: addressData.state,
-        country: addressData.country || 'India',
+        country: addressData.country || "India",
         formattedAddress: addressData.formatted_address,
         locationSource,
         locationType,
       });
-
     } catch (error: any) {
-      if (error.code === 1) { // PERMISSION_DENIED
-        throw new Error('Location access denied. Please enable location permissions.');
-      } else if (error.code === 2) { // POSITION_UNAVAILABLE
-        throw new Error('Location information unavailable.');
-      } else if (error.code === 3) { // TIMEOUT
-        throw new Error('Location request timed out.');
+      if (error.code === 1) {
+        // PERMISSION_DENIED
+        throw new Error(
+          "Location access denied. Please enable location permissions."
+        );
+      } else if (error.code === 2) {
+        // POSITION_UNAVAILABLE
+        throw new Error("Location information unavailable.");
+      } else if (error.code === 3) {
+        // TIMEOUT
+        throw new Error("Location request timed out.");
       } else {
-        throw new Error(error.message || 'Failed to get current location');
+        throw new Error(error.message || "Failed to get current location");
       }
     }
   }
@@ -291,15 +319,13 @@ class LocationService {
     if (location.formatted_address) {
       return location.formatted_address;
     }
-    
-    const parts = [
-      location.city,
-      location.state,
-      location.country
-    ].filter(Boolean);
-    
-    return parts.length > 0 
-      ? parts.join(', ')
+
+    const parts = [location.city, location.state, location.country].filter(
+      Boolean
+    );
+
+    return parts.length > 0
+      ? parts.join(", ")
       : `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
   }
 
@@ -313,12 +339,14 @@ class LocationService {
     const R = 6371; // Earth's radius in km
     const dLat = this.toRadians(lat2 - lat1);
     const dLon = this.toRadians(lon2 - lon1);
-    
-    const a = 
+
+    const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
+      Math.cos(this.toRadians(lat1)) *
+        Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }

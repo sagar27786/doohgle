@@ -1,14 +1,26 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createScreen, getMyScreens, ScreenPayload, ScreenAsset, ScreenPricing, ScreenAvailability } from '../../api/screens';
-import { 
-  Grid, 
-  Search, 
-  Tv, 
-  Monitor, 
-  MapPin, 
-  DollarSign, 
-  ArrowUp, 
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  createScreen,
+  getMyScreens,
+  ScreenPayload,
+  ScreenAsset,
+  ScreenPricing,
+  ScreenAvailability,
+} from "../../api/screens";
+import {
+  screenManagerService,
+  ScreenManagerDashboardData,
+  ScreenStats,
+} from "../../services/screenManagerService";
+import {
+  Grid,
+  Search,
+  Tv,
+  Monitor,
+  MapPin,
+  DollarSign,
+  ArrowUp,
   HelpCircle,
   Settings,
   ChevronRight,
@@ -16,8 +28,21 @@ import {
   Sparkles,
   User,
   Building2,
-  LogOut
-} from 'lucide-react';
+  LogOut,
+  BarChart3,
+  TrendingUp,
+  Eye,
+  Calendar,
+  Activity,
+  PlayCircle,
+  PauseCircle,
+  Trash2,
+  Edit3,
+  Plus,
+} from "lucide-react";
+import BookingList from "../VenueDashboard/BookingList";
+import AnalyticsDashboard from "./AnalyticsDashboard";
+import { RevenueChart } from "./Charts";
 interface NavigationItem {
   id: string;
   label: string;
@@ -30,7 +55,6 @@ interface TabItem {
   label: string;
 }
 
-
 const UserProfileDropdown: React.FC = () => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -38,13 +62,16 @@ const UserProfileDropdown: React.FC = () => {
   useEffect(() => {
     if (!open) return;
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [open]);
 
@@ -57,7 +84,9 @@ const UserProfileDropdown: React.FC = () => {
         <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
           <span className="text-sm font-medium text-gray-700">S</span>
         </div>
-        <span className="flex-1 text-sm font-medium text-gray-900 text-left">Sadashiv T...</span>
+        <span className="flex-1 text-sm font-medium text-gray-900 text-left">
+          Sadashiv T...
+        </span>
         <Settings size={16} className="text-gray-400 ml-2" />
       </button>
       {open && (
@@ -92,21 +121,25 @@ const Sidebar: React.FC<{
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (appMenuRef.current && !appMenuRef.current.contains(e.target as Node)) {
+      if (
+        appMenuRef.current &&
+        !appMenuRef.current.contains(e.target as Node)
+      ) {
         setAppMenuOpen(false);
       }
     }
-    if (appMenuOpen) document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
+    if (appMenuOpen) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
   }, [appMenuOpen]);
   const navigationItems: NavigationItem[] = [
-    { id: 'gallery', label: 'Gallery', icon: Grid },
-    { id: 'discover', label: 'Discover', icon: Search },
-    { id: 'myscreens', label: 'My Screens', icon: Tv },
-    { id: 'screens', label: 'Screens', icon: Monitor },
-    { id: 'locations', label: 'Locations', icon: MapPin },
-    { id: 'earn', label: 'Earn Money', icon: DollarSign, hasSubmenu: true },
-    { id: 'upgrade', label: 'Upgrade Plan', icon: ArrowUp },
+    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+    { id: "your_screens", label: "My Screens", icon: Tv },
+    { id: "screens", label: "Add Screen", icon: Monitor },
+    { id: "your_bookings", label: "Bookings", icon: Building2 },
+    { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "locations", label: "Locations", icon: MapPin },
+    { id: "earn", label: "Earnings", icon: DollarSign, hasSubmenu: true },
+    { id: "upgrade", label: "Upgrade Plan", icon: ArrowUp },
   ];
 
   return (
@@ -146,7 +179,7 @@ const Sidebar: React.FC<{
                 className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50"
                 onClick={() => {
                   setAppMenuOpen(false);
-                  navigate('/products/ads-manager');
+                  navigate("/products/ads-manager");
                 }}
               >
                 Advertiser Dashboard
@@ -165,8 +198,8 @@ const Sidebar: React.FC<{
               onClick={() => onTabChange(item.id)}
               className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
                 activeTab === item.id
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-50"
               }`}
             >
               <item.icon size={20} />
@@ -203,36 +236,237 @@ const Sidebar: React.FC<{
   );
 };
 
-const Header: React.FC<{
-  activeFilter: string;
-  onFilterChange: (filter: string) => void;
-}> = ({ activeFilter, onFilterChange }) => {
-  const filters: TabItem[] = [
-    { id: 'all', label: 'Show all' },
-    { id: 'screen', label: 'Screen Manager' },
-    { id: 'ads', label: 'Ads Manager' },
-    { id: 'content', label: 'Content' },
-    { id: 'framen', label: 'Doohgle' },
-  ];
+// Screen Manager Dashboard Overview Component
+const DashboardOverview: React.FC = () => {
+  const [dashboardData, setDashboardData] =
+    useState<ScreenManagerDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      setLoading(true);
+      try {
+        const data = await screenManagerService.getDashboardStats();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+        <div className="animate-pulse">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 shadow-sm">
+                <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
+                <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                <div className="h-3 bg-gray-100 rounded w-32"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { overview, recent_bookings, monthly_revenue } = dashboardData || {};
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center space-x-6">
-        <span className="text-sm text-gray-500">Select:</span>
-        <div className="flex space-x-1">
-          {filters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => onFilterChange(filter.id)}
-              className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                activeFilter === filter.id
-                  ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              {filter.label}
+    <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Screen Manager Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Monitor your screens performance and earnings
+          </p>
+        </div>
+
+        {/* Overview Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Monitor className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="text-green-600 text-sm font-medium">
+                +
+                {Math.round(
+                  ((overview?.active_screens || 0) /
+                    (overview?.total_screens || 1)) *
+                    100
+                )}
+                %
+              </div>
+            </div>
+            <div className="mb-1">
+              <div className="text-2xl font-bold text-gray-900">
+                {overview?.active_screens || 0}
+              </div>
+              <div className="text-sm text-gray-600">
+                Active Screens ({overview?.total_screens || 0} total)
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <DollarSign className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="text-green-600 text-sm font-medium">+12.5%</div>
+            </div>
+            <div className="mb-1">
+              <div className="text-2xl font-bold text-gray-900">
+                ₹{(overview?.total_revenue || 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">Total Revenue</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Eye className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="text-green-600 text-sm font-medium">+8.2%</div>
+            </div>
+            <div className="mb-1">
+              <div className="text-2xl font-bold text-gray-900">
+                {(overview?.total_impressions || 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">Total Impressions</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Calendar className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="text-green-600 text-sm font-medium">+15.3%</div>
+            </div>
+            <div className="mb-1">
+              <div className="text-2xl font-bold text-gray-900">
+                {overview?.total_bookings || 0}
+              </div>
+              <div className="text-sm text-gray-600">Total Bookings</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Revenue Chart */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Monthly Revenue
+            </h3>
+            <div className="h-64">
+              {monthly_revenue && monthly_revenue.length > 0 ? (
+                <RevenueChart data={monthly_revenue} />
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500">
+                  No revenue data available
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Bookings */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Recent Bookings
+            </h3>
+            <div className="space-y-4">
+              {recent_bookings?.slice(0, 4).map((booking, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm">
+                      {booking.campaign_name}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {booking.screen_name}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-gray-900 text-sm">
+                      ₹{booking.amount.toLocaleString()}
+                    </div>
+                    <div
+                      className={`text-xs px-2 py-1 rounded-full inline-block ${
+                        booking.status === "confirmed"
+                          ? "bg-green-100 text-green-800"
+                          : booking.status === "completed"
+                          ? "bg-blue-100 text-blue-800"
+                          : booking.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {booking.status}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors text-left">
+              <div className="flex items-center space-x-3 mb-2">
+                <Plus className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-gray-900">
+                  Add New Screen
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">
+                Register a new screen to expand your inventory
+              </p>
             </button>
-          ))}
+
+            <button className="p-4 border border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-colors text-left">
+              <div className="flex items-center space-x-3 mb-2">
+                <BarChart3 className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-gray-900">
+                  View Analytics
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">
+                Detailed performance insights for all screens
+              </p>
+            </button>
+
+            <button className="p-4 border border-gray-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 transition-colors text-left">
+              <div className="flex items-center space-x-3 mb-2">
+                <Settings className="w-5 h-5 text-purple-600" />
+                <span className="font-medium text-gray-900">
+                  Manage Screens
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">
+                Update screen settings and availability
+              </p>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -240,39 +474,23 @@ const Header: React.FC<{
 };
 
 const TABS = [
-  { id: 'all', label: 'Show all' },
-  { id: 'screen', label: 'Screen Manager' },
-  { id: 'ads', label: 'Ads Manager' },
-  { id: 'content', label: 'Content' },
-  { id: 'framen', label: 'Doohgle' },
+  { id: "all", label: "Show all" },
+  { id: "screen", label: "Screen Manager" },
+  { id: "ads", label: "Ads Manager" },
+  { id: "content", label: "Content" },
+  { id: "framen", label: "Doohgle" },
 ];
 
 const tabDummyContent: Record<string, string[]> = {
-  all: [
-    'All Content Block 1',
-    'All Content Block 2',
-    'All Content Block 3',
-  ],
-  screen: [
-    'Screen Manager Content 1',
-    'Screen Manager Content 2',
-  ],
-  ads: [
-    'Ads Manager Content 1',
-    'Ads Manager Content 2',
-  ],
-  content: [
-    'Content Tab Example 1',
-    'Content Tab Example 2',
-  ],
-  framen: [
-    'Doohgle Tab Example 1',
-    'Doohgle Tab Example 2',
-  ],
+  all: ["All Content Block 1", "All Content Block 2", "All Content Block 3"],
+  screen: ["Screen Manager Content 1", "Screen Manager Content 2"],
+  ads: ["Ads Manager Content 1", "Ads Manager Content 2"],
+  content: ["Content Tab Example 1", "Content Tab Example 2"],
+  framen: ["Doohgle Tab Example 1", "Doohgle Tab Example 2"],
 };
 
 const MainContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   return (
     <div className="flex flex-col w-full h-full bg-gray-50">
@@ -281,14 +499,14 @@ const MainContent: React.FC = () => {
         <div className="flex items-center">
           <span className="text-sm text-gray-500 mr-6">Select:</span>
           <div className="flex flex-1 justify-evenly">
-            {TABS.map(tab => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 mx-2 px-4 py-2 text-sm rounded-full transition-colors font-medium text-center ${
                   activeTab === tab.id
-                    ? 'bg-gray-200 text-gray-900'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? "bg-gray-200 text-gray-900"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {tab.label}
@@ -301,7 +519,10 @@ const MainContent: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {tabDummyContent[activeTab].map((content, idx) => (
-            <div key={idx} className="bg-white rounded-xl shadow p-8 text-lg text-gray-800">
+            <div
+              key={idx}
+              className="bg-white rounded-xl shadow p-8 text-lg text-gray-800"
+            >
               {content}
             </div>
           ))}
@@ -315,53 +536,68 @@ const MainContent: React.FC = () => {
 const ScreenRegistrationForm: React.FC = () => {
   const [form, setForm] = useState({
     // Basic Details
-    screen_name: '',
-    location_in_venue: '',
-    screen_size_inches: '',
-    resolution: '',
-    orientation: 'landscape' as const,
-    device_type: 'smart_tv' as const,
-    device_model: '',
+    screen_name: "",
+    location_in_venue: "",
+    screen_size_inches: "",
+    resolution: "",
+    orientation: "landscape" as const,
+    device_type: "smart_tv" as const,
+    device_model: "",
     ads_enabled: false,
     ad_frequency: 0,
-    viewing_distance: 'close' as const,
-    typical_viewer_duration: '',
+    viewing_distance: "close" as const,
+    typical_viewer_duration: "",
     peak_viewing_hours: [] as string[],
     // Assets
-    assets: [] as Array<{ asset_type: 'photo_day' | 'photo_night' | 'video'; url: string }>,
+    assets: [] as Array<{
+      asset_type: "photo_day" | "photo_night" | "video";
+      url: string;
+    }>,
     // Pricing
     pricing: {
       hourly_rate: 0,
       daily_rate: 0,
       weekly_rate: 0,
-      currency: 'INR'
+      currency: "INR",
     },
     // Availability
-    availability: [] as Array<{ date: string; is_available: boolean }>
+    availability: [] as Array<{ date: string; is_available: boolean }>,
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ text: string; error: boolean } | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const target = e.target as HTMLInputElement & HTMLSelectElement;
     const name = target.name;
-    const isCheckbox = (target as HTMLInputElement).type === 'checkbox';
-    const value: any = isCheckbox ? (target as HTMLInputElement).checked : target.value;
-    setForm(prev => ({
+    const isCheckbox = (target as HTMLInputElement).type === "checkbox";
+    const value: any = isCheckbox
+      ? (target as HTMLInputElement).checked
+      : target.value;
+    setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
   const updatePeakHour = (idx: number, value: string) => {
-    setForm(prev => {
+    setForm((prev) => {
       const list = [...prev.peak_viewing_hours];
       list[idx] = value;
       return { ...prev, peak_viewing_hours: list };
     });
   };
-  const addPeakHour = () => setForm(prev => ({ ...prev, peak_viewing_hours: [...prev.peak_viewing_hours, ''] }));
-  const removePeakHour = (idx: number) => setForm(prev => ({ ...prev, peak_viewing_hours: prev.peak_viewing_hours.filter((_, i) => i !== idx) }));
+  const addPeakHour = () =>
+    setForm((prev) => ({
+      ...prev,
+      peak_viewing_hours: [...prev.peak_viewing_hours, ""],
+    }));
+  const removePeakHour = (idx: number) =>
+    setForm((prev) => ({
+      ...prev,
+      peak_viewing_hours: prev.peak_viewing_hours.filter((_, i) => i !== idx),
+    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -371,7 +607,9 @@ const ScreenRegistrationForm: React.FC = () => {
       const payload: ScreenPayload = {
         screen_name: form.screen_name.trim(),
         location_in_venue: form.location_in_venue.trim(),
-        screen_size_inches: form.screen_size_inches ? Number(form.screen_size_inches) : null,
+        screen_size_inches: form.screen_size_inches
+          ? Number(form.screen_size_inches)
+          : null,
         resolution: form.resolution.trim() || null,
         orientation: form.orientation,
         device_type: form.device_type,
@@ -380,27 +618,35 @@ const ScreenRegistrationForm: React.FC = () => {
         ad_frequency: Number(form.ad_frequency) || 0,
         viewing_distance: form.viewing_distance,
         typical_viewer_duration: form.typical_viewer_duration.trim() || null,
-        peak_viewing_hours: form.peak_viewing_hours.filter(hour => hour.trim()),
+        peak_viewing_hours: form.peak_viewing_hours.filter((hour) =>
+          hour.trim()
+        ),
         assets: form.assets,
         pricing: {
           hourly_rate: form.pricing.hourly_rate || undefined,
           daily_rate: form.pricing.daily_rate || undefined,
           weekly_rate: form.pricing.weekly_rate || undefined,
-          currency: form.pricing.currency
+          currency: form.pricing.currency,
         },
-        availability: form.availability.map(a => ({
+        availability: form.availability.map((a) => ({
           date: a.date,
-          is_available: a.is_available
-        }))
+          is_available: a.is_available,
+        })),
       };
       const { ok, data } = await createScreen(payload);
       if (ok) {
-        setMsg({ text: data?.message || 'Screen registered successfully!', error: false });
+        setMsg({
+          text: data?.message || "Screen registered successfully!",
+          error: false,
+        });
       } else {
-        setMsg({ text: data?.message || 'Failed to register screen', error: true });
+        setMsg({
+          text: data?.message || "Failed to register screen",
+          error: true,
+        });
       }
     } catch (err) {
-      setMsg({ text: 'Something went wrong. Please try again.', error: true });
+      setMsg({ text: "Something went wrong. Please try again.", error: true });
     } finally {
       setSaving(false);
     }
@@ -410,41 +656,107 @@ const ScreenRegistrationForm: React.FC = () => {
     <div className="flex-1 overflow-y-auto p-8 md:p-10 bg-gray-50">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg ring-1 ring-gray-100 p-8 md:p-10">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Register a Screen</h2>
-          <p className="mt-1 text-sm text-gray-500">Add basic details about your display to start managing content and ads.</p>
+          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
+            Register a Screen
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Add basic details about your display to start managing content and
+            ads.
+          </p>
         </div>
         {msg && (
-          <div className={`mb-6 rounded-lg border px-4 py-3 text-sm ${msg.error ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>{msg.text}</div>
+          <div
+            className={`mb-6 rounded-lg border px-4 py-3 text-sm ${
+              msg.error
+                ? "bg-red-50 text-red-700 border-red-200"
+                : "bg-green-50 text-green-700 border-green-200"
+            }`}
+          >
+            {msg.text}
+          </div>
         )}
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
           <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Screen name</label>
-            <input name="screen_name" value={form.screen_name} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="Reception Display #1" required />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Screen name
+            </label>
+            <input
+              name="screen_name"
+              value={form.screen_name}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+              placeholder="Reception Display #1"
+              required
+            />
           </div>
           <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Location in venue</label>
-            <input name="location_in_venue" value={form.location_in_venue} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="Main Reception" required />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Location in venue
+            </label>
+            <input
+              name="location_in_venue"
+              value={form.location_in_venue}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+              placeholder="Main Reception"
+              required
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Screen size (inches)</label>
-            <input name="screen_size_inches" type="number" min={1} value={form.screen_size_inches} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="55" />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Screen size (inches)
+            </label>
+            <input
+              name="screen_size_inches"
+              type="number"
+              min={1}
+              value={form.screen_size_inches}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+              placeholder="55"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Resolution</label>
-            <input name="resolution" value={form.resolution} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="1920x1080" />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Resolution
+            </label>
+            <input
+              name="resolution"
+              value={form.resolution}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+              placeholder="1920x1080"
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Orientation</label>
-            <select name="orientation" value={form.orientation} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Orientation
+            </label>
+            <select
+              name="orientation"
+              value={form.orientation}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+            >
               <option value="landscape">Landscape</option>
               <option value="portrait">Portrait</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Device type</label>
-            <select name="device_type" value={form.device_type} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Device type
+            </label>
+            <select
+              name="device_type"
+              value={form.device_type}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+            >
               <option value="smart_tv">Smart TV</option>
               <option value="media_player">Media Player</option>
               <option value="custom">Custom</option>
@@ -452,21 +764,55 @@ const ScreenRegistrationForm: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Device model</label>
-            <input name="device_model" value={form.device_model} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="Samsung TU7000" />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Device model
+            </label>
+            <input
+              name="device_model"
+              value={form.device_model}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+              placeholder="Samsung TU7000"
+            />
           </div>
           <div className="flex items-center space-x-3 mt-1">
-            <input id="ads_enabled" name="ads_enabled" type="checkbox" checked={form.ads_enabled} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            <label htmlFor="ads_enabled" className="text-sm text-gray-700">Enable Ads</label>
+            <input
+              id="ads_enabled"
+              name="ads_enabled"
+              type="checkbox"
+              checked={form.ads_enabled}
+              onChange={handleChange}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="ads_enabled" className="text-sm text-gray-700">
+              Enable Ads
+            </label>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Ad Frequency (%)</label>
-            <input name="ad_frequency" type="number" min={0} max={100} value={form.ad_frequency} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Ad Frequency (%)
+            </label>
+            <input
+              name="ad_frequency"
+              type="number"
+              min={0}
+              max={100}
+              value={form.ad_frequency}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Viewing distance</label>
-            <select name="viewing_distance" value={form.viewing_distance} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Viewing distance
+            </label>
+            <select
+              name="viewing_distance"
+              value={form.viewing_distance}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+            >
               <option value="close">Close</option>
               <option value="medium">Medium</option>
               <option value="far">Far</option>
@@ -474,35 +820,67 @@ const ScreenRegistrationForm: React.FC = () => {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Typical viewer duration</label>
-            <input name="typical_viewer_duration" value={form.typical_viewer_duration} onChange={handleChange} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="2-5 minutes" />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Typical viewer duration
+            </label>
+            <input
+              name="typical_viewer_duration"
+              value={form.typical_viewer_duration}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+              placeholder="2-5 minutes"
+            />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Peak viewing hours</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Peak viewing hours
+            </label>
             <div className="space-y-2">
               {form.peak_viewing_hours.map((h, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <input value={h} onChange={(e) => updatePeakHour(idx, e.target.value)} className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition" placeholder="09:00-11:00" />
-                  <button type="button" onClick={() => removePeakHour(idx)} className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition">Remove</button>
+                  <input
+                    value={h}
+                    onChange={(e) => updatePeakHour(idx, e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+                    placeholder="09:00-11:00"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePeakHour(idx)}
+                    className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                  >
+                    Remove
+                  </button>
                 </div>
               ))}
-              <button type="button" onClick={addPeakHour} className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition">+ Add time range</button>
+              <button
+                type="button"
+                onClick={addPeakHour}
+                className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+              >
+                + Add time range
+              </button>
             </div>
           </div>
 
           {/* Assets Section */}
           <div className="md:col-span-2 border-t pt-6 mt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Screen Assets</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Screen Assets
+            </h3>
             <div className="space-y-4">
               {form.assets.map((asset, idx) => (
                 <div key={idx} className="flex items-center gap-4">
-                  <select 
+                  <select
                     value={asset.asset_type}
                     onChange={(e) => {
                       const newAssets = [...form.assets];
-                      newAssets[idx] = { ...asset, asset_type: e.target.value as any };
-                      setForm(prev => ({ ...prev, assets: newAssets }));
+                      newAssets[idx] = {
+                        ...asset,
+                        asset_type: e.target.value as any,
+                      };
+                      setForm((prev) => ({ ...prev, assets: newAssets }));
                     }}
                     className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5"
                   >
@@ -516,7 +894,7 @@ const ScreenRegistrationForm: React.FC = () => {
                     onChange={(e) => {
                       const newAssets = [...form.assets];
                       newAssets[idx] = { ...asset, url: e.target.value };
-                      setForm(prev => ({ ...prev, assets: newAssets }));
+                      setForm((prev) => ({ ...prev, assets: newAssets }));
                     }}
                     placeholder="Asset URL"
                     className="flex-[2] rounded-lg border border-gray-300 bg-white px-3 py-2.5"
@@ -524,9 +902,9 @@ const ScreenRegistrationForm: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setForm(prev => ({
+                      setForm((prev) => ({
                         ...prev,
-                        assets: prev.assets.filter((_, i) => i !== idx)
+                        assets: prev.assets.filter((_, i) => i !== idx),
                       }));
                     }}
                     className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
@@ -538,9 +916,12 @@ const ScreenRegistrationForm: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setForm(prev => ({
+                  setForm((prev) => ({
                     ...prev,
-                    assets: [...prev.assets, { asset_type: 'photo_day', url: '' }]
+                    assets: [
+                      ...prev.assets,
+                      { asset_type: "photo_day", url: "" },
+                    ],
                   }));
                 }}
                 className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
@@ -552,58 +933,85 @@ const ScreenRegistrationForm: React.FC = () => {
 
           {/* Pricing Section */}
           <div className="md:col-span-2 border-t pt-6 mt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Screen Pricing</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Screen Pricing
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Hourly Rate</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Hourly Rate
+                </label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={form.pricing.hourly_rate}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    pricing: { ...prev.pricing, hourly_rate: Number(e.target.value) }
-                  }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      pricing: {
+                        ...prev.pricing,
+                        hourly_rate: Number(e.target.value),
+                      },
+                    }))
+                  }
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Daily Rate</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Daily Rate
+                </label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={form.pricing.daily_rate}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    pricing: { ...prev.pricing, daily_rate: Number(e.target.value) }
-                  }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      pricing: {
+                        ...prev.pricing,
+                        daily_rate: Number(e.target.value),
+                      },
+                    }))
+                  }
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Weekly Rate</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Weekly Rate
+                </label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={form.pricing.weekly_rate}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    pricing: { ...prev.pricing, weekly_rate: Number(e.target.value) }
-                  }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      pricing: {
+                        ...prev.pricing,
+                        weekly_rate: Number(e.target.value),
+                      },
+                    }))
+                  }
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Currency</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Currency
+                </label>
                 <select
                   value={form.pricing.currency}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    pricing: { ...prev.pricing, currency: e.target.value }
-                  }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      pricing: { ...prev.pricing, currency: e.target.value },
+                    }))
+                  }
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
                 >
                   <option value="INR">INR</option>
@@ -616,7 +1024,9 @@ const ScreenRegistrationForm: React.FC = () => {
 
           {/* Availability Section */}
           <div className="md:col-span-2 border-t pt-6 mt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Screen Availability</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Screen Availability
+            </h3>
             <div className="space-y-4">
               {form.availability.map((avail, idx) => (
                 <div key={idx} className="flex items-center gap-4">
@@ -626,7 +1036,7 @@ const ScreenRegistrationForm: React.FC = () => {
                     onChange={(e) => {
                       const newAvail = [...form.availability];
                       newAvail[idx] = { ...avail, date: e.target.value };
-                      setForm(prev => ({ ...prev, availability: newAvail }));
+                      setForm((prev) => ({ ...prev, availability: newAvail }));
                     }}
                     className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5"
                   />
@@ -634,8 +1044,11 @@ const ScreenRegistrationForm: React.FC = () => {
                     value={avail.is_available.toString()}
                     onChange={(e) => {
                       const newAvail = [...form.availability];
-                      newAvail[idx] = { ...avail, is_available: e.target.value === 'true' };
-                      setForm(prev => ({ ...prev, availability: newAvail }));
+                      newAvail[idx] = {
+                        ...avail,
+                        is_available: e.target.value === "true",
+                      };
+                      setForm((prev) => ({ ...prev, availability: newAvail }));
                     }}
                     className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5"
                   >
@@ -645,9 +1058,11 @@ const ScreenRegistrationForm: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setForm(prev => ({
+                      setForm((prev) => ({
                         ...prev,
-                        availability: prev.availability.filter((_, i) => i !== idx)
+                        availability: prev.availability.filter(
+                          (_, i) => i !== idx
+                        ),
                       }));
                     }}
                     className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
@@ -659,10 +1074,13 @@ const ScreenRegistrationForm: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  const today = new Date().toISOString().split('T')[0];
-                  setForm(prev => ({
+                  const today = new Date().toISOString().split("T")[0];
+                  setForm((prev) => ({
                     ...prev,
-                    availability: [...prev.availability, { date: today, is_available: true }]
+                    availability: [
+                      ...prev.availability,
+                      { date: today, is_available: true },
+                    ],
                   }));
                 }}
                 className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
@@ -678,24 +1096,26 @@ const ScreenRegistrationForm: React.FC = () => {
               disabled={saving}
               className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
             >
-              {saving ? 'Saving...' : 'Register Screen'}
+              {saving ? "Saving..." : "Register Screen"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-}
-  
+};
+
 // My Screens Grid
 const MyScreensGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [screens, setScreens] = useState<Array<{
-    id: number;
-    screen_name: string;
-    location_in_venue: string;
-  }>>([]);
+  const [screens, setScreens] = useState<
+    Array<{
+      id: number;
+      screen_name: string;
+      location_in_venue: string;
+    }>
+  >([]);
 
   useEffect(() => {
     let mounted = true;
@@ -707,33 +1127,43 @@ const MyScreensGrid: React.FC = () => {
       if (ok && data?.screens) {
         setScreens(data.screens);
       } else {
-        setError(data?.message || 'Failed to load screens');
+        setError(data?.message || "Failed to load screens");
       }
       setLoading(false);
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
     <div className="flex-1 overflow-y-auto p-8 md:p-10 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">My Screens</h2>
-          <p className="mt-1 text-sm text-gray-500">Your registered screens appear here.</p>
+          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
+            My Screens
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Your registered screens appear here.
+          </p>
         </div>
-        {loading && (
-          <div className="text-gray-600">Loading screens...</div>
-        )}
+        {loading && <div className="text-gray-600">Loading screens...</div>}
         {error && (
-          <div className="mb-4 rounded-lg border px-4 py-3 text-sm bg-red-50 text-red-700 border-red-200">{error}</div>
+          <div className="mb-4 rounded-lg border px-4 py-3 text-sm bg-red-50 text-red-700 border-red-200">
+            {error}
+          </div>
         )}
-        {!loading && !error && (
-          screens.length === 0 ? (
+        {!loading &&
+          !error &&
+          (screens.length === 0 ? (
             <div className="text-gray-600">No screens found.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {screens.map((s) => (
-                <div key={s.id} className="bg-white rounded-2xl shadow ring-1 ring-gray-100 overflow-hidden">
+                <div
+                  key={s.id}
+                  className="bg-white rounded-2xl shadow ring-1 ring-gray-100 overflow-hidden"
+                >
                   {/* Image area (3/4th of the card) */}
                   <div className="aspect-video bg-gray-100">
                     <img
@@ -745,14 +1175,17 @@ const MyScreensGrid: React.FC = () => {
                   </div>
                   {/* Footer */}
                   <div className="px-4 py-3 border-t border-gray-100">
-                    <div className="text-sm font-medium text-gray-900 truncate">{s.screen_name}</div>
-                    <div className="text-sm text-gray-500 truncate">{s.location_in_venue}</div>
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {s.screen_name}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate">
+                      {s.location_in_venue}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          )
-        )}
+          ))}
       </div>
     </div>
   );
@@ -760,15 +1193,17 @@ const MyScreensGrid: React.FC = () => {
 
 // Main Screen Manager Dashboard Component
 const ScreenManagerDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('gallery');
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans relative">
       {/* Sidebar with transition */}
       <div
-        className={`transition-all duration-300 h-full ${sidebarOpen ? 'w-80' : 'w-0'} overflow-hidden relative`}
-        style={{ minWidth: sidebarOpen ? '20rem' : '0' }}
+        className={`transition-all duration-300 h-full ${
+          sidebarOpen ? "w-80" : "w-0"
+        } overflow-hidden relative`}
+        style={{ minWidth: sidebarOpen ? "20rem" : "0" }}
       >
         {/* Toggle button inside sidebar when open */}
         {sidebarOpen && (
@@ -780,7 +1215,11 @@ const ScreenManagerDashboard: React.FC = () => {
             <ChevronLeft className="text-gray-500" />
           </button>
         )}
-        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} sidebarOpen={sidebarOpen} />
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          sidebarOpen={sidebarOpen}
+        />
       </div>
       {/* Toggle button at screen edge when sidebar is closed */}
       {!sidebarOpen && (
@@ -794,10 +1233,20 @@ const ScreenManagerDashboard: React.FC = () => {
       )}
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {activeTab === 'screens' ? (
+        {activeTab === "dashboard" ? (
+          <DashboardOverview />
+        ) : activeTab === "screens" ? (
           <ScreenRegistrationForm />
-        ) : activeTab === 'myscreens' ? (
+        ) : activeTab === "your_screens" ? (
           <MyScreensGrid />
+        ) : activeTab === "analytics" ? (
+          <AnalyticsDashboard />
+        ) : activeTab === "your_bookings" ? (
+          <div className="flex-1 overflow-y-auto p-8 md:p-10 bg-gray-50">
+            <div className="max-w-6xl mx-auto">
+              <BookingList />
+            </div>
+          </div>
         ) : (
           <MainContent />
         )}

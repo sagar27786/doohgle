@@ -138,7 +138,11 @@ function App() {
   const navigate = useNavigate();
   const hideHeaderRoutes = [
     "/auth/login",
+    "/auth/signup",
+    "/auth/select-role",
     "/products/screen-manager",
+    "/venue-dashboard",
+    "/products/ads-manager",
     "/products/ads-manager/dashboard",
   ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
@@ -147,22 +151,8 @@ function App() {
       <div className="min-h-screen bg-white">
         {shouldShowHeader && <Header />}
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route
-            path="/products/screen-manager"
-            element={<ScreenManagerPage />}
-          />
-          <Route
-            path="/ScreenManagerDashboard"
-            element={<ScreenManagerDashboard />}
-          />
-
-          {/* Ads Manager Routes */}
-          <Route path="/products/ads-manager" element={<AdsManagerPage />} />
-          <Route
-            path="/products/ads-manager/dashboard"
-            element={<AdsManagerDashboard />}
-          />
 
           {/* Auth Routes */}
           <Route
@@ -174,19 +164,42 @@ function App() {
             element={<Signup onSwitch={() => navigate("/auth")} />}
           />
           <Route path="/auth/login" element={<LoginSignup />} />
-          <Route path="/auth/select-role" element={<RoleSelect />} />
+
+          {/* Role Selection - Protected but accessible to all authenticated users */}
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={[
+                  "venue_owner",
+                  "advertiser",
+                  "screen_manager",
+                  "",
+                ]}
+              />
+            }
+          >
+            <Route path="/auth/select-role" element={<RoleSelect />} />
+          </Route>
 
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
 
-          {/* Protected Advertiser Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
+          {/* Protected Screen Manager Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["screen_manager"]} />}>
+            <Route
+              path="/products/screen-manager"
+              element={<ScreenManagerPage />}
+            />
             <Route
               path="/ScreenManagerDashboard"
               element={<ScreenManagerDashboard />}
             />
+          </Route>
+
+          {/* Protected Advertiser Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />
             <Route
               path="/products/ads-manager/dashboard"

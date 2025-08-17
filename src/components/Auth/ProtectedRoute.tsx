@@ -14,7 +14,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
     return <Navigate to="/auth/login" replace />;
   }
 
-  const hasRequiredRole = currentUser.roles && currentUser.roles.some((role: string) => allowedRoles.includes(role));
+  // If allowedRoles includes an empty string (""), treat that as "any authenticated user".
+  // This lets users who are authenticated but haven't been assigned roles (yet) access
+  // pages like `/auth/select-role`.
+  let hasRequiredRole = false;
+  if (allowedRoles.includes('')) {
+    hasRequiredRole = true;
+  } else if (currentUser.roles && Array.isArray(currentUser.roles)) {
+    hasRequiredRole = currentUser.roles.some((role: string) => allowedRoles.includes(role));
+  }
 
   if (!hasRequiredRole) {
     // User does not have the required role

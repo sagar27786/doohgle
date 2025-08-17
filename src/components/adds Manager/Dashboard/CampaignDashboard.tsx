@@ -1305,7 +1305,7 @@ const CampaignDashboard: React.FC<CampaignDashboardProps> = ({ onBack }) => {
         isOpen={isLocationManagerOpen}
         onClose={() => setIsLocationManagerOpen(false)}
         onLocationSelect={(location) => {
-          console.log('Selected location:', location);
+          console.log("Selected location:", location);
           // You can handle the selected location here
           // For example, add it to your campaign targeting
         }}

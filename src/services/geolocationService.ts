@@ -13,14 +13,16 @@ class GeolocationService {
 
   // Check if geolocation is supported
   isSupported(): boolean {
-    return 'geolocation' in navigator;
+    return "geolocation" in navigator;
   }
 
   // Get current position once
-  async getCurrentPosition(options?: PositionOptions): Promise<GeolocationPosition> {
+  async getCurrentPosition(
+    options?: PositionOptions
+  ): Promise<GeolocationPosition> {
     return new Promise((resolve, reject) => {
       if (!this.isSupported()) {
-        reject(new Error('Geolocation is not supported by this browser'));
+        reject(new Error("Geolocation is not supported by this browser"));
         return;
       }
 
@@ -28,7 +30,7 @@ class GeolocationService {
         enableHighAccuracy: true,
         timeout: 15000,
         maximumAge: 300000, // 5 minutes
-        ...options
+        ...options,
       };
 
       navigator.geolocation.getCurrentPosition(
@@ -37,20 +39,20 @@ class GeolocationService {
           resolve(position);
         },
         (error) => {
-          let errorMessage = 'Unknown location error';
-          
+          let errorMessage = "Unknown location error";
+
           switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = 'Location access denied by user';
+              errorMessage = "Location access denied by user";
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information unavailable';
+              errorMessage = "Location information unavailable";
               break;
             case error.TIMEOUT:
-              errorMessage = 'Location request timed out';
+              errorMessage = "Location request timed out";
               break;
           }
-          
+
           reject(new Error(errorMessage));
         },
         defaultOptions
@@ -65,14 +67,14 @@ class GeolocationService {
     options?: PositionOptions
   ): number {
     if (!this.isSupported()) {
-      throw new Error('Geolocation is not supported');
+      throw new Error("Geolocation is not supported");
     }
 
     const defaultOptions: PositionOptions = {
       enableHighAccuracy: true,
       timeout: 10000,
       maximumAge: 60000, // 1 minute
-      ...options
+      ...options,
     };
 
     this.watchId = navigator.geolocation.watchPosition(
@@ -102,20 +104,22 @@ class GeolocationService {
 
   // Calculate distance between two points using Haversine formula
   calculateDistance(
-    lat1: number, 
-    lon1: number, 
-    lat2: number, 
+    lat1: number,
+    lon1: number,
+    lat2: number,
     lon2: number
   ): number {
     const R = 6371; // Earth's radius in kilometers
     const dLat = this.toRadians(lat2 - lat1);
     const dLon = this.toRadians(lon2 - lon1);
-    
-    const a = 
+
+    const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
+      Math.cos(this.toRadians(lat1)) *
+        Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in kilometers
   }
@@ -131,11 +135,11 @@ class GeolocationService {
 
   // Get location accuracy description
   getAccuracyDescription(accuracy: number): string {
-    if (accuracy <= 5) return 'Very High';
-    if (accuracy <= 10) return 'High';
-    if (accuracy <= 50) return 'Medium';
-    if (accuracy <= 100) return 'Low';
-    return 'Very Low';
+    if (accuracy <= 5) return "Very High";
+    if (accuracy <= 10) return "High";
+    if (accuracy <= 50) return "Medium";
+    if (accuracy <= 100) return "Low";
+    return "Very Low";
   }
 }
 

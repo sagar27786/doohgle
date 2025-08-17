@@ -150,11 +150,11 @@ body {
   .mobile-card {
     @apply p-4 rounded-xl;
   }
-  
+
   .mobile-nav {
     @apply px-2 py-2;
   }
-  
+
   .mobile-text {
     @apply text-sm;
   }

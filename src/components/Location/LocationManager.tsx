@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
   Users,
@@ -11,10 +11,13 @@ import {
   MapIcon,
   Crosshair,
   Clock,
-  TrendingUp
-} from 'lucide-react';
-import IndianMap from '../Map/IndianMap';
-import LocationService, { LocationData, LocationHistory } from '../../services/locationService';
+  TrendingUp,
+} from "lucide-react";
+import IndianMap from "../Map/IndianMap";
+import LocationService, {
+  LocationData,
+  LocationHistory,
+} from "../../services/locationService";
 
 interface LocationManagerProps {
   isOpen: boolean;
@@ -25,11 +28,15 @@ interface LocationManagerProps {
 const LocationManager: React.FC<LocationManagerProps> = ({
   isOpen,
   onClose,
-  onLocationSelect
+  onLocationSelect,
 }) => {
-  const [activeTab, setActiveTab] = useState<'map' | 'locations' | 'history' | 'settings'>('map');
+  const [activeTab, setActiveTab] = useState<
+    "map" | "locations" | "history" | "settings"
+  >("map");
   const [userLocations, setUserLocations] = useState<LocationData[]>([]);
-  const [primaryLocation, setPrimaryLocation] = useState<LocationData | null>(null);
+  const [primaryLocation, setPrimaryLocation] = useState<LocationData | null>(
+    null
+  );
   const [locationHistory, setLocationHistory] = useState<LocationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +64,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
       const historyData = await LocationService.getLocationHistory(20);
       setLocationHistory(historyData.history);
     } catch (err) {
-      console.error('Failed to load location history:', err);
+      console.error("Failed to load location history:", err);
     }
   };
 
@@ -67,7 +74,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
       const statsData = await LocationService.getLocationStats();
       setStats(statsData);
     } catch (err) {
-      console.error('Failed to load location stats:', err);
+      console.error("Failed to load location stats:", err);
     }
   };
 
@@ -106,10 +113,10 @@ const LocationManager: React.FC<LocationManagerProps> = ({
   }, [isOpen]);
 
   const tabs = [
-    { id: 'map', label: 'Map View', icon: MapIcon },
-    { id: 'locations', label: 'My Locations', icon: MapPin },
-    { id: 'history', label: 'History', icon: History },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: "map", label: "Map View", icon: MapIcon },
+    { id: "locations", label: "My Locations", icon: MapPin },
+    { id: "history", label: "History", icon: History },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   if (!isOpen) return null;
@@ -132,7 +139,9 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">Location Manager</h2>
-                  <p className="text-blue-100">Manage your locations and view campaign reach</p>
+                  <p className="text-blue-100">
+                    Manage your locations and view campaign reach
+                  </p>
                 </div>
               </div>
               <button
@@ -168,8 +177,8 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -203,10 +212,12 @@ const LocationManager: React.FC<LocationManagerProps> = ({
             )}
 
             {/* Map View Tab */}
-            {activeTab === 'map' && (
+            {activeTab === "map" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Interactive Map</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Interactive Map
+                  </h3>
                   <motion.button
                     onClick={updateCurrentLocation}
                     disabled={isLoading}
@@ -233,10 +244,12 @@ const LocationManager: React.FC<LocationManagerProps> = ({
             )}
 
             {/* My Locations Tab */}
-            {activeTab === 'locations' && (
+            {activeTab === "locations" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">My Saved Locations</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    My Saved Locations
+                  </h3>
                   <motion.button
                     onClick={loadUserLocations}
                     disabled={isLoading}
@@ -244,7 +257,9 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+                    />
                     <span>Refresh</span>
                   </motion.button>
                 </div>
@@ -269,8 +284,8 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                         key={location.id}
                         className={`p-4 rounded-xl border-2 cursor-pointer ${
                           location.is_primary
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 bg-white hover:border-gray-300'
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 bg-white hover:border-gray-300"
                         }`}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => onLocationSelect?.(location)}
@@ -279,11 +294,21 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-2">
-                              <MapPin className={`w-4 h-4 ${location.is_primary ? 'text-blue-600' : 'text-gray-500'}`} />
-                              <span className={`text-sm font-medium capitalize ${
-                                location.is_primary ? 'text-blue-900' : 'text-gray-700'
-                              }`}>
-                                {location.location_type || 'Unknown'}
+                              <MapPin
+                                className={`w-4 h-4 ${
+                                  location.is_primary
+                                    ? "text-blue-600"
+                                    : "text-gray-500"
+                                }`}
+                              />
+                              <span
+                                className={`text-sm font-medium capitalize ${
+                                  location.is_primary
+                                    ? "text-blue-900"
+                                    : "text-gray-700"
+                                }`}
+                              >
+                                {location.location_type || "Unknown"}
                               </span>
                               {location.is_primary && (
                                 <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -292,13 +317,18 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                               )}
                             </div>
                             <p className="text-gray-900 font-medium truncate">
-                              {location.city || 'Unknown City'}
+                              {location.city || "Unknown City"}
                             </p>
                             <p className="text-gray-600 text-sm truncate">
                               {LocationService.formatLocationDisplay(location)}
                             </p>
                             <p className="text-gray-400 text-xs mt-1">
-                              Last accessed: {new Date(location.last_accessed || location.created_at || '').toLocaleDateString()}
+                              Last accessed:{" "}
+                              {new Date(
+                                location.last_accessed ||
+                                  location.created_at ||
+                                  ""
+                              ).toLocaleDateString()}
                             </p>
                           </div>
                           <button
@@ -319,10 +349,12 @@ const LocationManager: React.FC<LocationManagerProps> = ({
             )}
 
             {/* History Tab */}
-            {activeTab === 'history' && (
+            {activeTab === "history" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Location History</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Location History
+                  </h3>
                   <motion.button
                     onClick={loadLocationHistory}
                     disabled={isLoading}
@@ -330,7 +362,9 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+                    />
                     <span>Refresh</span>
                   </motion.button>
                 </div>
@@ -355,10 +389,11 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">
-                            {entry.city || 'Unknown Location'}
+                            {entry.city || "Unknown Location"}
                           </p>
                           <p className="text-gray-600 text-sm">
-                            {entry.latitude.toFixed(6)}, {entry.longitude.toFixed(6)}
+                            {entry.latitude.toFixed(6)},{" "}
+                            {entry.longitude.toFixed(6)}
                           </p>
                           <p className="text-gray-400 text-xs">
                             {new Date(entry.created_at).toLocaleString()}
@@ -366,7 +401,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500 capitalize">
-                            {entry.location_source || 'GPS'}
+                            {entry.location_source || "GPS"}
                           </p>
                           {entry.accuracy && (
                             <p className="text-xs text-gray-400">
@@ -382,9 +417,11 @@ const LocationManager: React.FC<LocationManagerProps> = ({
             )}
 
             {/* Settings Tab */}
-            {activeTab === 'settings' && (
+            {activeTab === "settings" && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900">Location Settings</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Location Settings
+                </h3>
 
                 {/* Statistics */}
                 {stats && (
@@ -392,21 +429,35 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
                       <div className="flex items-center space-x-3 mb-4">
                         <TrendingUp className="w-8 h-8 text-blue-600" />
-                        <h4 className="text-lg font-semibold text-blue-900">Location Stats</h4>
+                        <h4 className="text-lg font-semibold text-blue-900">
+                          Location Stats
+                        </h4>
                       </div>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-blue-700">Total Locations:</span>
-                          <span className="font-semibold text-blue-900">{stats.locations.total_locations}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Active Locations:</span>
-                          <span className="font-semibold text-blue-900">{stats.locations.active_locations}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Average Accuracy:</span>
+                          <span className="text-blue-700">
+                            Total Locations:
+                          </span>
                           <span className="font-semibold text-blue-900">
-                            {stats.locations.avg_accuracy ? `±${Math.round(stats.locations.avg_accuracy)}m` : 'N/A'}
+                            {stats.locations.total_locations}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">
+                            Active Locations:
+                          </span>
+                          <span className="font-semibold text-blue-900">
+                            {stats.locations.active_locations}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">
+                            Average Accuracy:
+                          </span>
+                          <span className="font-semibold text-blue-900">
+                            {stats.locations.avg_accuracy
+                              ? `±${Math.round(stats.locations.avg_accuracy)}m`
+                              : "N/A"}
                           </span>
                         </div>
                       </div>
@@ -415,22 +466,34 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                     <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
                       <div className="flex items-center space-x-3 mb-4">
                         <Users className="w-8 h-8 text-green-600" />
-                        <h4 className="text-lg font-semibold text-green-900">Activity Stats</h4>
+                        <h4 className="text-lg font-semibold text-green-900">
+                          Activity Stats
+                        </h4>
                       </div>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-green-700">History Entries:</span>
-                          <span className="font-semibold text-green-900">{stats.history.total_history_entries}</span>
+                          <span className="text-green-700">
+                            History Entries:
+                          </span>
+                          <span className="font-semibold text-green-900">
+                            {stats.history.total_history_entries}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-green-700">Unique Days:</span>
-                          <span className="font-semibold text-green-900">{stats.history.unique_days}</span>
+                          <span className="font-semibold text-green-900">
+                            {stats.history.unique_days}
+                          </span>
                         </div>
                         {stats.history.first_location && (
                           <div className="flex justify-between">
-                            <span className="text-green-700">First Record:</span>
+                            <span className="text-green-700">
+                              First Record:
+                            </span>
                             <span className="font-semibold text-green-900">
-                              {new Date(stats.history.first_location).toLocaleDateString()}
+                              {new Date(
+                                stats.history.first_location
+                              ).toLocaleDateString()}
                             </span>
                           </div>
                         )}
@@ -441,26 +504,44 @@ const LocationManager: React.FC<LocationManagerProps> = ({
 
                 {/* Location Privacy Settings */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Privacy Settings</h4>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                    Privacy Settings
+                  </h4>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">Share location with nearby users</p>
-                        <p className="text-sm text-gray-500">Allow other users to see your general location</p>
+                        <p className="font-medium text-gray-900">
+                          Share location with nearby users
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Allow other users to see your general location
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          defaultChecked
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">High accuracy location</p>
-                        <p className="text-sm text-gray-500">Use GPS for more precise location tracking</p>
+                        <p className="font-medium text-gray-900">
+                          High accuracy location
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Use GPS for more precise location tracking
+                        </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          defaultChecked
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                       </label>
                     </div>
@@ -474,7 +555,8 @@ const LocationManager: React.FC<LocationManagerProps> = ({
           <div className="border-t border-gray-200 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500">
-                Location data is stored securely and used only for campaign targeting
+                Location data is stored securely and used only for campaign
+                targeting
               </div>
               <div className="flex space-x-3">
                 <motion.button

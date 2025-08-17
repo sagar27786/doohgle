@@ -33,7 +33,7 @@ export async function checkScreenAvailability(req: Request, res: Response) {
     }
 
     const client = await pool.connect();
-    
+
     try {
       // Check if screen exists and is active
       const screenCheck = await client.query(
@@ -90,7 +90,8 @@ export async function checkScreenAvailability(req: Request, res: Response) {
 
       const availability: ScreenAvailability = {
         screen_id: parseInt(screen_id as string),
-        available: conflictResult.rows.length === 0 || availableSlots.length > 0,
+        available:
+          conflictResult.rows.length === 0 || availableSlots.length > 0,
         conflicting_bookings: conflictResult.rows,
         available_slots: availableSlots,
       };
@@ -142,12 +143,13 @@ export async function createBooking(
     if (!screen_id || !start_date || !end_date || !total_amount) {
       return res.status(400).json({
         success: false,
-        message: "screen_id, start_date, end_date, and total_amount are required",
+        message:
+          "screen_id, start_date, end_date, and total_amount are required",
       });
     }
 
     const client = await pool.connect();
-    
+
     try {
       await client.query("BEGIN");
 
@@ -158,15 +160,15 @@ export async function createBooking(
         WHERE id = $1 
         FOR UPDATE
       `;
-      
+
       const screenResult = await client.query(lockQuery, [screen_id]);
-      
+
       if (screenResult.rows.length === 0) {
         throw new Error("Screen not found");
       }
 
       const screen = screenResult.rows[0];
-      
+
       if (!screen.is_active) {
         throw new Error("Screen is not active for bookings");
       }
@@ -282,7 +284,8 @@ export async function createBooking(
     console.error("Error creating booking:", error);
     res.status(500).json({
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create booking",
+      message:
+        error instanceof Error ? error.message : "Failed to create booking",
     });
   }
 }
@@ -334,7 +337,9 @@ export async function getMyBookings(
       paramIndex++;
     }
 
-    query += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${
+      paramIndex + 1
+    }`;
     params.push(parseInt(limit as string), parseInt(offset as string));
 
     const result = await pool.query(query, params);
@@ -390,7 +395,7 @@ export async function cancelBooking(
     const { reason } = req.body;
 
     const client = await pool.connect();
-    
+
     try {
       await client.query("BEGIN");
 
@@ -479,7 +484,8 @@ export async function cancelBooking(
     console.error("Error cancelling booking:", error);
     res.status(500).json({
       success: false,
-      message: error instanceof Error ? error.message : "Failed to cancel booking",
+      message:
+        error instanceof Error ? error.message : "Failed to cancel booking",
     });
   }
 }
@@ -494,13 +500,15 @@ function calculateAvailableSlots(
   // Implementation for calculating available time slots
   // This would involve complex date/time calculations
   const availableSlots: any[] = [];
-  
+
   // Simplified logic - in production, this would be more sophisticated
   if (conflictingBookings.length === 0) {
     availableSlots.push({
       start: startDate,
       end: endDate,
-      available_hours: requestedHours ? JSON.parse(requestedHours) : [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+      available_hours: requestedHours
+        ? JSON.parse(requestedHours)
+        : [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
     });
   }
 

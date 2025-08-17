@@ -14,7 +14,8 @@ export const createOTPTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS otps (
       id SERIAL PRIMARY KEY,
-      email VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  phone VARCHAR(20),
       otp VARCHAR(6) NOT NULL,
       expires_at TIMESTAMP NOT NULL,
       is_used BOOLEAN DEFAULT FALSE,

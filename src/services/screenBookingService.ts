@@ -1,7 +1,7 @@
 // Screen Booking Service Integration
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = "http://localhost:4000/api";
 
 export interface Screen {
   id: number;
@@ -34,7 +34,7 @@ export interface Booking {
   start_date: string;
   end_date: string;
   total_amount: number;
-  status: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
+  status: "pending" | "confirmed" | "active" | "completed" | "cancelled";
   booking_hours: number[];
   content_url?: string;
   notes?: string;
@@ -47,10 +47,10 @@ export interface Booking {
 
 class ScreenBookingService {
   private getAuthHeaders() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     };
   }
 
@@ -69,13 +69,15 @@ class ScreenBookingService {
       });
 
       if (bookingHours) {
-        params.append('booking_hours', JSON.stringify(bookingHours));
+        params.append("booking_hours", JSON.stringify(bookingHours));
       }
 
-      const response = await axios.get(`${API_BASE_URL}/bookings/availability?${params}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/bookings/availability?${params}`
+      );
       return response.data;
     } catch (error) {
-      console.error('Error checking availability:', error);
+      console.error("Error checking availability:", error);
       throw error;
     }
   }
@@ -90,7 +92,7 @@ class ScreenBookingService {
       );
       return response.data;
     } catch (error) {
-      console.error('Error creating booking:', error);
+      console.error("Error creating booking:", error);
       throw error;
     }
   }
@@ -103,8 +105,8 @@ class ScreenBookingService {
         offset: offset.toString(),
       });
 
-      if (status && status !== 'all') {
-        params.append('status', status);
+      if (status && status !== "all") {
+        params.append("status", status);
       }
 
       const response = await axios.get(
@@ -113,7 +115,7 @@ class ScreenBookingService {
       );
       return response.data;
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      console.error("Error fetching bookings:", error);
       throw error;
     }
   }
@@ -128,23 +130,27 @@ class ScreenBookingService {
       );
       return response.data;
     } catch (error) {
-      console.error('Error cancelling booking:', error);
+      console.error("Error cancelling booking:", error);
       throw error;
     }
   }
 
   // Get screens with availability info
-  async getAvailableScreens(city?: string, startDate?: string, endDate?: string) {
+  async getAvailableScreens(
+    city?: string,
+    startDate?: string,
+    endDate?: string
+  ) {
     try {
       const params = new URLSearchParams();
-      if (city) params.append('city', city);
-      if (startDate) params.append('start_date', startDate);
-      if (endDate) params.append('end_date', endDate);
+      if (city) params.append("city", city);
+      if (startDate) params.append("start_date", startDate);
+      if (endDate) params.append("end_date", endDate);
 
       const response = await axios.get(`${API_BASE_URL}/screens?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching available screens:', error);
+      console.error("Error fetching available screens:", error);
       throw error;
     }
   }
@@ -160,36 +166,41 @@ class ScreenBookingService {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const daysDiff =
+      Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     // Cost calculation: hours per day * days * cost per 10 seconds * 360 (10-second slots per hour)
-    const totalAmount = selectedHours.length * daysDiff * screen.cost_per_10_seconds * 360;
-    
+    const totalAmount =
+      selectedHours.length * daysDiff * screen.cost_per_10_seconds * 360;
+
     return Math.round(totalAmount * 100) / 100;
   }
 
   // Format currency for display
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
     }).format(amount);
   }
 
   // Validate booking data
-  validateBookingData(bookingData: BookingRequest): { isValid: boolean; errors: string[] } {
+  validateBookingData(bookingData: BookingRequest): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!bookingData.screen_id) {
-      errors.push('Screen ID is required');
+      errors.push("Screen ID is required");
     }
 
     if (!bookingData.start_date) {
-      errors.push('Start date is required');
+      errors.push("Start date is required");
     }
 
     if (!bookingData.end_date) {
-      errors.push('End date is required');
+      errors.push("End date is required");
     }
 
     if (bookingData.start_date && bookingData.end_date) {
@@ -199,43 +210,43 @@ class ScreenBookingService {
       today.setHours(0, 0, 0, 0);
 
       if (startDate < today) {
-        errors.push('Start date cannot be in the past');
+        errors.push("Start date cannot be in the past");
       }
 
       if (endDate < startDate) {
-        errors.push('End date cannot be before start date');
+        errors.push("End date cannot be before start date");
       }
     }
 
     if (!bookingData.booking_hours || bookingData.booking_hours.length === 0) {
-      errors.push('At least one time slot must be selected');
+      errors.push("At least one time slot must be selected");
     }
 
     if (!bookingData.total_amount || bookingData.total_amount <= 0) {
-      errors.push('Total amount must be greater than 0');
+      errors.push("Total amount must be greater than 0");
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
   // Get booking status color
   getStatusColor(status: string): string {
     switch (status) {
-      case 'pending':
-        return 'text-yellow-600 bg-yellow-100 border-yellow-200';
-      case 'confirmed':
-        return 'text-blue-600 bg-blue-100 border-blue-200';
-      case 'active':
-        return 'text-green-600 bg-green-100 border-green-200';
-      case 'completed':
-        return 'text-gray-600 bg-gray-100 border-gray-200';
-      case 'cancelled':
-        return 'text-red-600 bg-red-100 border-red-200';
+      case "pending":
+        return "text-yellow-600 bg-yellow-100 border-yellow-200";
+      case "confirmed":
+        return "text-blue-600 bg-blue-100 border-blue-200";
+      case "active":
+        return "text-green-600 bg-green-100 border-green-200";
+      case "completed":
+        return "text-gray-600 bg-gray-100 border-gray-200";
+      case "cancelled":
+        return "text-red-600 bg-red-100 border-red-200";
       default:
-        return 'text-gray-600 bg-gray-100 border-gray-200';
+        return "text-gray-600 bg-gray-100 border-gray-200";
     }
   }
 

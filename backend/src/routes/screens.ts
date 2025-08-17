@@ -9,6 +9,7 @@ import {
   getScreenTypes,
   getPopularCities,
   getDashboardStats,
+  getScreenManagerDashboard,
 } from "../controllers/screensController";
 
 const router = Router();
@@ -19,6 +20,13 @@ router.get("/mine", authMiddleware, getMyScreens);
 
 // Dashboard analytics for ads manager
 router.get("/dashboard/stats", authMiddleware, getDashboardStats);
+
+// Dashboard analytics for screen manager
+router.get(
+  "/dashboard/manager/stats",
+  authMiddleware,
+  getScreenManagerDashboard
+);
 
 // New ads manager routes (public access for browsing screens)
 router.get("/", getAllScreens);

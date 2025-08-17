@@ -1,44 +1,44 @@
-import express from 'express';
+import express from "express";
 import {
   getUserLocation,
   updateUserLocation,
   getNearbyLocations,
   reverseGeocode,
   getLocationHistory,
-  deleteUserLocation
-} from '../controllers/locationController';
-import { authMiddleware } from '../middleware/auth';
+  deleteUserLocation,
+} from "../controllers/locationController";
+import { authMiddleware } from "../middleware/auth";
 
 const router = express.Router();
 
 // Get user's current location
-router.get('/current', authMiddleware, getUserLocation);
+router.get("/current", authMiddleware, getUserLocation);
 
 // Update user location
-router.post('/update', authMiddleware, updateUserLocation);
-router.put('/update', authMiddleware, updateUserLocation);
+router.post("/update", authMiddleware, updateUserLocation);
+router.put("/update", authMiddleware, updateUserLocation);
 
 // Get nearby locations
-router.get('/nearby', getNearbyLocations);
+router.get("/nearby", getNearbyLocations);
 
 // Reverse geocoding - convert coordinates to address
-router.get('/reverse-geocode', reverseGeocode);
+router.get("/reverse-geocode", reverseGeocode);
 
 // Get location history
-router.get('/history', authMiddleware, getLocationHistory);
+router.get("/history", authMiddleware, getLocationHistory);
 
 // Delete a location
-router.delete('/:locationId', authMiddleware, deleteUserLocation);
+router.delete("/:locationId", authMiddleware, deleteUserLocation);
 
 // Public endpoint to get all active locations for map visualization
-router.get('/public', async (req, res) => {
+router.get("/public", async (req, res) => {
   try {
-    const { Pool } = require('pg');
+    const { Pool } = require("pg");
     const pool = new Pool({
-      user: process.env.DB_USER || 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      database: process.env.DB_NAME || 'ads_manager_db',
-      password: process.env.DB_PASSWORD || 'password',
+      user: process.env.DB_USER || "postgres",
+      host: process.env.DB_HOST || "localhost",
+      database: process.env.DB_NAME || "ads_manager_db",
+      password: process.env.DB_PASSWORD || "password",
       port: process.env.DB_PORT || 5432,
     });
 
@@ -63,29 +63,28 @@ router.get('/public', async (req, res) => {
       success: true,
       data: {
         locations: result.rows,
-        total: result.rows.length
-      }
+        total: result.rows.length,
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching public locations:', error);
+    console.error("Error fetching public locations:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch locations'
+      message: "Failed to fetch locations",
     });
   }
 });
 
 // Get location statistics
-router.get('/stats', authMiddleware, async (req, res) => {
+router.get("/stats", authMiddleware, async (req, res) => {
   try {
     const userId = (req as any).user?.id;
-    const { Pool } = require('pg');
+    const { Pool } = require("pg");
     const pool = new Pool({
-      user: process.env.DB_USER || 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      database: process.env.DB_NAME || 'ads_manager_db',
-      password: process.env.DB_PASSWORD || 'password',
+      user: process.env.DB_USER || "postgres",
+      host: process.env.DB_HOST || "localhost",
+      database: process.env.DB_NAME || "ads_manager_db",
+      password: process.env.DB_PASSWORD || "password",
       port: process.env.DB_PORT || 5432,
     });
 
@@ -113,22 +112,21 @@ router.get('/stats', authMiddleware, async (req, res) => {
 
     const [statsResult, historyResult] = await Promise.all([
       pool.query(statsQuery, [userId]),
-      pool.query(historyStatsQuery, [userId])
+      pool.query(historyStatsQuery, [userId]),
     ]);
 
     res.json({
       success: true,
       data: {
         locations: statsResult.rows[0],
-        history: historyResult.rows[0]
-      }
+        history: historyResult.rows[0],
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching location stats:', error);
+    console.error("Error fetching location stats:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch location statistics'
+      message: "Failed to fetch location statistics",
     });
   }
 });

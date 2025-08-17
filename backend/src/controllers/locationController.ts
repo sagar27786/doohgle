@@ -1,12 +1,12 @@
-import { Request, Response } from 'express';
-import { Pool } from 'pg';
-const { Pool: PgPool } = require('pg');
+import { Request, Response } from "express";
+import { Pool } from "pg";
+const { Pool: PgPool } = require("pg");
 
 const pool = new PgPool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'ads_manager_db',
-  password: process.env.DB_PASSWORD || 'password',
+  user: process.env.DB_USER || "postgres",
+  host: process.env.DB_HOST || "localhost",
+  database: process.env.DB_NAME || "ads_manager_db",
+  password: process.env.DB_PASSWORD || "password",
   port: process.env.DB_PORT || 5432,
 });
 
@@ -32,11 +32,11 @@ interface LocationRequest extends Request {
 export const getUserLocation = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'User authentication required'
+        message: "User authentication required",
       });
     }
 
@@ -66,18 +66,18 @@ export const getUserLocation = async (req: Request, res: Response) => {
     `;
 
     const result = await pool.query(query, [userId]);
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No location found for user'
+        message: "No location found for user",
       });
     }
 
     // Update last accessed timestamp for primary location
     if (result.rows[0].is_primary) {
       await pool.query(
-        'UPDATE user_locations SET last_accessed = CURRENT_TIMESTAMP WHERE id = $1',
+        "UPDATE user_locations SET last_accessed = CURRENT_TIMESTAMP WHERE id = $1",
         [result.rows[0].id]
       );
     }
@@ -86,28 +86,31 @@ export const getUserLocation = async (req: Request, res: Response) => {
       success: true,
       data: {
         locations: result.rows,
-        primary: result.rows.find((loc: any) => loc.is_primary) || result.rows[0]
-      }
+        primary:
+          result.rows.find((loc: any) => loc.is_primary) || result.rows[0],
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching user location:', error);
+    console.error("Error fetching user location:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
 // Update or create user location
-export const updateUserLocation = async (req: LocationRequest, res: Response) => {
+export const updateUserLocation = async (
+  req: LocationRequest,
+  res: Response
+) => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'User authentication required'
+        message: "User authentication required",
       });
     }
 
@@ -117,42 +120,50 @@ export const updateUserLocation = async (req: LocationRequest, res: Response) =>
       accuracy,
       city,
       state,
-      country = 'India',
+      country = "India",
       formattedAddress,
-      locationSource = 'gps',
-      locationType = 'current'
+      locationSource = "gps",
+      locationType = "current",
     } = req.body;
 
     // Validate coordinates
     if (!latitude || !longitude) {
       return res.status(400).json({
         success: false,
-        message: 'Latitude and longitude are required'
+        message: "Latitude and longitude are required",
       });
     }
 
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    if (
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid coordinates'
+        message: "Invalid coordinates",
       });
     }
 
     const client = await pool.connect();
-    
+
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
       // Check if location already exists for this user
       const existingQuery = `
         SELECT id FROM user_locations 
         WHERE user_id = $1 AND location_type = $2 AND is_active = TRUE
       `;
-      
-      const existingResult = await client.query(existingQuery, [userId, locationType]);
-      
+
+      const existingResult = await client.query(existingQuery, [
+        userId,
+        locationType,
+      ]);
+
       let locationId;
-      
+
       if (existingResult.rows.length > 0) {
         // Update existing location
         const updateQuery = `
@@ -170,12 +181,19 @@ export const updateUserLocation = async (req: LocationRequest, res: Response) =>
           WHERE id = $9
           RETURNING *
         `;
-        
+
         const updateResult = await client.query(updateQuery, [
-          latitude, longitude, accuracy, city, state, country,
-          formattedAddress, locationSource, existingResult.rows[0].id
+          latitude,
+          longitude,
+          accuracy,
+          city,
+          state,
+          country,
+          formattedAddress,
+          locationSource,
+          existingResult.rows[0].id,
         ]);
-        
+
         locationId = updateResult.rows[0].id;
       } else {
         // Create new location
@@ -187,21 +205,30 @@ export const updateUserLocation = async (req: LocationRequest, res: Response) =>
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
           RETURNING *
         `;
-        
+
         // Set as primary if it's the first location or if it's current type
-        const isPrimary = locationType === 'current';
-        
+        const isPrimary = locationType === "current";
+
         const insertResult = await client.query(insertQuery, [
-          userId, latitude, longitude, accuracy, city, state,
-          country, formattedAddress, locationSource, locationType, isPrimary
+          userId,
+          latitude,
+          longitude,
+          accuracy,
+          city,
+          state,
+          country,
+          formattedAddress,
+          locationSource,
+          locationType,
+          isPrimary,
         ]);
-        
+
         locationId = insertResult.rows[0].id;
-        
+
         // If this is set as primary, unset other primary locations
         if (isPrimary) {
           await client.query(
-            'UPDATE user_locations SET is_primary = FALSE WHERE user_id = $1 AND id != $2',
+            "UPDATE user_locations SET is_primary = FALSE WHERE user_id = $1 AND id != $2",
             [userId, locationId]
           );
         }
@@ -214,14 +241,21 @@ export const updateUserLocation = async (req: LocationRequest, res: Response) =>
           country, location_source, session_id, ip_address
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       `;
-      
+
       await client.query(historyQuery, [
-        userId, latitude, longitude, accuracy, city, state,
-        country, locationSource, (req as any).sessionID || null,
-        req.ip || (req.connection as any)?.remoteAddress
+        userId,
+        latitude,
+        longitude,
+        accuracy,
+        city,
+        state,
+        country,
+        locationSource,
+        (req as any).sessionID || null,
+        req.ip || (req.connection as any)?.remoteAddress,
       ]);
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
 
       // Fetch the updated location
       const finalQuery = `
@@ -231,22 +265,20 @@ export const updateUserLocation = async (req: LocationRequest, res: Response) =>
 
       res.json({
         success: true,
-        message: 'Location updated successfully',
-        data: finalResult.rows[0]
+        message: "Location updated successfully",
+        data: finalResult.rows[0],
       });
-
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw error;
     } finally {
       client.release();
     }
-
   } catch (error) {
-    console.error('Error updating user location:', error);
+    console.error("Error updating user location:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update location'
+      message: "Failed to update location",
     });
   }
 };
@@ -260,7 +292,7 @@ export const getNearbyLocations = async (req: Request, res: Response) => {
     if (!latitude || !longitude) {
       return res.status(400).json({
         success: false,
-        message: 'Latitude and longitude are required'
+        message: "Latitude and longitude are required",
       });
     }
 
@@ -271,7 +303,7 @@ export const getNearbyLocations = async (req: Request, res: Response) => {
     if (isNaN(lat) || isNaN(lon) || isNaN(rad)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid numeric values'
+        message: "Invalid numeric values",
       });
     }
 
@@ -288,15 +320,14 @@ export const getNearbyLocations = async (req: Request, res: Response) => {
         locations: result.rows,
         center: { latitude: lat, longitude: lon },
         radius: rad,
-        count: result.rows.length
-      }
+        count: result.rows.length,
+      },
     });
-
   } catch (error) {
-    console.error('Error finding nearby locations:', error);
+    console.error("Error finding nearby locations:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to find nearby locations'
+      message: "Failed to find nearby locations",
     });
   }
 };
@@ -309,7 +340,7 @@ export const reverseGeocode = async (req: Request, res: Response) => {
     if (!latitude || !longitude) {
       return res.status(400).json({
         success: false,
-        message: 'Latitude and longitude are required'
+        message: "Latitude and longitude are required",
       });
     }
 
@@ -318,15 +349,15 @@ export const reverseGeocode = async (req: Request, res: Response) => {
 
     // Using Nominatim (OpenStreetMap) for reverse geocoding
     const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-    
+
     const response = await fetch(nominatimUrl, {
       headers: {
-        'User-Agent': 'DOOH-Platform/1.0'
-      }
+        "User-Agent": "DOOH-Platform/1.0",
+      },
     });
 
     if (!response.ok) {
-      throw new Error('Geocoding service unavailable');
+      throw new Error("Geocoding service unavailable");
     }
 
     const data = await response.json();
@@ -334,42 +365,44 @@ export const reverseGeocode = async (req: Request, res: Response) => {
     if (!data || data.error) {
       return res.status(404).json({
         success: false,
-        message: 'Address not found for these coordinates'
+        message: "Address not found for these coordinates",
       });
     }
 
     const address = data.address || {};
     const formattedResult = {
-      formatted_address: data.display_name || '',
-      street_address: `${address.house_number || ''} ${address.road || ''}`.trim(),
-      city: address.city || address.town || address.village || address.suburb || '',
-      state: address.state || address.province || '',
-      country: address.country || '',
-      postal_code: address.postcode || '',
+      formatted_address: data.display_name || "",
+      street_address: `${address.house_number || ""} ${
+        address.road || ""
+      }`.trim(),
+      city:
+        address.city || address.town || address.village || address.suburb || "",
+      state: address.state || address.province || "",
+      country: address.country || "",
+      postal_code: address.postcode || "",
       components: {
-        house_number: address.house_number || '',
-        road: address.road || '',
-        neighbourhood: address.neighbourhood || '',
-        suburb: address.suburb || '',
-        city: address.city || address.town || address.village || '',
-        district: address.district || '',
-        state: address.state || address.province || '',
-        country: address.country || '',
-        country_code: address.country_code || '',
-        postcode: address.postcode || ''
-      }
+        house_number: address.house_number || "",
+        road: address.road || "",
+        neighbourhood: address.neighbourhood || "",
+        suburb: address.suburb || "",
+        city: address.city || address.town || address.village || "",
+        district: address.district || "",
+        state: address.state || address.province || "",
+        country: address.country || "",
+        country_code: address.country_code || "",
+        postcode: address.postcode || "",
+      },
     };
 
     res.json({
       success: true,
-      data: formattedResult
+      data: formattedResult,
     });
-
   } catch (error) {
-    console.error('Error in reverse geocoding:', error);
+    console.error("Error in reverse geocoding:", error);
     res.status(500).json({
       success: false,
-      message: 'Reverse geocoding failed'
+      message: "Reverse geocoding failed",
     });
   }
 };
@@ -383,7 +416,7 @@ export const getLocationHistory = async (req: Request, res: Response) => {
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'User authentication required'
+        message: "User authentication required",
       });
     }
 
@@ -412,7 +445,7 @@ export const getLocationHistory = async (req: Request, res: Response) => {
 
     const [result, countResult] = await Promise.all([
       pool.query(query, [userId, limit, offset]),
-      pool.query(countQuery, [userId])
+      pool.query(countQuery, [userId]),
     ]);
 
     res.json({
@@ -423,16 +456,17 @@ export const getLocationHistory = async (req: Request, res: Response) => {
           total: parseInt(countResult.rows[0].total),
           limit: parseInt(limit as string),
           offset: parseInt(offset as string),
-          has_more: parseInt(offset as string) + parseInt(limit as string) < parseInt(countResult.rows[0].total)
-        }
-      }
+          has_more:
+            parseInt(offset as string) + parseInt(limit as string) <
+            parseInt(countResult.rows[0].total),
+        },
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching location history:', error);
+    console.error("Error fetching location history:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch location history'
+      message: "Failed to fetch location history",
     });
   }
 };
@@ -446,7 +480,7 @@ export const deleteUserLocation = async (req: Request, res: Response) => {
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'User authentication required'
+        message: "User authentication required",
       });
     }
 
@@ -462,21 +496,20 @@ export const deleteUserLocation = async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Location not found'
+        message: "Location not found",
       });
     }
 
     res.json({
       success: true,
-      message: 'Location deleted successfully',
-      data: result.rows[0]
+      message: "Location deleted successfully",
+      data: result.rows[0],
     });
-
   } catch (error) {
-    console.error('Error deleting location:', error);
+    console.error("Error deleting location:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete location'
+      message: "Failed to delete location",
     });
   }
 };
