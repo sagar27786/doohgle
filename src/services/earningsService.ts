@@ -49,30 +49,36 @@ export interface EarningsSummary {
 
 export const getMyEarnings = async (filters?: EarningsFilters): Promise<PaginatedResponse<Earnings>> => {
   try {
-    const response = await api.get('/earnings', { params: filters });
-    return response.data || { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
+    const response = await api.get<PaginatedResponse<Earnings>>('/earnings', { params: filters });
+    return response.data ?? { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
   } catch (error) {
     console.error('Error fetching earnings:', error);
-    throw error;
+    // Return empty paginated response on error
+    return { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
   }
 };
 
 export const getEarningsByScreen = async (screenId: number, filters?: Omit<EarningsFilters, 'screenId'>): Promise<PaginatedResponse<Earnings>> => {
   try {
-    const response = await api.get(`/screens/${screenId}/earnings`, { 
+    const response = await api.get<PaginatedResponse<Earnings>>(`/screens/${screenId}/earnings`, { 
       params: filters 
     });
-    return response.data || { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
+    return response.data ?? { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
   } catch (error) {
     console.error(`Error fetching earnings for screen ${screenId}:`, error);
-    throw error;
+    // Return empty paginated response on error to maintain type safety
+    return { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
   }
 };
 
+interface EarningsSummaryResponse {
+  summary: EarningsSummary;
+}
+
 export const getEarningsSummary = async (filters?: Pick<EarningsFilters, 'startDate' | 'endDate' | 'screenId'>): Promise<EarningsSummary> => {
   try {
-    const response = await api.get('/earnings/summary', { params: filters });
-    return response.data.summary || {
+    const response = await api.get<EarningsSummaryResponse>('/earnings/summary', { params: filters });
+    return response.data?.summary || {
       total_earnings: 0,
       total_paid: 0,
       pending_payout: 0,
@@ -91,9 +97,14 @@ export const getEarningsSummary = async (filters?: Pick<EarningsFilters, 'startD
   }
 };
 
-export const requestPayout = async (amount: number, paymentMethod: string): Promise<{ success: boolean; message: string }> => {
+interface PayoutResponse {
+  success: boolean;
+  message: string;
+}
+
+export const requestPayout = async (amount: number, paymentMethod: string): Promise<PayoutResponse> => {
   try {
-    const response = await api.post('/earnings/request-payout', { amount, payment_method: paymentMethod });
+    const response = await api.post<PayoutResponse>('/earnings/request-payout', { amount, payment_method: paymentMethod });
     return { success: true, message: response.data.message };
   } catch (error: any) {
     console.error('Error requesting payout:', error);

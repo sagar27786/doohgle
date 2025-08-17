@@ -154,6 +154,12 @@ const Header = () => {
                       title="Ads Manager"
                       subtitle="Create targeted ad campaigns"
                     />
+                    <ProductLink
+                      to="/products/ads-manager/dashboard"
+                      icon={<Monitor className="h-6 w-6 text-green-500" />}
+                      title="Campaign Dashboard"
+                      subtitle="Manage campaigns & screens"
+                    />
                   </div>
                 </div>
               )}
@@ -168,11 +174,11 @@ const Header = () => {
             <div className="hidden md:flex items-center space-x-4">
               <NavLink to="/contact">Contact</NavLink>
               <button
-              onClick={() => navigate("/auth") }
-              className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
-            >
-              Login / Sign up
-            </button>
+                onClick={() => navigate("/auth")}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+              >
+                Login / Sign up
+              </button>
             </div>
             {/* Theme Toggle */}
             <button
@@ -231,6 +237,12 @@ const Header = () => {
                   icon={<Target className="h-5 w-5 text-purple-500" />}
                   title="Ads Manager"
                   subtitle="Create ad campaigns"
+                />
+                <ProductLink
+                  to="/products/ads-manager/dashboard"
+                  icon={<Monitor className="h-5 w-5 text-green-500" />}
+                  title="Campaign Dashboard"
+                  subtitle="Manage campaigns"
                 />
               </div>
             )}
