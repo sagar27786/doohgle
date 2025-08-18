@@ -137,12 +137,6 @@ const IntegratedAdsManager: React.FC = () => {
         </nav>
 
         {/* Quick Actions */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <button className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            <Plus size={16} className="mr-2" />
-            New Campaign
-          </button>
-        </div>
       </div>
 
       {/* Main Content */}

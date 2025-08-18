@@ -52,7 +52,13 @@ export class ScreenModel {
         WHERE is_active = true 
         ORDER BY created_at DESC
       `);
-      return result.rows;
+      // Map DB column names (screen_name, location_in_venue, screen_size_inches) to model fields
+      return result.rows.map((r: any) => ({
+        ...r,
+        name: r.screen_name,
+        location_name: r.location_in_venue,
+        screen_size_width: r.screen_size_inches ?? null,
+      }));
     } finally {
       client.release();
     }

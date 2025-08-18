@@ -117,6 +117,7 @@ export async function searchScreensByCity(city: string): Promise<ScreenSearchRes
     }
 
     const data = await response.json();
+    console.log(data);
     
     if (!data.success) {
       throw new Error(data.message || 'Failed to fetch screens');

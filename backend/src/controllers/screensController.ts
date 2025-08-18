@@ -97,13 +97,31 @@ export async function getAllScreens(req: Request, res: Response) {
     const { city, state, screen_type, min_footfall, max_budget } = req.query;
 
     let query = `
-      SELECT 
-        id, name, description, screen_type, location_name, address, 
-        city, state, pincode, latitude, longitude, screen_size_width, 
-        screen_size_height, resolution_width, resolution_height, 
-        daily_footfall, vehicle_count, peak_hours, demographics, 
-        cost_per_10_seconds, image_url, video_url, is_active
-      FROM screens 
+      SELECT
+        id,
+        screen_name as name,
+        NULL::text as description,
+        NULL::text as screen_type,
+        location_in_venue as location_name,
+        NULL::text as address,
+        city,
+        NULL::text as state,
+        NULL::text as pincode,
+        latitude,
+        longitude,
+        screen_size_inches as screen_size_width,
+        NULL::int as screen_size_height,
+        NULL::int as resolution_width,
+        NULL::int as resolution_height,
+        NULL::int as daily_footfall,
+        NULL::int as vehicle_count,
+        peak_viewing_hours as peak_hours,
+        NULL::text as demographics,
+        NULL::numeric as cost_per_10_seconds,
+        NULL::text as image_url,
+        NULL::text as video_url,
+        is_active
+      FROM screens
       WHERE is_active = true
     `;
 
@@ -167,7 +185,9 @@ export async function searchScreens(req: Request, res: Response) {
 
     let query = `
       SELECT 
-        id, 
+        id,
+        latitude,
+        longitude,
         screen_name as name,
         location_in_venue as location_name,
         city,
@@ -219,26 +239,42 @@ export async function getScreenById(req: Request, res: Response) {
   try {
     const { id } = req.params;
 
-    const query = `
+    // First get the screen details
+    const screenQuery = `
       SELECT 
         s.*,
-        json_agg(
-          DISTINCT jsonb_build_object(
-            'date', sa.date,
-            'start_time', sa.start_time,
-            'end_time', sa.end_time,
-            'is_available', sa.is_available
+        p.hourly_rate,
+        p.daily_rate,
+        p.weekly_rate,
+        (
+          SELECT json_agg(
+            jsonb_build_object(
+              'asset_type', sa.asset_type,
+              'url', sa.url,
+              'created_at', sa.created_at
+            )
           )
+          FROM screen_assets sa
+          WHERE sa.screen_id = s.id
+        ) as assets,
+        (
+          SELECT json_agg(
+            jsonb_build_object(
+              'date', sa.date,
+              'is_available', sa.is_available
+            )
+          )
+          FROM screen_availability sa
+          WHERE sa.screen_id = s.id
+            AND sa.date >= CURRENT_DATE
+            AND sa.date <= CURRENT_DATE + INTERVAL '30 days'
         ) as availability
       FROM screens s
-      LEFT JOIN screen_availability sa ON s.id = sa.screen_id 
-        AND sa.date >= CURRENT_DATE 
-        AND sa.date <= CURRENT_DATE + INTERVAL '30 days'
+      LEFT JOIN screen_pricing p ON s.id = p.screen_id
       WHERE s.id = $1 AND s.is_active = true
-      GROUP BY s.id
     `;
 
-    const result = await pool.query(query, [id]);
+    const result = await pool.query(screenQuery, [id]);
 
     if (result.rows.length === 0) {
       res.status(404).json({
@@ -248,9 +284,21 @@ export async function getScreenById(req: Request, res: Response) {
       return;
     }
 
+    // Format the response to match the frontend expectations
+    const screen = result.rows[0];
+    const response = {
+      ...screen,
+      pricing: {
+        hourly: screen.hourly_rate || 0,
+        daily: screen.daily_rate || 0,
+        weekly: screen.weekly_rate || 0,
+      },
+      // Add any other necessary transformations here
+    };
+
     res.json({
       success: true,
-      data: result.rows[0],
+      data: response,
     });
   } catch (error) {
     console.error("Error fetching screen:", error);

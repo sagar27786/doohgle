@@ -482,10 +482,6 @@ const AdvertiserDashboard: React.FC = () => {
                   <Filter size={16} className="mr-2" />
                   Filter
                 </button>
-                <button className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 transform hover:scale-105">
-                  <Plus size={16} className="mr-2" />
-                  New Campaign
-                </button>
               </div>
             </div>
 

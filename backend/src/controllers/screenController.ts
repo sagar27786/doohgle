@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { db } from "../database/connection";
-import { AuthenticatedRequest } from "../middleware/auth";
-import { createError } from "../middleware/errorHandler";
+import { pool as db } from "../db";
+import { AuthUser } from "../middleware/auth";
+import errorHandler, { createError } from "../middleware/errorHandler";
 
 export const getAllScreens = async (
-  req: AuthenticatedRequest,
+  req: Request & { user?: AuthUser },
   res: Response
 ): Promise<void> => {
   try {
@@ -18,7 +18,7 @@ export const getAllScreens = async (
         u.name as owner_name,
         COUNT(*) OVER() as total_count
       FROM screens s
-      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       WHERE s.is_active = true
       ORDER BY s.created_at DESC
       LIMIT $1 OFFSET $2
@@ -29,7 +29,7 @@ export const getAllScreens = async (
 
     res.json({
       success: true,
-      data: result.rows.map((row) => {
+      data: result.rows.map((row: any) => {
         const { total_count, ...screen } = row;
         return screen;
       }),
@@ -46,7 +46,7 @@ export const getAllScreens = async (
 };
 
 export const getScreenById = async (
-  req: AuthenticatedRequest,
+  req: Request & { user?: AuthUser },
   res: Response
 ): Promise<void> => {
   try {
@@ -59,7 +59,7 @@ export const getScreenById = async (
         u.email as owner_email,
         u.phone as owner_phone
       FROM screens s
-      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       WHERE s.id = $1 AND s.is_active = true
     `;
 
@@ -116,7 +116,7 @@ export const getScreenById = async (
 };
 
 export const searchScreens = async (
-  req: AuthenticatedRequest,
+  req: Request & { user?: AuthUser },
   res: Response
 ): Promise<void> => {
   try {
@@ -144,7 +144,7 @@ export const searchScreens = async (
           ELSE NULL
         END as distance_km
       FROM screens s
-      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       WHERE s.is_active = true
     `;
 
@@ -222,7 +222,7 @@ export const searchScreens = async (
 };
 
 export const getNearbyScreens = async (
-  req: AuthenticatedRequest,
+  req: Request & { user?: AuthUser },
   res: Response
 ): Promise<void> => {
   try {
@@ -241,7 +241,7 @@ export const getNearbyScreens = async (
           ST_Point($2, $1)::geography
         ) / 1000 as distance_km
       FROM screens s
-      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       WHERE s.is_active = true
         AND ST_Distance(
           ST_Point(s.longitude, s.latitude)::geography,
@@ -264,7 +264,7 @@ export const getNearbyScreens = async (
 };
 
 export const getScreenAvailability = async (
-  req: AuthenticatedRequest,
+  req: Request & { user?: AuthUser },
   res: Response
 ): Promise<void> => {
   try {
