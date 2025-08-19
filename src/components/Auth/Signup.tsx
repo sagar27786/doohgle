@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/authService';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { authService } from "../../services/authService";
+import Header from "../Home/Header";
 
 export default function Signup({ onSwitch }: { onSwitch: () => void }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
-  const [message, setMessage] = useState('');
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState("");
   const [showOtpField, setShowOtpField] = useState(false);
   const navigate = useNavigate();
 
@@ -18,10 +25,10 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
   // Step 1: Request OTP for the provided phone (email required)
   const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage('');
+    setMessage("");
     setIsError(false);
     if (!form.phone || !form.email) {
-      setMessage('Phone number and email are required');
+      setMessage("Phone number and email are required");
       setIsError(true);
       return;
     }
@@ -29,11 +36,11 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
       setLoading(true);
       await authService.requestOTP({ phone: form.phone, email: form.email });
       setShowOtpField(true);
-      setMessage('OTP sent to your phone');
+      setMessage("OTP sent to your phone");
       setIsError(false);
     } catch (err: any) {
       // Show backend error if available (e.g., user exists)
-      setMessage(err?.response?.data?.message || 'Failed to send OTP');
+      setMessage(err?.response?.data?.message || "Failed to send OTP");
       setIsError(true);
     } finally {
       setLoading(false);
@@ -43,10 +50,10 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
   // Step 2: Verify OTP and complete signup
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage('');
+    setMessage("");
     setIsError(false);
     if (form.password !== form.confirmPassword) {
-      setMessage('Passwords do not match');
+      setMessage("Passwords do not match");
       setIsError(true);
       return;
     }
@@ -60,14 +67,16 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
         confirmPassword: form.confirmPassword,
         otp,
       });
-      localStorage.setItem('token', token);
-      setMessage('Signup successful!');
+      localStorage.setItem("token", token);
+      setMessage("Signup successful!");
       setIsError(false);
       // Always redirect to role selection after signup
-      navigate('/auth/select-role');
+      navigate("/auth/select-role");
     } catch (err: any) {
       // Show backend error if available (e.g., invalid OTP, forbidden)
-      setMessage(err?.response?.data?.message || 'Failed to verify OTP or signup');
+      setMessage(
+        err?.response?.data?.message || "Failed to verify OTP or signup"
+      );
       setIsError(true);
     } finally {
       setLoading(false);
@@ -75,156 +84,187 @@ export default function Signup({ onSwitch }: { onSwitch: () => void }) {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-8">
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create your account</h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Sign up to get started</p>
-        </div>
-
-        {message && (
-          <div
-            className={
-              `mb-4 rounded-lg px-4 py-3 text-sm ` +
-              (isError
-                ? 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800'
-                : 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800')
-            }
-          >
-            {message}
-          </div>
-        )}
-
-        <form onSubmit={showOtpField ? handleSignup : handleRequestOTP} className="space-y-4">
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Full Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Your full name"
-              autoComplete="name"
-              required
-              disabled={showOtpField}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-            />
+    <>
+      <Header />
+      <div className="min-h-[93vh] flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Create your account
+            </h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+              Sign up to get started
+            </p>
           </div>
 
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Phone number
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="e.g. +919876543210"
-              autoComplete="tel"
-              required
-              disabled={showOtpField}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-              disabled={showOtpField}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-            />
-          </div>
-
-          {showOtpField && (
-            <>
-              <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Enter OTP
-                </label>
-                <input
-                  id="otp"
-                  name="otp"
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="6-digit code"
-                  required
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                  required
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Confirm password
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                  required
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-                />
-              </div>
-            </>
+          {message && (
+            <div
+              className={
+                `mb-4 rounded-lg px-4 py-3 text-sm ` +
+                (isError
+                  ? "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800"
+                  : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800")
+              }
+            >
+              {message}
+            </div>
           )}
 
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold px-4 py-2.5 transition-colors"
+          <form
+            onSubmit={showOtpField ? handleSignup : handleRequestOTP}
+            className="space-y-4"
           >
-            {loading ? 'Processing…' : showOtpField ? 'Verify OTP and Sign up' : 'Send OTP'}
-          </button>
-        </form>
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
+                Full Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Your full name"
+                autoComplete="name"
+                required
+                disabled={showOtpField}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              />
+            </div>
 
-        <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">
-          Already have an account?{' '}
-          <button
-            type="button"
-            onClick={onSwitch}
-            className="font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-          >
-            Log in
-          </button>
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
+                Phone number
+              </label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="e.g. +919876543210"
+                autoComplete="tel"
+                required
+                disabled={showOtpField}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+                disabled={showOtpField}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              />
+            </div>
+
+            {showOtpField && (
+              <>
+                <div>
+                  <label
+                    htmlFor="otp"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
+                    Enter OTP
+                  </label>
+                  <input
+                    id="otp"
+                    name="otp"
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="6-digit code"
+                    required
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    required
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
+                    Confirm password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    required
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                  />
+                </div>
+              </>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full inline-flex items-center justify-center rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-semibold px-4 py-2.5 transition-colors"
+            >
+              {loading
+                ? "Processing…"
+                : showOtpField
+                ? "Verify OTP and Sign up"
+                : "Send OTP"}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={onSwitch}
+              className="font-semibold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+            >
+              Log in
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

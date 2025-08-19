@@ -1,152 +1,246 @@
-import React from "react";
-import { ChevronRight, Monitor, Users, Settings } from "lucide-react";
+import { useState, forwardRef } from "react";
+import {
+  Monitor,
+  Users,
+  Settings,
+  ChevronRight,
+  MapPin,
+  Clock,
+  Zap,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
-const ScreenManager = () => {
-  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
+  const [activeStep, setActiveStep] = useState<number | null>(null);
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
-  const images = [
-    "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/64be5c829ad0a3df643deab8_Gym_carousel_002.jpg",
-    "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/64be5c83a1f629e06a22578f_Gym_carousel_007.jpg",
-    "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/656f37b2dbd4bbff668b6df8_Screen-in-Coworking-Space.jpg",
-  ];
-
-  const features = [
+  const steps = [
     {
       icon: Monitor,
       title: "Manage Your Content",
-      description:
-        "Upload, schedule, and control your digital content across all screens in real-time.",
-      imageIndex: 0,
+      description: "Upload, schedule, and control your digital content",
+      detailedDescription:
+        "Upload, schedule, and control your digital content across all screens in real-time. Manage multiple campaigns simultaneously with our intuitive dashboard and scheduling system.",
+      features: [
+        "Real-time content updates",
+        "Advanced scheduling",
+        "Multi-screen control",
+      ],
+      color: "from-blue-500 to-cyan-500",
+      image: "/assets/screen1.png",
     },
     {
       icon: Users,
       title: "Track Performance",
-      description:
-        "Monitor engagement metrics and audience analytics to optimize your campaigns.",
-      imageIndex: 1,
+      description: "Monitor engagement metrics and audience analytics",
+      detailedDescription:
+        "Monitor engagement metrics and audience analytics to optimize your campaigns. Get detailed insights into viewer behavior, peak engagement times, and content performance across all your displays.",
+      features: [
+        "Engagement analytics",
+        "Audience insights",
+        "Performance reports",
+      ],
+      color: "from-purple-500 to-pink-500",
+      image: "/assets/screen2.png",
     },
     {
       icon: Settings,
       title: "Customize Layouts",
-      description:
-        "Design and implement custom layouts that match your brand and messaging.",
-      imageIndex: 2,
+      description: "Design and implement custom layouts",
+      detailedDescription:
+        "Design and implement custom layouts that match your brand and messaging. Create stunning visual experiences with our drag-and-drop layout editor and extensive template library.",
+      features: [
+        "Drag-and-drop editor",
+        "Brand customization",
+        "Template library",
+      ],
+      color: "from-emerald-500 to-teal-500",
+      image: "/assets/screen3.png",
     },
   ];
 
-  interface Feature {
-    icon: React.ElementType;
-    title: string;
-    description: string;
-    imageIndex: number;
-  }
-
-  const handleFeatureClick = (imageIndex: number): void => {
-    setCurrentImageIndex(imageIndex);
-  };
+  const stepIcons = [MapPin, Clock, Zap];
 
   return (
-    <div className="bg-gray-200 dark:bg-slate-900 py-16 transition-colors duration-300">
+    <div
+      ref={ref}
+      className="py-24 bg-white dark:bg-slate-900"
+      id="screen-manager"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className=" pb-4 text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
             Screen Manager
           </h2>
-          <p className="text-xl text-gray-600 dark:text-slate-300 max-w-3xl mx-auto">
-            Take control of your digital displays with our comprehensive screen
-            management platform
+          <p className="mt-4 text-xl text-gray-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Control your digital screens with ease and precision. Click on any
+            feature to learn more.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-4">
-            {features.map((feature, index) => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          {steps.map((step, idx) => {
+            const StepIcon = step.icon;
+            const isActive = activeStep === idx;
+            const isHovered = hoveredStep === idx;
+
+            return (
               <div
-                key={index}
-                className={`group rounded-xl cursor-pointer transition-all duration-300 ${
-                  currentImageIndex === feature.imageIndex
-                    ? "ring-2 ring-purple-400 dark:ring-purple-500/80 bg-purple-50 dark:bg-slate-800"
-                    : "hover:bg-gray-50 dark:hover:bg-slate-800/50"
-                }`}
-                onClick={() => handleFeatureClick(feature.imageIndex)}
+                key={idx}
+                className={`relative cursor-pointer transition-all duration-500 transform ${
+                  isHovered ? "scale-105 -translate-y-2" : ""
+                } ${isActive ? "scale-110 -translate-y-4" : ""}`}
+                onClick={() => setActiveStep(activeStep === idx ? null : idx)}
+                onMouseEnter={() => setHoveredStep(idx)}
+                onMouseLeave={() => setHoveredStep(null)}
               >
-                <div className="flex items-start space-x-4 p-6">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-purple-100 dark:bg-slate-700 rounded-lg flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-slate-600 transition-colors duration-300">
-                      <feature.icon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                {/* Connection line for desktop */}
+                {idx < steps.length - 1 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-px bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 z-10">
+                    <ChevronRight className="absolute -top-2 -right-1 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  </div>
+                )}
+
+                <div
+                  className={`relative overflow-hidden rounded-2xl border-2 transition-all duration-500 ${
+                    isActive
+                      ? "border-transparent shadow-2xl"
+                      : isHovered
+                      ? "border-gray-300 dark:border-slate-600 shadow-lg"
+                      : "border-gray-200 dark:border-slate-700 shadow-md hover:shadow-lg"
+                  } bg-white dark:bg-slate-800`}
+                >
+                  {/* Animated background gradient */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${
+                      step.color
+                    } opacity-0 transition-opacity duration-500 ${
+                      isActive ? "opacity-10" : isHovered ? "opacity-5" : ""
+                    }`}
+                  />
+
+                  <div className="relative p-8">
+                    {/* Step number */}
+                    <div className="absolute top-4 right-4">
+                      <span
+                        className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-300 ${
+                          isActive
+                            ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
+                            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        {idx + 1}
+                      </span>
+                    </div>
+
+                    {/* Icon with animation */}
+                    <div
+                      className={`mb-6 transition-all duration-500 ${
+                        isActive || isHovered ? "scale-110" : ""
+                      }`}
+                    >
+                      <div
+                        className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${
+                          step.color
+                        } transition-all duration-300 ${
+                          isActive ? "shadow-lg" : "shadow-md"
+                        }`}
+                      >
+                        <StepIcon className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                      {step.title}
+                    </h3>
+
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                      {step.description}
+                    </p>
+
+                    {/* Expandable content */}
+                    <div
+                      className={`transition-all duration-500 overflow-hidden ${
+                        isActive
+                          ? "max-h-[600px] opacity-100"
+                          : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="pt-4 border-t border-gray-100 dark:border-slate-700">
+                        <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm leading-relaxed">
+                          {step.detailedDescription}
+                        </p>
+
+                        <div className="space-y-2 mb-4">
+                          {step.features.map((feature, featureIdx) => {
+                            const FeatureIcon = stepIcons[featureIdx];
+                            return (
+                              <div
+                                key={featureIdx}
+                                className="flex items-center text-sm text-gray-600 dark:text-gray-400"
+                              >
+                                <FeatureIcon className="h-4 w-4 mr-2 text-indigo-500" />
+                                {feature}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Image */}
+                        <img
+                          src={step.image}
+                          alt={step.title}
+                          className="w-full rounded-xl border border-gray-100 dark:border-slate-600 transition-all duration-300"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Click indicator */}
+                    <div
+                      className={`mt-4 text-xs text-center transition-all duration-300 ${
+                        isActive
+                          ? "text-indigo-600 dark:text-indigo-400"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
+                      {isActive ? "Click to collapse" : "Click to learn more"}
                     </div>
                   </div>
-
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-600 dark:text-slate-300 leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
-
-                  <div className="flex-shrink-0 self-center">
-                    <ChevronRight className="h-5 w-5 text-gray-400 dark:text-slate-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:translate-x-1 transition-all duration-300" />
-                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          <div className="relative">
-            <div className="relative rounded-xl overflow-hidden shadow-2xl border-4 border-purple-200 dark:border-purple-500/30 min-h-[26rem]">
-              {images.map((src, index) => (
-                <img
-                  key={src}
-                  src={src}
-                  alt={`Screen Manager Feature ${index + 1}`}
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out dark:brightness-90 ${
-                    currentImageIndex === index ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              ))}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h3 className="text-white text-2xl font-bold mb-2">
-                    Become a Screen Manager
-                  </h3>
-                  <p className="text-white/90 text-sm">
-                    Take control of your digital displays and maximize your
-                    content's impact
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-center mt-6 space-x-2">
-              {images.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleFeatureClick(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    currentImageIndex === index
-                      ? "bg-purple-600 scale-125"
-                      : "bg-gray-300 dark:bg-slate-600 hover:bg-gray-400 dark:hover:bg-slate-500"
-                  }`}
-                  aria-label={`Go to image ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
+            );
+          })}
         </div>
 
+        {/* Progress indicator */}
+        <div className="flex justify-center space-x-2">
+          {steps.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveStep(activeStep === idx ? null : idx)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                activeStep === idx
+                  ? "bg-indigo-500 scale-125"
+                  : hoveredStep === idx
+                  ? "bg-gray-400 dark:bg-gray-500"
+                  : "bg-gray-300 dark:bg-gray-600"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Call to action */}
         <div className="text-center mt-16">
-          <Link to="/screen-manager">
+          <Link to="/auth">
             <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
-              Start Managing Your Screens
+              Get Started Today
+              <ChevronRight className="pl-2 inline h-5 w-5" />
             </button>
           </Link>
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default ScreenManager;

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import HeroVideo from "./HeroVideo";
-import { MoveRight } from "lucide-react";
 
 const MainHero = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -44,49 +43,48 @@ const MainHero = () => {
 
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto text-white dark:text-slate-200">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5">
+          <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tighter mb-5">
             Connect{" "}
             <span className="purple-gray-gradient">Digital Screens</span>
           </h1>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5">
+          <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tighter mb-5">
             With <span className="purple-gray-gradient">Perfect Ads</span>
           </h1>
 
-          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-2 text-gray-300">
-            The world's largest marketplace for{" "}
+          <p className="max-w-4xl mx-auto text-xl md:text-2xl lg:text-[1.4rem] leading-relaxed mb-2 text-gray-300">
+            The largest marketplace for{" "}
             <span className="purple-gray-gradient">
               digital out-of-home advertising.
             </span>
           </p>
-          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-2 text-gray-300">
+          <p className="max-w-3xl mx-auto text-xl md:text-2xl lg:text-[1.4rem] leading-relaxed mb-2 text-gray-300">
             List your screens,{" "}
             <span className="purple-gray-gradient"> elevate your income.</span>
           </p>
-          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-4 text-gray-300">
+          <p className="max-w-3xl mx-auto text-xl md:text-2xl lg:text-[1.4rem] leading-relaxed mb-4 text-gray-300">
             Book <span className="purple-gray-gradient">Premium location </span>
             for your ad and maximize your reach with{" "}
             <span className="purple-gray-gradient">AI driven insights.</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {/* Button 1: Gradient Border + Slide (Blue/Teal scheme) */}
+          {/* Buttons */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-4">
             <Link
               to="/auth"
-              className="group relative h-14 w-full sm:w-auto px-8 text-lg font-semibold text-white bg-slate-800 dark:text-slate-900 dark:bg-slate-100 rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg-gradient-to-r hover:text-gray-300 dark:hover:text-slate-800 hover:shadow-2xl hover:shadow-blue-500/25 transform hover:-rotate-1 hover:scale-105"
+              className="group relative h-14 w-64 text-lg font-semibold text-white bg-slate-800 dark:text-white dark:bg-slate-800 rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg- hover:text-gray-100 dark:hover:text-white hover:shadow-2xl hover:shadow-blue-500/25 transform hover:-rotate-1 hover:scale-105"
             >
               <span>List your Screen for Free</span>
             </Link>
 
-            {/* Button 2: Gradient Border + Slide (Indigo/Purple scheme) */}
             <Link
               to="/auth"
-              className="group relative h-14 w-full sm:w-auto px-8 text-lg font-semibold text-slate-800 bg-slate-200 dark:text-slate-200 dark:bg-slate-700 rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-600 hover:text-white hover:shadow-2xl hover:shadow-purple-500/25 transform hover:-rotate-1 hover:scale-105"
+              className="group relative h-14 w-64 text-lg font-semibold text-slate-800 bg-slate-200  rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-600 hover:text-white hover:shadow-2xl hover:shadow-purple-500/25 transform hover:-rotate-1 hover:scale-105"
             >
-              <span>Book Screen for Free</span>
+              <span>Book Screen</span>
             </Link>
           </div>
 
-          {/* Optional Floating Box */}
+          {/* Floating Box */}
           <div
             className={`flex items-center justify-center transition-opacity duration-500 ${
               visible ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -100,22 +98,26 @@ const MainHero = () => {
             }}
           >
             <div
-              className={`flex items-center justify-between px-6 py-4 shadow-lg transition-all duration-500 ease-out
-              ${searchExpanded ? "w-[600px] h-20" : "w-[300px] h-16"} 
+              className={`flex items-center justify-between px-4 sm:px-6 py-4 shadow-lg transition-all duration-500 ease-out
+              ${
+                searchExpanded
+                  ? "w-[90vw] sm:w-[600px] h-20"
+                  : "w-[80vw] sm:w-[300px] h-16"
+              }
               bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700
               hover:shadow-xl cursor-text`}
             >
               <div className="flex items-center">
-                <span className="mr-4 text-slate-400 dark:text-slate-500">
+                <span className="mr-3 text-slate-400 dark:text-slate-500">
                   ✨
                 </span>
-                <span className="text-slate-600 dark:text-slate-300 text-base md:text-lg">
+                <span className="text-slate-600 dark:text-slate-300 text-sm sm:text-base md:text-lg">
                   {searchExpanded ? "Keep Scrolling" : "Sign Up. It's free. :)"}
                 </span>
               </div>
 
               {searchExpanded && (
-                <button className="ml-4 p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                <button className="ml-4 p-2 rounded-lg bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 transition">
                   💬
                 </button>
               )}

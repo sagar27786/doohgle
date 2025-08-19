@@ -616,19 +616,19 @@ export default function InteractiveMap() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Search Location
           </label>
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-2 items-center">
             <input
               type="text"
-              placeholder="Enter location or postal code..."
+              placeholder="Enter location"
               value={postalCode}
               onChange={(e) => setPostalCode(e.target.value)}
               onKeyDown={handleKeyPress}
-              className="flex-1 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              className="flex-1 min-w-0 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
             />
             <button
               onClick={handleLocationSearch}
               disabled={isSearching}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
+              className="w-9 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
             >
               {isSearching ? "..." : <MapPin className="w-4 h-4" />}
             </button>

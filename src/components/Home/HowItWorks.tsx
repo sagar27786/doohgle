@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, forwardRef } from "react";
 import {
   Search,
   Calendar,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const HowItWorks: React.FC = () => {
+const HowItWorks = forwardRef<HTMLDivElement>((props, ref) => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
@@ -59,11 +59,15 @@ const HowItWorks: React.FC = () => {
   const stepIcons = [MapPin, Clock, Zap];
 
   return (
-    <div className="py-24 bg-white dark:bg-slate-900">
+    <div
+      ref={ref}
+      className="py-24 bg-white dark:bg-slate-900"
+      id="ads-manager"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
-            How It Works
+            Ads Manager
           </h2>
           <p className="mt-4 text-xl text-gray-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
             Get your ads on digital screens in three simple steps. Click on any
@@ -225,6 +229,6 @@ const HowItWorks: React.FC = () => {
       </div>
     </div>
   );
-};
+});
 
 export default HowItWorks;

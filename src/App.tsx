@@ -46,6 +46,7 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
 import ContactPage from "./components/Home/ContactPage";
+import AboutUs from "./components/Home/AboutUs";
 
 // ThemeProvider for dark mode
 interface ThemeContextType {
@@ -95,12 +96,12 @@ const HomePage = () => {
       <Statistics />
       <DOOHSection />
       <InteractiveMap />
-      <HowItWorks />
       <GlobalFeed />
       <WhyFramen />
       <SuccessStories />
       <ContentCreator />
       <ScreenManager />
+      <HowItWorks />
       <FAQ />
       <Contact />
       <Footer />
@@ -161,6 +162,8 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactPage />} />"
           <Route
             path="/products/screen-manager"
             element={<ScreenManagerPage />}
@@ -169,7 +172,6 @@ function App() {
             path="/ScreenManagerDashboard"
             element={<ScreenManagerDashboard />}
           />
-          <Route path="/contact" element={<ContactPage />} />"
           {/* Ads Manager Routes */}
           <Route path="/products/ads-manager" element={<AdsManagerPage />} />
           <Route
