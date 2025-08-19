@@ -35,7 +35,7 @@ const FAQ = () => {
   return (
     <div className="bg-white dark:bg-slate-900 py-16 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-4xl font-bold text-gray-900 dark:text-white text-center mb-12">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-tight md:leading-[1.2] lg:leading-[1.25] mb-4">
           Do you have questions?
         </h2>
 

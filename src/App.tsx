@@ -1,4 +1,11 @@
 import React, { createContext, useEffect, useState, useContext } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Home/Header";
 import HeroVideo from "./components/Home/HeroVideo";
@@ -14,6 +21,7 @@ import ContentCreator from "./components/Home/ContentCreator";
 import ScreenManager from "./components/Home/ScreenManager";
 import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
+import DOOHChatbot from "./components/Home/DOOHChatbot";
 import Footer from "./components/Home/Footer";
 
 // Screen Manager page components
@@ -80,13 +88,16 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 // Home page component
 const HomePage = () => {
   return (
+    <div className="min-h-screen bg-gray-200">
+      {/* <HeroCarousel />  */}
     <div className="min-h-screen bg-white">
       <MainHero />
-      <HeroVideo />
+      <DOOHChatbot />
       <CompanyLogos />
       <Statistics />
       <DOOHSection />
       <InteractiveMap />
+      <HowItWorks />
       <GlobalFeed />
       <WhyFramen />
       <SuccessStories />

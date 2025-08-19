@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Contact = () => {
   const teamMembers = [
@@ -20,9 +21,9 @@ const Contact = () => {
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-900 py-16 transition-colors duration-300">
+    <div className="bg-gray-200 dark:bg-slate-900 py-16 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r mb-4 from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
           Get in touch
         </h2>
 
@@ -45,12 +46,11 @@ const Contact = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="bg-indigo-600 text-white px-8 py-3 rounded-md font-medium hover:bg-indigo-700 transition-colors">
-            Contact Sales
-          </button>
-          <button className="border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 px-8 py-3 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-            Go to Help Center
-          </button>
+          <Link to="/contact">
+            <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
+              Contact Sales
+            </button>
+          </Link>
         </div>
       </div>
     </div>

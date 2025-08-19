@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const ContentCreator = () => {
   const creatorImages = [
@@ -38,7 +39,7 @@ const ContentCreator = () => {
     <div className="relative bg-white dark:bg-slate-900 py-24 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
             Are you a content creator?
           </h2>
           <p className="mt-4 text-xl text-gray-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
@@ -102,9 +103,11 @@ const ContentCreator = () => {
         </div>
 
         <div className="text-center mt-16">
-          <button className="bg-purple-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            Learn more
-          </button>
+          <Link to="/content-creator">
+            <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
+              Learn More
+            </button>
+          </Link>
         </div>
       </div>
       <style

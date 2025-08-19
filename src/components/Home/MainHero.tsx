@@ -1,80 +1,131 @@
-import { ChevronDown } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
+import HeroVideo from "./HeroVideo";
+import { MoveRight } from "lucide-react";
 
 const MainHero = () => {
-  const handleScrollDown = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: "smooth",
-    });
-  };
+  const [scrollY, setScrollY] = useState(0);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const nextSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setScrollY(y);
+      setSearchExpanded(y > 20);
+
+      if (nextSectionRef.current) {
+        const nextTop = nextSectionRef.current.offsetTop;
+        setVisible(y + 400 < nextTop);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
-      <style>
-        {`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-in {
-            animation: fadeIn 0.8s ease-out forwards;
-          }
-          @keyframes bounce-down {
-            0%, 20%, 50%, 80%, 100% {
-              transform: translateY(0);
-            }
-            40% {
-              transform: translateY(-10px);
-            }
-            60% {
-              transform: translateY(-5px);
-            }
-          }
-          .animate-bounce-down {
-            animation: bounce-down 2s ease-in-out infinite;
-          }
-        `}
-      </style>
+      <main className="relative flex items-center justify-center min-h-screen overflow-hidden p-4 bg-black">
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/background.mp4" type="video/mp4" />
+        </video>
 
-      <div className="relative overflow-hidden bg-slate-50 dark:bg-slate-950 h-screen flex flex-col justify-center">
-        <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-3xl"></div>
-        </div>
-        <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2">
-          <div className="w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl"></div>
-        </div>
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-40 z-0 dark:bg-opacity-60" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-            <span className="block">Digital Out of Home Advertising</span>
+        {/* Main Content */}
+        <div className="relative z-10 text-center max-w-4xl mx-auto text-white dark:text-slate-200">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5">
+            Connect{" "}
+            <span className="purple-gray-gradient">Digital Screens</span>
+          </h1>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-5">
+            With <span className="purple-gray-gradient">Perfect Ads</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed mb-8">
-            Combine the power of Digital Out of Home with the precision of
-            programmatic.
+          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-2 text-gray-300">
+            The world's largest marketplace for{" "}
+            <span className="purple-gray-gradient">
+              digital out-of-home advertising.
+            </span>
+          </p>
+          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-2 text-gray-300">
+            List your screens,{" "}
+            <span className="purple-gray-gradient"> elevate your income.</span>
+          </p>
+          <p className="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed mb-4 text-gray-300">
+            Book <span className="purple-gray-gradient">Premium location </span>
+            for your ad and maximize your reach with{" "}
+            <span className="purple-gray-gradient">AI driven insights.</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center ">
-            <button className="group relative inline-flex items-center justify-center px-8 py-3 rounded-lg text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-300 shadow-lg hover:shadow-indigo-500/40 transform hover:-translate-y-1">
-              <span className="absolute inset-0 bg-gradient-to-t from-indigo-700 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></span>
-              <span className="relative">Start your Campaign</span>
-            </button>
-            <button className="px-8 py-3 rounded-lg text-lg font-semibold text-slate-700 dark:text-slate-300 bg-white/60 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 shadow-sm transform hover:-translate-y-1">
-              Get our Digital Signage
-            </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Button 1: Gradient Border + Slide (Blue/Teal scheme) */}
+            <Link
+              to="/auth"
+              className="group relative h-14 w-full sm:w-auto px-8 text-lg font-semibold text-white bg-slate-800 dark:text-slate-900 dark:bg-slate-100 rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg-gradient-to-r hover:text-gray-300 dark:hover:text-slate-800 hover:shadow-2xl hover:shadow-blue-500/25 transform hover:-rotate-1 hover:scale-105"
+            >
+              <span>List your Screen for Free</span>
+            </Link>
+
+            {/* Button 2: Gradient Border + Slide (Indigo/Purple scheme) */}
+            <Link
+              to="/auth"
+              className="group relative h-14 w-full sm:w-auto px-8 text-lg font-semibold text-slate-800 bg-slate-200 dark:text-slate-200 dark:bg-slate-700 rounded-xl shadow-md transition-all duration-500 flex items-center justify-center hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-600 hover:text-white hover:shadow-2xl hover:shadow-purple-500/25 transform hover:-rotate-1 hover:scale-105"
+            >
+              <span>Book Screen for Free</span>
+            </Link>
+          </div>
+
+          {/* Optional Floating Box */}
+          <div
+            className={`flex items-center justify-center transition-opacity duration-500 ${
+              visible ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+            style={{
+              position: "fixed",
+              top: `${150 + scrollY * 0.2}px`,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 50,
+            }}
+          >
+            <div
+              className={`flex items-center justify-between px-6 py-4 shadow-lg transition-all duration-500 ease-out
+              ${searchExpanded ? "w-[600px] h-20" : "w-[300px] h-16"} 
+              bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700
+              hover:shadow-xl cursor-text`}
+            >
+              <div className="flex items-center">
+                <span className="mr-4 text-slate-400 dark:text-slate-500">
+                  ✨
+                </span>
+                <span className="text-slate-600 dark:text-slate-300 text-base md:text-lg">
+                  {searchExpanded ? "Keep Scrolling" : "Sign Up. It's free. :)"}
+                </span>
+              </div>
+
+              {searchExpanded && (
+                <button className="ml-4 p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                  💬
+                </button>
+              )}
+            </div>
           </div>
         </div>
+      </main>
 
-        {/* Scroll Down Button */}
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
-          <button
-            onClick={handleScrollDown}
-            className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-300 animate-bounce-down"
-            aria-label="Scroll to next section"
-          >
-            <ChevronDown className="h-8 w-8" />
-          </button>
-        </div>
+      <div ref={nextSectionRef}>
+        <HeroVideo />
       </div>
     </>
   );

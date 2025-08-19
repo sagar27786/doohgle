@@ -2,7 +2,7 @@ import React from "react";
 
 const Footer = () => {
   const footerLinks = {
-    FRAMEN: ["About us", "Career", "News & Blog", "Contact"],
+    DOOHGLE: ["About us", "Career", "News & Blog", "Contact"],
     Products: [
       "Ads Manager",
       "Screen Manager",
