@@ -6,9 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Home/Header";
-import HeroVideo from "./components/Home/HeroVideo";
 import MainHero from "./components/Home/MainHero";
 import CompanyLogos from "./components/Home/CompanyLogos";
 import Statistics from "./components/Home/Statistics";
@@ -23,6 +21,7 @@ import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
 import DOOHChatbot from "./components/Home/DOOHChatbot";
 import Footer from "./components/Home/Footer";
+import HowItWorks from "./components/Home/HowItWorks";
 
 // Screen Manager page components
 import ScreenManagerDashboard from "./components/Screen Manager/ScreenManagerDashboard";
@@ -46,6 +45,7 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
+import ContactPage from "./components/Home/ContactPage";
 
 // ThemeProvider for dark mode
 interface ThemeContextType {
@@ -89,8 +89,6 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-gray-200">
-      {/* <HeroCarousel />  */}
-    <div className="min-h-screen bg-white">
       <MainHero />
       <DOOHChatbot />
       <CompanyLogos />
@@ -171,14 +169,13 @@ function App() {
             path="/ScreenManagerDashboard"
             element={<ScreenManagerDashboard />}
           />
-
+          <Route path="/contact" element={<ContactPage />} />"
           {/* Ads Manager Routes */}
           <Route path="/products/ads-manager" element={<AdsManagerPage />} />
           <Route
             path="/products/ads-manager/dashboard"
             element={<AdsManagerDashboard />}
           />
-
           {/* Auth Routes */}
           <Route
             path="/auth"
@@ -189,17 +186,20 @@ function App() {
             element={<Signup onSwitch={() => navigate("/auth")} />}
           />
           <Route path="/auth/login" element={<LoginSignup />} />
-
           {/* Role Selection - Protected but accessible to all authenticated users */}
-          <Route element={<ProtectedRoute allowedRoles={['venue_owner', 'advertiser', '']} />}>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={["venue_owner", "advertiser", ""]}
+              />
+            }
+          >
             <Route path="/auth/select-role" element={<RoleSelect />} />
           </Route>
-          
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
-
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
             <Route
