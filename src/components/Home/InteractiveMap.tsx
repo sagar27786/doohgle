@@ -664,7 +664,6 @@ export default function InteractiveMap() {
         </div>
       </div>
 
-      {/* Map Container */}
       <div className="flex-1 pl-4">
         <div className="h-[600px] w-[70vw] rounded-lg shadow-md overflow-hidden">
           <MapContainer
@@ -682,6 +681,7 @@ export default function InteractiveMap() {
               selectedCountry={selectedCountry}
               searchLocation={searchLocation}
             />
+            {/* Screen markers */}
             {filteredScreens.map((screen, idx) => (
               <Marker key={idx} position={[screen.lat, screen.lng]}>
                 <Popup>
