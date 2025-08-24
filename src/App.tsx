@@ -25,7 +25,7 @@ import Login from "./components/Auth/Login";
 import Signup from "./components/Auth/Signup";
 import RoleSelect from "./components/Auth/RoleSelect";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
-import VenueDashboard from "./components/VenueDashboard/VenueDashboard";
+import ProfessionalVenueDashboard from "./components/VenueDashboard/ProfessionalVenueDashboard";
 
 // Ads Manager page components
 import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
@@ -38,6 +38,14 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
+
+// Campaign Components
+import CampaignCreationWorkflow from "./components/Campaign/CampaignCreationWorkflow";
+
+// Map Components
+import MapDemo from "./pages/MapDemo";
+import MapDashboardPage from "./pages/MapDashboardPage";
+import MapQuickNav from "./components/Navigation/MapQuickNav";
 
 // ThemeProvider for dark mode
 interface ThemeContextType {
@@ -179,14 +187,29 @@ function App() {
           />
           <Route path="/auth/login" element={<LoginSignup />} />
 
+          {/* Map Routes */}
+          <Route path="/map" element={<MapDemo />} />
+          <Route path="/map-dashboard" element={<MapDashboardPage />} />
+          <Route path="/map-analytics" element={<MapDashboardPage />} />
+          <Route path="/map-locations" element={<MapDashboardPage />} />
+
           {/* Role Selection - Protected but accessible to all authenticated users */}
-          <Route element={<ProtectedRoute allowedRoles={['venue_owner', 'advertiser', '']} />}>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={["venue_owner", "advertiser", ""]}
+              />
+            }
+          >
             <Route path="/auth/select-role" element={<RoleSelect />} />
           </Route>
-          
+
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
-            <Route path="/venue-dashboard" element={<VenueDashboard />} />
+            <Route
+              path="/venue-dashboard"
+              element={<ProfessionalVenueDashboard />}
+            />
           </Route>
 
           {/* Protected Advertiser Routes */}
@@ -200,8 +223,15 @@ function App() {
               path="/products/ads-manager/dashboard"
               element={<AdsManagerDashboard />}
             />
+            <Route
+              path="/products/ads-manager/campaigns/create"
+              element={<CampaignCreationWorkflow />}
+            />
           </Route>
         </Routes>
+
+        {/* Quick Navigation for Maps - Available on all pages */}
+        <MapQuickNav />
       </div>
     </ThemeProvider>
   );

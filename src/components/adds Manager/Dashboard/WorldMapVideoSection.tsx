@@ -46,7 +46,7 @@ const WorldMapVideoSection: React.FC = () => {
           <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black">
             <video className="w-full h-auto" autoPlay loop muted playsInline>
               <source
-                src="https://s3.amazonaws.com/webflow-prod-assets/6364e4e0baec60a3a1eff938/65649cfbf8fe2b7c3057f66c_Framen-Ads-Manager-Scheduling.mp4"
+                src=""
                 type="video/mp4"
               />
               Your browser does not support the video tag.

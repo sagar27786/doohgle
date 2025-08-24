@@ -3,21 +3,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   MapPin,
-  Calendar,
-  Clock,
-  DollarSign,
   Users,
   Monitor,
   Filter,
   Grid,
   List,
   Star,
-  Eye,
-  Wifi,
   Zap,
-  Loader2
+  Loader2,
+  Send,
 } from "lucide-react";
 import { searchScreensByCity } from "../../api/screens";
+import CreateCampaignRequest from "../Campaign/CreateCampaignRequest";
 
 // Enhanced Screen Interface
 export interface EnhancedScreen {
@@ -207,67 +204,89 @@ const AdvancedScreenSearch: React.FC = () => {
   const [filteredScreens, setFilteredScreens] = useState<EnhancedScreen[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCampaignRequest, setShowCampaignRequest] = useState(false);
+  const [selectedScreen, setSelectedScreen] = useState<EnhancedScreen | null>(
+    null
+  );
 
-  const cities = ["Mumbai", "Delhi", "Bangalore", "Pune", "Hyderabad", "Chennai", "Kolkata"];
+  const cities = [
+    "Mumbai",
+    "Delhi",
+    "Bangalore",
+    "Pune",
+    "Hyderabad",
+    "Chennai",
+    "Kolkata",
+  ];
 
   const fetchScreensByCity = async (city: string) => {
     setIsLoading(true);
     setError(null);
     try {
       const screens = await searchScreensByCity(city);
-      
+
       // Transform the API response to match the EnhancedScreen interface
       const transformedScreens: EnhancedScreen[] = screens.map((screen) => ({
         id: screen.id,
         name: screen.name || `${screen.screen_type} Screen`,
         location: {
           city: screen.city,
-          area: screen.location_name || '',
-          address: screen.address || '',
+          area: screen.location_name || "",
+          address: screen.address || "",
           coordinates: {
             lat: screen.latitude || 0,
-            lng: screen.longitude || 0
-          }
+            lng: screen.longitude || 0,
+          },
         },
         pricing: {
-          hourly: screen.cost_per_10_seconds ? screen.cost_per_10_seconds * 360 : 1000, // Convert to hourly rate
-          daily: screen.cost_per_10_seconds ? screen.cost_per_10_seconds * 8640 : 10000, // Convert to daily rate
-          weekly: screen.cost_per_10_seconds ? screen.cost_per_10_seconds * 60480 : 70000 // Convert to weekly rate
+          hourly: screen.cost_per_10_seconds
+            ? screen.cost_per_10_seconds * 360
+            : 1000, // Convert to hourly rate
+          daily: screen.cost_per_10_seconds
+            ? screen.cost_per_10_seconds * 8640
+            : 10000, // Convert to daily rate
+          weekly: screen.cost_per_10_seconds
+            ? screen.cost_per_10_seconds * 60480
+            : 70000, // Convert to weekly rate
         },
         specifications: {
-          size: screen.screen_size_width && screen.screen_size_height 
-            ? `${screen.screen_size_width}x${screen.screen_size_height} ft` 
-            : 'Not specified',
-          resolution: screen.resolution_width && screen.resolution_height
-            ? `${screen.resolution_width}x${screen.resolution_height}`
-            : 'HD',
-          orientation: 'landscape', // Default value
-          screenType: screen.screen_type || 'LED Display'
+          size:
+            screen.screen_size_width && screen.screen_size_height
+              ? `${screen.screen_size_width}x${screen.screen_size_height} ft`
+              : "Not specified",
+          resolution:
+            screen.resolution_width && screen.resolution_height
+              ? `${screen.resolution_width}x${screen.resolution_height}`
+              : "HD",
+          orientation: "landscape", // Default value
+          screenType: screen.screen_type || "LED Display",
         },
-        availability: [{
-          date: new Date().toISOString().split('T')[0],
-          timeSlots: ['09:00-12:00', '14:00-18:00']
-        }],
+        availability: [
+          {
+            date: new Date().toISOString().split("T")[0],
+            timeSlots: ["09:00-12:00", "14:00-18:00"],
+          },
+        ],
         traffic: {
           dailyFootfall: screen.daily_footfall || 1000,
           vehicleCount: screen.vehicle_count || 500,
-          peakHours: Array.isArray(screen.peak_hours) 
-            ? screen.peak_hours 
-            : screen.peak_hours 
-              ? [screen.peak_hours] 
-              : ['08:00-10:00', '17:00-20:00']
+          peakHours: Array.isArray(screen.peak_hours)
+            ? screen.peak_hours
+            : screen.peak_hours
+            ? [screen.peak_hours]
+            : ["08:00-10:00", "17:00-20:00"],
         },
-        features: ['HD Display', '24/7 Operation'],
+        features: ["HD Display", "24/7 Operation"],
         rating: 4.5,
         totalBookings: 42,
-        imageUrl: screen.image_url || 'https://via.placeholder.com/400x300',
-        isVerified: true
+        imageUrl: screen.image_url || "https://via.placeholder.com/400x300",
+        isVerified: true,
       }));
 
       setFilteredScreens(transformedScreens);
     } catch (err) {
-      console.error('Error fetching screens:', err);
-      setError('Failed to load screens. Please try again.');
+      console.error("Error fetching screens:", err);
+      setError("Failed to load screens. Please try again.");
       // setFilteredScreens(sampleScreens); // Fallback to sample data
     } finally {
       setIsLoading(false);
@@ -306,7 +325,7 @@ const AdvancedScreenSearch: React.FC = () => {
       filtered = filtered.filter((screen) => screen.rating >= filters.rating);
     }
 
-    setFilteredScreens(prev => {
+    setFilteredScreens((prev) => {
       // Only update if there are actual changes to prevent infinite loops
       if (JSON.stringify(prev) !== JSON.stringify(filtered)) {
         return filtered;
@@ -314,6 +333,16 @@ const AdvancedScreenSearch: React.FC = () => {
       return prev;
     });
   }, [filters]);
+
+  const handleRequestCampaign = (screen: EnhancedScreen) => {
+    setSelectedScreen(screen);
+    setShowCampaignRequest(true);
+  };
+
+  const handleCampaignRequestCreated = () => {
+    // Optionally show a success message or update some state
+    console.log("Campaign request created successfully!");
+  };
 
   const ScreenCard: React.FC<{ screen: EnhancedScreen }> = ({ screen }) => (
     <motion.div
@@ -381,7 +410,7 @@ const AdvancedScreenSearch: React.FC = () => {
         </div>
 
         <div className="mt-3 pt-3 border-t">
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 mb-3">
             {screen.features.slice(0, 2).map((feature, idx) => (
               <span
                 key={idx}
@@ -396,6 +425,14 @@ const AdvancedScreenSearch: React.FC = () => {
               </span>
             )}
           </div>
+
+          <button
+            onClick={() => handleRequestCampaign(screen)}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors flex items-center justify-center space-x-2"
+          >
+            <Send size={16} />
+            <span>Request Campaign</span>
+          </button>
         </div>
       </div>
     </motion.div>
@@ -458,6 +495,16 @@ const AdvancedScreenSearch: React.FC = () => {
               </span>
             </div>
           </div>
+
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={() => handleRequestCampaign(screen)}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-md font-medium transition-colors flex items-center space-x-2"
+            >
+              <Send size={16} />
+              <span>Request Campaign</span>
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -502,7 +549,7 @@ const AdvancedScreenSearch: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <button 
+              <button
                 onClick={handleSearch}
                 disabled={isLoading}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-r-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
@@ -513,7 +560,7 @@ const AdvancedScreenSearch: React.FC = () => {
                     Searching...
                   </>
                 ) : (
-                  'Search'
+                  "Search"
                 )}
               </button>
             </div>
@@ -697,6 +744,20 @@ const AdvancedScreenSearch: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Campaign Request Modal */}
+      {showCampaignRequest && selectedScreen && (
+        <CreateCampaignRequest
+          screenId={selectedScreen.id}
+          screenName={selectedScreen.name}
+          screenLocation={`${selectedScreen.location.area}, ${selectedScreen.location.city}`}
+          onRequestCreated={handleCampaignRequestCreated}
+          onClose={() => {
+            setShowCampaignRequest(false);
+            setSelectedScreen(null);
+          }}
+        />
+      )}
     </div>
   );
 };

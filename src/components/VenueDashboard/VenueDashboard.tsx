@@ -1,30 +1,43 @@
-
-
-import { useState } from 'react';
-import ScreenList from './ScreenList';
-import BookingList from './BookingList';
-import EarningsList from './EarningsList';
-import { venueService } from '../../services/venueService';
-import { FaTv, FaCalendarCheck, FaMoneyBillWave, FaPlus } from 'react-icons/fa';
+import { useState } from "react";
+import ScreenList from "./ScreenList";
+import BookingList from "./BookingList";
+import EarningsList from "./EarningsList";
+import { venueService } from "../../services/venueService";
+import {
+  FaTv,
+  FaCalendarCheck,
+  FaMoneyBillWave,
+  FaPlus,
+  FaEnvelope,
+} from "react-icons/fa";
+import IncomingCampaignRequests from "../Campaign/IncomingCampaignRequests";
+import NotificationPanel from "../Campaign/NotificationPanel";
 
 const AssetAndPricingForms = () => {
-  const [screenId, setScreenId] = useState('');
-  const [assetType, setAssetType] = useState('photo_day');
-  const [assetUrl, setAssetUrl] = useState('');
-  const [pricing, setPricing] = useState({ hourly_rate: '', daily_rate: '', weekly_rate: '' });
-  const [pricingMsg, setPricingMsg] = useState('');
-  const [assetMsg, setAssetMsg] = useState('');
+  const [screenId, setScreenId] = useState("");
+  const [assetType, setAssetType] = useState("photo_day");
+  const [assetUrl, setAssetUrl] = useState("");
+  const [pricing, setPricing] = useState({
+    hourly_rate: "",
+    daily_rate: "",
+    weekly_rate: "",
+  });
+  const [pricingMsg, setPricingMsg] = useState("");
+  const [assetMsg, setAssetMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleAssetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAssetMsg('');
+    setAssetMsg("");
     setLoading(true);
     try {
-      await venueService.uploadScreenAsset(Number(screenId), { asset_type: assetType, url: assetUrl });
-      setAssetMsg('Asset uploaded successfully!');
+      await venueService.uploadScreenAsset(Number(screenId), {
+        asset_type: assetType,
+        url: assetUrl,
+      });
+      setAssetMsg("Asset uploaded successfully!");
     } catch (err: any) {
-      setAssetMsg(err?.response?.data?.message || 'Failed to upload asset');
+      setAssetMsg(err?.response?.data?.message || "Failed to upload asset");
     } finally {
       setLoading(false);
     }
@@ -32,7 +45,7 @@ const AssetAndPricingForms = () => {
 
   const handlePricingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPricingMsg('');
+    setPricingMsg("");
     setLoading(true);
     try {
       await venueService.setScreenPricing({
@@ -41,9 +54,9 @@ const AssetAndPricingForms = () => {
         daily_rate: pricing.daily_rate,
         weekly_rate: pricing.weekly_rate,
       });
-      setPricingMsg('Pricing updated successfully!');
+      setPricingMsg("Pricing updated successfully!");
     } catch (err: any) {
-      setPricingMsg(err?.response?.data?.message || 'Failed to set pricing');
+      setPricingMsg(err?.response?.data?.message || "Failed to set pricing");
     } finally {
       setLoading(false);
     }
@@ -57,11 +70,15 @@ const AssetAndPricingForms = () => {
           type="text"
           placeholder="Screen ID"
           value={screenId}
-          onChange={e => setScreenId(e.target.value)}
+          onChange={(e) => setScreenId(e.target.value)}
           className="mb-2 w-full border px-2 py-1 rounded"
           required
         />
-        <select value={assetType} onChange={e => setAssetType(e.target.value as any)} className="mb-2 w-full border px-2 py-1 rounded">
+        <select
+          value={assetType}
+          onChange={(e) => setAssetType(e.target.value as any)}
+          className="mb-2 w-full border px-2 py-1 rounded"
+        >
           <option value="photo_day">Photo (Day)</option>
           <option value="photo_night">Photo (Night)</option>
           <option value="video">Video</option>
@@ -70,12 +87,20 @@ const AssetAndPricingForms = () => {
           type="text"
           placeholder="Asset URL"
           value={assetUrl}
-          onChange={e => setAssetUrl(e.target.value)}
+          onChange={(e) => setAssetUrl(e.target.value)}
           className="mb-2 w-full border px-2 py-1 rounded"
           required
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>Upload</button>
-        {assetMsg && <div className="mt-2 text-sm text-red-500">{assetMsg}</div>}
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          disabled={loading}
+        >
+          Upload
+        </button>
+        {assetMsg && (
+          <div className="mt-2 text-sm text-red-500">{assetMsg}</div>
+        )}
       </form>
 
       <form onSubmit={handlePricingSubmit} className="p-4 border rounded-md">
@@ -84,7 +109,7 @@ const AssetAndPricingForms = () => {
           type="text"
           placeholder="Screen ID"
           value={screenId}
-          onChange={e => setScreenId(e.target.value)}
+          onChange={(e) => setScreenId(e.target.value)}
           className="mb-2 w-full border px-2 py-1 rounded"
           required
         />
@@ -92,76 +117,89 @@ const AssetAndPricingForms = () => {
           type="number"
           placeholder="Hourly Rate"
           value={pricing.hourly_rate}
-          onChange={e => setPricing({ ...pricing, hourly_rate: e.target.value })}
+          onChange={(e) =>
+            setPricing({ ...pricing, hourly_rate: e.target.value })
+          }
           className="mb-2 w-full border px-2 py-1 rounded"
         />
         <input
           type="number"
           placeholder="Daily Rate"
           value={pricing.daily_rate}
-          onChange={e => setPricing({ ...pricing, daily_rate: e.target.value })}
+          onChange={(e) =>
+            setPricing({ ...pricing, daily_rate: e.target.value })
+          }
           className="mb-2 w-full border px-2 py-1 rounded"
         />
         <input
           type="number"
           placeholder="Weekly Rate"
           value={pricing.weekly_rate}
-          onChange={e => setPricing({ ...pricing, weekly_rate: e.target.value })}
+          onChange={(e) =>
+            setPricing({ ...pricing, weekly_rate: e.target.value })
+          }
           className="mb-2 w-full border px-2 py-1 rounded"
         />
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded" disabled={loading}>Set Pricing</button>
-        {pricingMsg && <div className="mt-2 text-sm text-red-500">{pricingMsg}</div>}
+        <button
+          type="submit"
+          className="bg-green-600 text-white px-4 py-2 rounded"
+          disabled={loading}
+        >
+          Set Pricing
+        </button>
+        {pricingMsg && (
+          <div className="mt-2 text-sm text-red-500">{pricingMsg}</div>
+        )}
       </form>
     </div>
   );
 };
 
-
-
 const screenInitialState = {
   // Basic Info
-  screen_name: '',
-  location_in_venue: '',
-  description: '',
-  
+  screen_name: "",
+  location_in_venue: "",
+  description: "",
+
   // Address
-  address_line1: '',
-  address_line2: '',
-  city: '',
-  state: '',
-  country: '',
-  postal_code: '',
-  latitude: '',
-  longitude: '',
-  
+  address_line1: "",
+  address_line2: "",
+  city: "",
+  state: "",
+  country: "",
+  postal_code: "",
+  latitude: "",
+  longitude: "",
+
   // Technical Specs
-  width_px: '',
-  height_px: '',
-  resolution: '',
-  orientation: 'landscape',
-  device_type: 'smart_tv',
-  device_model: '',
+  width_px: "",
+  height_px: "",
+  resolution: "",
+  orientation: "landscape",
+  device_type: "smart_tv",
+  device_model: "",
   ads_enabled: false,
   ad_frequency: 0,
-  viewing_distance: 'close',
-  typical_viewer_duration: '',
-  peak_viewing_hours: ['09:00-17:00'],
-  
+  viewing_distance: "close",
+  typical_viewer_duration: "",
+  peak_viewing_hours: ["09:00-17:00"],
+
   // Assets
-  assets: [{ asset_type: 'photo_day', url: '' }],
-  
+  assets: [{ asset_type: "photo_day", url: "" }],
+
   // Pricing
   pricing: {
-    hourly_rate: '',
-    daily_rate: '',
-    weekly_rate: '',
-    currency: 'INR'
-  }
+    hourly_rate: "",
+    daily_rate: "",
+    weekly_rate: "",
+    currency: "INR",
+  },
 };
 
 const VenueDashboard = () => {
-  const [activeTab, setActiveTab] = useState('screens');
+  const [activeTab, setActiveTab] = useState("screens");
   const [showAddScreen, setShowAddScreen] = useState(false); // To control the modal for adding screens
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -174,99 +212,110 @@ const VenueDashboard = () => {
 
   const screenInitialState = {
     // Basic Info
-    screen_name: '',
-    location_in_venue: '',
-    description: '',
-    
+    screen_name: "",
+    location_in_venue: "",
+    description: "",
+
     // Address
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    country: '',
-    postal_code: '',
-    latitude: '',
-    longitude: '',
-    
+    address_line1: "",
+    address_line2: "",
+    city: "",
+    state: "",
+    country: "",
+    postal_code: "",
+    latitude: "",
+    longitude: "",
+
     // Technical Specs
-    width_px: '',
-    height_px: '',
-    resolution: '',
-    orientation: 'landscape',
-    device_type: 'smart_tv',
-    device_model: '',
+    width_px: "",
+    height_px: "",
+    resolution: "",
+    orientation: "landscape",
+    device_type: "smart_tv",
+    device_model: "",
     ads_enabled: false,
     ad_frequency: 0,
-    viewing_distance: 'close',
-    typical_viewer_duration: '',
-    peak_viewing_hours: ['09:00-17:00'],
-    
+    viewing_distance: "close",
+    typical_viewer_duration: "",
+    peak_viewing_hours: ["09:00-17:00"],
+
     // Assets
-    assets: [{ asset_type: 'photo_day', url: '' }],
-    
+    assets: [{ asset_type: "photo_day", url: "" }],
+
     // Pricing
     pricing: {
-      hourly_rate: '',
-      daily_rate: '',
-      weekly_rate: '',
-      currency: 'INR'
-    }
+      hourly_rate: "",
+      daily_rate: "",
+      weekly_rate: "",
+      currency: "INR",
+    },
   };
 
   const [screen, setScreen] = useState(screenInitialState);
-  const [screenMsg, setScreenMsg] = useState('');
+  const [screenMsg, setScreenMsg] = useState("");
   const [screenLoading, setScreenLoading] = useState(false);
 
-  const handleScreenChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleScreenChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setScreen(prev => ({ ...prev, [name]: value }));
+    setScreen((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePricingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setScreen(prev => ({
+    setScreen((prev) => ({
       ...prev,
-      pricing: { ...prev.pricing, [name]: value }
+      pricing: { ...prev.pricing, [name]: value },
     }));
   };
 
-  const handleAssetChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleAssetChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     const newAssets = [...screen.assets];
     // @ts-ignore
     newAssets[index][name] = value;
-    setScreen(prev => ({ ...prev, assets: newAssets }));
+    setScreen((prev) => ({ ...prev, assets: newAssets }));
   };
 
   const addAssetField = () => {
-    setScreen(prev => ({
+    setScreen((prev) => ({
       ...prev,
-      assets: [...prev.assets, { asset_type: 'photo_day', url: '' }]
+      assets: [...prev.assets, { asset_type: "photo_day", url: "" }],
     }));
   };
 
   const removeAssetField = (index: number) => {
-    setScreen(prev => ({
+    setScreen((prev) => ({
       ...prev,
-      assets: prev.assets.filter((_, i) => i !== index)
+      assets: prev.assets.filter((_, i) => i !== index),
     }));
   };
 
-  const handlePeakViewingHoursChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handlePeakViewingHoursChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const { value, selectedOptions } = e.target;
-    const selectedHours = Array.from(selectedOptions).map(option => option.value);
-    setScreen(prev => ({
+    const selectedHours = Array.from(selectedOptions).map(
+      (option) => option.value
+    );
+    setScreen((prev) => ({
       ...prev,
-      peak_viewing_hours: selectedHours
+      peak_viewing_hours: selectedHours,
     }));
   };
 
   const handleScreenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setScreenMsg('');
+    setScreenMsg("");
     setScreenLoading(true);
     try {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const userData = JSON.parse(localStorage.getItem("user") || "{}");
       const screenData = {
         ...screen,
         width_px: screen.width_px ? Number(screen.width_px) : undefined,
@@ -276,19 +325,25 @@ const VenueDashboard = () => {
         user_id: userData.id,
         pricing: {
           ...screen.pricing,
-          hourly_rate: screen.pricing.hourly_rate ? Number(screen.pricing.hourly_rate) : undefined,
-          daily_rate: screen.pricing.daily_rate ? Number(screen.pricing.daily_rate) : undefined,
-          weekly_rate: screen.pricing.weekly_rate ? Number(screen.pricing.weekly_rate) : undefined,
+          hourly_rate: screen.pricing.hourly_rate
+            ? Number(screen.pricing.hourly_rate)
+            : undefined,
+          daily_rate: screen.pricing.daily_rate
+            ? Number(screen.pricing.daily_rate)
+            : undefined,
+          weekly_rate: screen.pricing.weekly_rate
+            ? Number(screen.pricing.weekly_rate)
+            : undefined,
         },
-        assets: screen.assets.filter(asset => asset.url.trim() !== '')
+        assets: screen.assets.filter((asset) => asset.url.trim() !== ""),
       };
       await venueService.createScreen(screenData);
-      setScreenMsg('Screen registered successfully!');
+      setScreenMsg("Screen registered successfully!");
       setScreen(screenInitialState); // Reset form
       setShowAddScreen(false); // Close modal on success
-      setActiveTab('screens'); // Go to screens list
+      setActiveTab("screens"); // Go to screens list
     } catch (err: any) {
-      setScreenMsg(err?.response?.data?.message || 'Failed to register screen');
+      setScreenMsg(err?.response?.data?.message || "Failed to register screen");
     } finally {
       setScreenLoading(false);
     }
@@ -298,36 +353,81 @@ const VenueDashboard = () => {
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
       {/* Sidebar */}
       <aside className="w-72 bg-white shadow-xl p-8 flex flex-col min-h-screen border-r border-blue-100">
-        <h2 className="text-2xl font-bold mb-10 text-blue-700 tracking-tight">Venue Dashboard</h2>
+        <div className="flex justify-between items-center mb-10">
+          <h2 className="text-2xl font-bold text-blue-700 tracking-tight">
+            Venue Dashboard
+          </h2>
+          <button
+            onClick={() => setShowNotifications(true)}
+            className="relative p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
+            title="Notifications"
+          >
+            <FaEnvelope size={20} />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              3
+            </span>
+          </button>
+        </div>
         <nav>
           <ul className="space-y-3">
             <li>
               <button
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${activeTab === 'screens' && !showAddScreen ? 'bg-blue-600 text-white shadow' : 'text-blue-700 hover:bg-blue-100'}`}
-                onClick={() => handleTabChange('screens')}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${
+                  activeTab === "screens" && !showAddScreen
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-blue-700 hover:bg-blue-100"
+                }`}
+                onClick={() => handleTabChange("screens")}
               >
                 <FaTv size={24} /> My Screens
               </button>
             </li>
             <li>
               <button
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${activeTab === 'bookings' && !showAddScreen ? 'bg-blue-600 text-white shadow' : 'text-blue-700 hover:bg-blue-100'}`}
-                onClick={() => handleTabChange('bookings')}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${
+                  activeTab === "bookings" && !showAddScreen
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-blue-700 hover:bg-blue-100"
+                }`}
+                onClick={() => handleTabChange("bookings")}
               >
                 <FaCalendarCheck size={24} /> My Bookings
               </button>
             </li>
             <li>
               <button
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${activeTab === 'earnings' && !showAddScreen ? 'bg-blue-600 text-white shadow' : 'text-blue-700 hover:bg-blue-100'}`}
-                onClick={() => handleTabChange('earnings')}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${
+                  activeTab === "earnings" && !showAddScreen
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-blue-700 hover:bg-blue-100"
+                }`}
+                onClick={() => handleTabChange("earnings")}
               >
                 <FaMoneyBillWave size={24} /> My Earnings
               </button>
             </li>
             <li>
               <button
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${showAddScreen ? 'bg-green-600 text-white shadow' : 'text-green-700 hover:bg-green-100'}`}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${
+                  activeTab === "campaign-requests" && !showAddScreen
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-blue-700 hover:bg-blue-100"
+                } relative`}
+                onClick={() => handleTabChange("campaign-requests")}
+              >
+                <FaEnvelope size={24} /> Campaign Requests
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  !
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-all duration-150 text-lg font-medium ${
+                  showAddScreen
+                    ? "bg-green-600 text-white shadow"
+                    : "text-green-700 hover:bg-green-100"
+                }`}
                 onClick={handleAddScreenClick}
               >
                 <FaPlus size={24} /> Register New Screen
@@ -340,8 +440,12 @@ const VenueDashboard = () => {
       {/* Main Content */}
       <main className="flex-1 p-10 flex flex-col items-center">
         <div className="w-full max-w-4xl">
-          <h1 className="text-3xl font-extrabold text-blue-800 mb-2">Venue Owner Dashboard</h1>
-          <p className="mb-8 text-gray-600">Welcome! Manage your screens, bookings, earnings, and more below.</p>
+          <h1 className="text-3xl font-extrabold text-blue-800 mb-2">
+            Venue Owner Dashboard
+          </h1>
+          <p className="mb-8 text-gray-600">
+            Welcome! Manage your screens, bookings, earnings, and more below.
+          </p>
 
           {/* Registration form as right pane content, not modal */}
           <div className="mt-2">
@@ -354,14 +458,23 @@ const VenueDashboard = () => {
                 >
                   &times;
                 </button>
-                <h2 className="text-2xl font-bold mb-6 text-blue-700">Register New Screen</h2>
+                <h2 className="text-2xl font-bold mb-6 text-blue-700">
+                  Register New Screen
+                </h2>
                 <form onSubmit={handleScreenSubmit} className="space-y-8">
                   {/* Basic Info */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Basic Information</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">
+                      Basic Information
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="screen_name" className="block text-sm font-medium text-gray-700">Screen Name</label>
+                        <label
+                          htmlFor="screen_name"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Screen Name
+                        </label>
                         <input
                           type="text"
                           id="screen_name"
@@ -373,7 +486,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="location_in_venue" className="block text-sm font-medium text-gray-700">Location in Venue</label>
+                        <label
+                          htmlFor="location_in_venue"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Location in Venue
+                        </label>
                         <input
                           type="text"
                           id="location_in_venue"
@@ -385,7 +503,12 @@ const VenueDashboard = () => {
                       </div>
                     </div>
                     <div className="mt-4">
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                      <label
+                        htmlFor="description"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Description
+                      </label>
                       <textarea
                         id="description"
                         name="description"
@@ -399,10 +522,17 @@ const VenueDashboard = () => {
                   <hr className="my-4 border-blue-100" />
                   {/* Address Info */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Address Information</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">
+                      Address Information
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="address_line1" className="block text-sm font-medium text-gray-700">Address Line 1</label>
+                        <label
+                          htmlFor="address_line1"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Address Line 1
+                        </label>
                         <input
                           type="text"
                           id="address_line1"
@@ -414,7 +544,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="address_line2" className="block text-sm font-medium text-gray-700">Address Line 2</label>
+                        <label
+                          htmlFor="address_line2"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Address Line 2
+                        </label>
                         <input
                           type="text"
                           id="address_line2"
@@ -425,7 +560,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label>
+                        <label
+                          htmlFor="city"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          City
+                        </label>
                         <input
                           type="text"
                           id="city"
@@ -437,7 +577,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label>
+                        <label
+                          htmlFor="state"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          State
+                        </label>
                         <input
                           type="text"
                           id="state"
@@ -449,7 +594,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="country" className="block text-sm font-medium text-gray-700">Country</label>
+                        <label
+                          htmlFor="country"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Country
+                        </label>
                         <input
                           type="text"
                           id="country"
@@ -461,7 +611,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="postal_code" className="block text-sm font-medium text-gray-700">Postal Code</label>
+                        <label
+                          htmlFor="postal_code"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Postal Code
+                        </label>
                         <input
                           type="text"
                           id="postal_code"
@@ -473,7 +628,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">Latitude</label>
+                        <label
+                          htmlFor="latitude"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Latitude
+                        </label>
                         <input
                           type="text"
                           id="latitude"
@@ -484,7 +644,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">Longitude</label>
+                        <label
+                          htmlFor="longitude"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Longitude
+                        </label>
                         <input
                           type="text"
                           id="longitude"
@@ -499,10 +664,17 @@ const VenueDashboard = () => {
                   <hr className="my-4 border-blue-100" />
                   {/* Technical Specs */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Technical Specifications</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">
+                      Technical Specifications
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="width_px" className="block text-sm font-medium text-gray-700">Width (px)</label>
+                        <label
+                          htmlFor="width_px"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Width (px)
+                        </label>
                         <input
                           type="number"
                           id="width_px"
@@ -514,7 +686,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="height_px" className="block text-sm font-medium text-gray-700">Height (px)</label>
+                        <label
+                          htmlFor="height_px"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Height (px)
+                        </label>
                         <input
                           type="number"
                           id="height_px"
@@ -526,7 +703,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="resolution" className="block text-sm font-medium text-gray-700">Resolution</label>
+                        <label
+                          htmlFor="resolution"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Resolution
+                        </label>
                         <input
                           type="text"
                           id="resolution"
@@ -538,7 +720,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="orientation" className="block text-sm font-medium text-gray-700">Orientation</label>
+                        <label
+                          htmlFor="orientation"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Orientation
+                        </label>
                         <select
                           id="orientation"
                           name="orientation"
@@ -551,7 +738,12 @@ const VenueDashboard = () => {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="device_type" className="block text-sm font-medium text-gray-700">Device Type</label>
+                        <label
+                          htmlFor="device_type"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Device Type
+                        </label>
                         <input
                           type="text"
                           id="device_type"
@@ -562,7 +754,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="device_model" className="block text-sm font-medium text-gray-700">Device Model</label>
+                        <label
+                          htmlFor="device_model"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Device Model
+                        </label>
                         <input
                           type="text"
                           id="device_model"
@@ -578,13 +775,28 @@ const VenueDashboard = () => {
                           id="ads_enabled"
                           name="ads_enabled"
                           checked={screen.ads_enabled}
-                          onChange={(e) => setScreen(prev => ({ ...prev, ads_enabled: e.target.checked }))}
+                          onChange={(e) =>
+                            setScreen((prev) => ({
+                              ...prev,
+                              ads_enabled: e.target.checked,
+                            }))
+                          }
                           className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-400"
                         />
-                        <label htmlFor="ads_enabled" className="ml-2 block text-sm font-medium text-gray-700">Ads Enabled</label>
+                        <label
+                          htmlFor="ads_enabled"
+                          className="ml-2 block text-sm font-medium text-gray-700"
+                        >
+                          Ads Enabled
+                        </label>
                       </div>
                       <div>
-                        <label htmlFor="ad_frequency" className="block text-sm font-medium text-gray-700">Ad Frequency (per hour)</label>
+                        <label
+                          htmlFor="ad_frequency"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Ad Frequency (per hour)
+                        </label>
                         <input
                           type="number"
                           id="ad_frequency"
@@ -595,7 +807,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="viewing_distance" className="block text-sm font-medium text-gray-700">Viewing Distance</label>
+                        <label
+                          htmlFor="viewing_distance"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Viewing Distance
+                        </label>
                         <input
                           type="text"
                           id="viewing_distance"
@@ -606,7 +823,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="typical_viewer_duration" className="block text-sm font-medium text-gray-700">Typical Viewer Duration</label>
+                        <label
+                          htmlFor="typical_viewer_duration"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Typical Viewer Duration
+                        </label>
                         <input
                           type="text"
                           id="typical_viewer_duration"
@@ -617,7 +839,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="peak_viewing_hours" className="block text-sm font-medium text-gray-700">Peak Viewing Hours</label>
+                        <label
+                          htmlFor="peak_viewing_hours"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Peak Viewing Hours
+                        </label>
                         <select
                           id="peak_viewing_hours"
                           name="peak_viewing_hours"
@@ -657,11 +884,21 @@ const VenueDashboard = () => {
                   <hr className="my-4 border-blue-100" />
                   {/* Assets */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Assets</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">
+                      Assets
+                    </h3>
                     {screen.assets.map((asset, index) => (
-                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+                      <div
+                        key={index}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end"
+                      >
                         <div>
-                          <label htmlFor={`asset_type_${index}`} className="block text-sm font-medium text-gray-700">Asset Type</label>
+                          <label
+                            htmlFor={`asset_type_${index}`}
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Asset Type
+                          </label>
                           <select
                             id={`asset_type_${index}`}
                             name="asset_type"
@@ -675,7 +912,12 @@ const VenueDashboard = () => {
                           </select>
                         </div>
                         <div className="md:col-span-2">
-                          <label htmlFor={`asset_url_${index}`} className="block text-sm font-medium text-gray-700">Asset URL</label>
+                          <label
+                            htmlFor={`asset_url_${index}`}
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Asset URL
+                          </label>
                           <input
                             type="url"
                             id={`asset_url_${index}`}
@@ -708,10 +950,17 @@ const VenueDashboard = () => {
                   <hr className="my-4 border-blue-100" />
                   {/* Pricing */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Pricing</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-600">
+                      Pricing
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
-                        <label htmlFor="hourly_rate" className="block text-sm font-medium text-gray-700">Hourly Rate</label>
+                        <label
+                          htmlFor="hourly_rate"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Hourly Rate
+                        </label>
                         <input
                           type="number"
                           id="hourly_rate"
@@ -723,7 +972,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="daily_rate" className="block text-sm font-medium text-gray-700">Daily Rate</label>
+                        <label
+                          htmlFor="daily_rate"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Daily Rate
+                        </label>
                         <input
                           type="number"
                           id="daily_rate"
@@ -735,7 +989,12 @@ const VenueDashboard = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="weekly_rate" className="block text-sm font-medium text-gray-700">Weekly Rate</label>
+                        <label
+                          htmlFor="weekly_rate"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Weekly Rate
+                        </label>
                         <input
                           type="number"
                           id="weekly_rate"
@@ -748,23 +1007,36 @@ const VenueDashboard = () => {
                       </div>
                     </div>
                   </div>
-                  {screenMsg && <div className="mt-4 p-2 text-center text-green-700 bg-green-100 rounded-md">{screenMsg}</div>}
+                  {screenMsg && (
+                    <div className="mt-4 p-2 text-center text-green-700 bg-green-100 rounded-md">
+                      {screenMsg}
+                    </div>
+                  )}
                   <button
                     type="submit"
                     className="mt-6 w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition duration-300 shadow"
                     disabled={screenLoading}
                   >
-                    {screenLoading ? 'Registering...' : 'Register Screen'}
+                    {screenLoading ? "Registering..." : "Register Screen"}
                   </button>
                 </form>
               </div>
             ) : (
               <>
-                {activeTab === 'screens' && <ScreenList />}
-                {activeTab === 'bookings' && <BookingList />}
-                {activeTab === 'earnings' && <EarningsList />}
+                {activeTab === "screens" && <ScreenList />}
+                {activeTab === "bookings" && <BookingList />}
+                {activeTab === "earnings" && <EarningsList />}
+                {activeTab === "campaign-requests" && (
+                  <IncomingCampaignRequests />
+                )}
               </>
             )}
+
+            {/* Notification Panel */}
+            <NotificationPanel
+              isOpen={showNotifications}
+              onClose={() => setShowNotifications(false)}
+            />
           </div>
         </div>
       </main>

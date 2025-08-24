@@ -8,7 +8,7 @@ const LOTTIE_URL =
   "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/65649b88a87e4de2bb35f526_World%20Map.json";
 
 const VIDEO_SRC =
-  "https://s3.amazonaws.com/webflow-prod-assets/6364e4e0baec60a3a1eff938/65649cfbf8fe2b7c3057f66c_Framen-Ads-Manager-Scheduling.mp4";
+  "";
 
 const WorldMapSection: React.FC = () => {
   const [ref, inView] = useInView({

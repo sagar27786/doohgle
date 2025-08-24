@@ -18,18 +18,8 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import L from "leaflet";
-
-// Fix for default markers in Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
+import IndianGoogleMap from "../Map/IndianGoogleMap";
+import GoogleMapService from "../../services/googleMapService";
 
 interface Country {
   name: string;
@@ -56,41 +46,28 @@ interface Creative {
   checked: boolean;
 }
 
+// Updated with India as primary country
 const countries: Country[] = [
   {
-    name: "Belgium",
-    code: "BE",
-    flag: "🇧🇪",
-    center: [50.8503, 4.3517],
-    zoom: 8,
+    name: "India",
+    code: "IN",
+    flag: "��",
+    center: [20.5937, 78.9629],
+    zoom: 5,
   },
   {
-    name: "Netherlands",
-    code: "NL",
-    flag: "🇳🇱",
-    center: [52.3676, 4.9041],
-    zoom: 8,
+    name: "United States",
+    code: "US",
+    flag: "��",
+    center: [39.8283, -98.5795],
+    zoom: 4,
   },
   {
-    name: "Germany",
-    code: "DE",
-    flag: "🇩🇪",
-    center: [51.1657, 10.4515],
+    name: "United Kingdom",
+    code: "GB",
+    flag: "��",
+    center: [55.3781, -3.436],
     zoom: 6,
-  },
-  {
-    name: "France",
-    code: "FR",
-    flag: "🇫🇷",
-    center: [46.2276, 2.2137],
-    zoom: 6,
-  },
-  {
-    name: "Luxembourg",
-    code: "LU",
-    flag: "🇱🇺",
-    center: [49.8153, 6.1296],
-    zoom: 10,
   },
 ];
 
@@ -169,7 +146,7 @@ const creatives: Creative[] = [
 
 const InteractiveMap = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[2]);
+  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]); // Default to India
   const [searchQuery, setSearchQuery] = useState("");
   const [venueTypesState, setVenueTypesState] = useState(venueTypes);
   const [selectedVenue, setSelectedVenue] = useState(venueTypes[1]);
@@ -179,80 +156,23 @@ const InteractiveMap = () => {
   const [creativesState, setCreativesState] = useState(creatives);
   const [showVenuePreset, setShowVenuePreset] = useState(false);
   const [showTimezone, setShowTimezone] = useState(false);
-  const [map, setMap] = useState<L.Map | null>(null);
-  const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
+  const [mapCenter, setMapCenter] = useState<
+    { lat: number; lng: number } | undefined
+  >();
 
-  // Initialize map when component mounts
+  const mapService = GoogleMapService.getInstance();
+
+  // Update map center when country changes
   useEffect(() => {
-    if (mapContainer && !map) {
-      const newMap = L.map(mapContainer).setView(
-        selectedCountry.center,
-        selectedCountry.zoom
-      );
-
-      // Add OpenStreetMap tiles
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "©OpenStreetMap contributors",
-        maxZoom: 18,
-      }).addTo(newMap);
-
-      // Add custom markers for Belgium
-      if (selectedCountry.code === "BE") {
-        // Brussels
-        const brusselsMarker = L.marker([50.8503, 4.3517])
-          .addTo(newMap)
-          .bindPopup("Brussels - 2 screens");
-
-        // Antwerp
-        const antwerpMarker = L.marker([51.2194, 4.4025])
-          .addTo(newMap)
-          .bindPopup("Antwerp - 3 screens");
-
-        // Ghent
-        const ghentMarker = L.marker([51.05, 3.73])
-          .addTo(newMap)
-          .bindPopup("Ghent - 1 screen");
-      }
-
-      setMap(newMap);
-    }
-
-    return () => {
-      if (map) {
-        map.remove();
-        setMap(null);
-      }
-    };
-  }, [mapContainer, selectedCountry]);
-
-  // Update map when country changes
-  useEffect(() => {
-    if (map) {
-      map.setView(selectedCountry.center, selectedCountry.zoom);
-      map.eachLayer((layer: L.Layer) => {
-        if (layer instanceof L.Marker) {
-          map.removeLayer(layer);
-        }
+    if (selectedCountry.code === "IN") {
+      setMapCenter(mapService.getIndiaCenter());
+    } else {
+      setMapCenter({
+        lat: selectedCountry.center[0],
+        lng: selectedCountry.center[1],
       });
-
-      // Add markers for the selected country
-      if (selectedCountry.code === "BE") {
-        L.marker([50.8503, 4.3517])
-          .addTo(map)
-          .bindPopup("Brussels - 2 screens");
-        L.marker([51.2194, 4.4025]).addTo(map).bindPopup("Antwerp - 3 screens");
-        L.marker([51.05, 3.73]).addTo(map).bindPopup("Ghent - 1 screen");
-      } else if (selectedCountry.code === "NL") {
-        L.marker([52.3676, 4.9041])
-          .addTo(map)
-          .bindPopup("Amsterdam - 4 screens");
-        L.marker([52.0907, 5.1214]).addTo(map).bindPopup("Utrecht - 2 screens");
-      } else if (selectedCountry.code === "DE") {
-        L.marker([52.52, 13.405]).addTo(map).bindPopup("Berlin - 5 screens");
-        L.marker([50.9375, 6.9603]).addTo(map).bindPopup("Cologne - 3 screens");
-      }
     }
-  }, [selectedCountry, map]);
+  }, [selectedCountry, mapService]);
 
   const handleVenueToggle = (id: string) => {
     setVenueTypesState((prev) =>
@@ -272,16 +192,9 @@ const InteractiveMap = () => {
     );
   };
 
-  const handleZoomIn = () => {
-    if (map) {
-      map.zoomIn();
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (map) {
-      map.zoomOut();
-    }
+  const handleLocationSelect = (lat: number, lng: number, address?: string) => {
+    console.log("Selected location:", { lat, lng, address });
+    // Handle location selection logic here
   };
 
   const renderStep1 = () => (
@@ -315,14 +228,14 @@ const InteractiveMap = () => {
           <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-slate-500" />
           <input
             type="text"
-            placeholder="Search for city, district or zip code"
+            placeholder="Search Indian cities, states (e.g., Mumbai, Delhi, Tamil Nadu)"
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 hover:border-purple-300 transition-all duration-300"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="text-sm text-gray-500 dark:text-slate-400">
-          powered by Google
+          powered by Google Maps
         </div>
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
@@ -341,24 +254,13 @@ const InteractiveMap = () => {
       </div>
       <div className="lg:col-span-2">
         <div className="relative rounded-lg overflow-hidden h-96 border border-gray-200 dark:border-slate-700">
-          <div
-            ref={setMapContainer}
-            className="w-full h-full dark:filter dark:grayscale-[0.9] dark:invert(1) dark:brightness(0.8) transition-all duration-300"
+          <IndianGoogleMap
+            onLocationSelect={handleLocationSelect}
+            showScreenLocations={true}
+            height="384px"
+            zoom={selectedCountry.code === "IN" ? 5 : selectedCountry.zoom}
+            center={mapCenter}
           />
-          <div className="absolute top-4 right-4 space-y-2 z-10">
-            <button
-              onClick={handleZoomIn}
-              className="bg-white dark:bg-slate-700 rounded shadow-lg p-2 hover:shadow-xl transition-shadow duration-300"
-            >
-              <ZoomIn className="h-5 w-5 text-gray-600 dark:text-slate-300" />
-            </button>
-            <button
-              onClick={handleZoomOut}
-              className="bg-white dark:bg-slate-700 rounded shadow-lg p-2 hover:shadow-xl transition-shadow duration-300"
-            >
-              <ZoomOut className="h-5 w-5 text-gray-600 dark:text-slate-300" />
-            </button>
-          </div>
         </div>
       </div>
     </div>
