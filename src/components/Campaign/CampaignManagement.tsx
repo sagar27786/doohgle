@@ -28,6 +28,7 @@ import {
   XCircle,
   Share2,
 } from "lucide-react";
+import CampaignCreationWorkflow from "./CampaignCreationWorkflow";
 
 // Types
 interface Campaign {
@@ -95,7 +96,14 @@ const sampleCampaigns: Campaign[] = [
     ],
     schedule: {
       timeSlots: ["10:00-14:00", "16:00-20:00"],
-      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      days: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ],
     },
   },
   {
@@ -116,7 +124,15 @@ const sampleCampaigns: Campaign[] = [
     ],
     schedule: {
       timeSlots: ["11:00-15:00", "19:00-23:00"],
-      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      days: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
     },
   },
   {
@@ -137,7 +153,14 @@ const sampleCampaigns: Campaign[] = [
     ],
     schedule: {
       timeSlots: ["06:00-10:00", "17:00-21:00"],
-      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      days: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ],
     },
   },
   {
@@ -176,13 +199,13 @@ const LoadingScreen: React.FC = () => {
         {/* Animated Logo with rotating effect */}
         <motion.div
           className="w-20 h-20 mx-auto mb-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl"
-          animate={{ 
+          animate={{
             rotateY: 360,
-            scale: [1, 1.1, 1] 
+            scale: [1, 1.1, 1],
           }}
-          transition={{ 
+          transition={{
             rotateY: { duration: 2, repeat: Infinity, ease: "linear" },
-            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
           }}
         >
           <Target className="text-white" size={32} />
@@ -195,18 +218,18 @@ const LoadingScreen: React.FC = () => {
               key={i}
               className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"
               animate={{
-                x: Math.cos(i * 30 * Math.PI / 180) * 50,
-                y: Math.sin(i * 30 * Math.PI / 180) * 50,
+                x: Math.cos((i * 30 * Math.PI) / 180) * 50,
+                y: Math.sin((i * 30 * Math.PI) / 180) * 50,
                 scale: [0, 1, 0],
-                opacity: [0, 1, 0]
+                opacity: [0, 1, 0],
               }}
               transition={{
                 duration: 2,
                 repeat: Infinity,
                 delay: i * 0.1,
-                ease: "easeInOut"
+                ease: "easeInOut",
               }}
-              style={{ left: '50%', top: '50%' }}
+              style={{ left: "50%", top: "50%" }}
             />
           ))}
         </div>
@@ -232,7 +255,7 @@ const LoadingScreen: React.FC = () => {
         <div className="w-64 h-1 bg-gray-200 rounded-full mx-auto mt-8 overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
-            animate={{ x: ['-100%', '100%'] }}
+            animate={{ x: ["-100%", "100%"] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
         </div>
@@ -270,7 +293,7 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
       // easeOutExpo animation curve
       const easeOutExpo = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
       const currentValue = easeOutExpo * value;
-      
+
       setCount(currentValue);
 
       if (progress < 1) {
@@ -284,7 +307,9 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 
   return (
     <span>
-      {prefix}{count.toFixed(decimals)}{suffix}
+      {prefix}
+      {count.toFixed(decimals)}
+      {suffix}
     </span>
   );
 };
@@ -298,7 +323,10 @@ const CampaignManagement: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
+    null
+  );
+  const [showCreateWorkflow, setShowCreateWorkflow] = useState(false);
 
   const tabs = ["All", "Active", "Paused", "Completed", "Draft"];
 
@@ -315,17 +343,17 @@ const CampaignManagement: React.FC = () => {
   // Filter and sort campaigns
   const filteredCampaigns = campaignData
     .filter((campaign) => {
-      const matchesSearch = campaign.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+      const matchesSearch =
+        campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         campaign.brand.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesTab = selectedTab === "All" || campaign.status === selectedTab;
+      const matchesTab =
+        selectedTab === "All" || campaign.status === selectedTab;
       return matchesSearch && matchesTab;
     })
     .sort((a, b) => {
       const aVal = a[sortBy as keyof Campaign];
       const bVal = b[sortBy as keyof Campaign];
-      
+
       if (sortOrder === "asc") {
         return aVal > bVal ? 1 : -1;
       } else {
@@ -334,29 +362,50 @@ const CampaignManagement: React.FC = () => {
     });
 
   // Calculate summary metrics for animated counters
-  const totalBudget = campaignData.reduce((sum, campaign) => sum + campaign.budget, 0);
-  const totalSpent = campaignData.reduce((sum, campaign) => sum + campaign.spent, 0);
-  const totalImpressions = campaignData.reduce((sum, campaign) => sum + campaign.impressions, 0);
-  const activeCampaigns = campaignData.filter(c => c.status === "Active").length;
+  const totalBudget = campaignData.reduce(
+    (sum, campaign) => sum + campaign.budget,
+    0
+  );
+  const totalSpent = campaignData.reduce(
+    (sum, campaign) => sum + campaign.spent,
+    0
+  );
+  const totalImpressions = campaignData.reduce(
+    (sum, campaign) => sum + campaign.impressions,
+    0
+  );
+  const activeCampaigns = campaignData.filter(
+    (c) => c.status === "Active"
+  ).length;
 
   // Status styling helpers
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active": return "bg-green-100 text-green-800 border-green-200";
-      case "Paused": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Completed": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Draft": return "bg-gray-100 text-gray-800 border-gray-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "Active":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "Paused":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "Completed":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "Draft":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Active": return <div className="w-2 h-2 bg-green-500 rounded-full" />;
-      case "Paused": return <div className="w-2 h-2 bg-yellow-500 rounded-full" />;
-      case "Completed": return <div className="w-2 h-2 bg-blue-500 rounded-full" />;
-      case "Draft": return <div className="w-2 h-2 bg-gray-500 rounded-full" />;
-      default: return <div className="w-2 h-2 bg-gray-500 rounded-full" />;
+      case "Active":
+        return <div className="w-2 h-2 bg-green-500 rounded-full" />;
+      case "Paused":
+        return <div className="w-2 h-2 bg-yellow-500 rounded-full" />;
+      case "Completed":
+        return <div className="w-2 h-2 bg-blue-500 rounded-full" />;
+      case "Draft":
+        return <div className="w-2 h-2 bg-gray-500 rounded-full" />;
+      default:
+        return <div className="w-2 h-2 bg-gray-500 rounded-full" />;
     }
   };
 
@@ -380,7 +429,8 @@ const CampaignManagement: React.FC = () => {
                 Campaign Management
               </h1>
               <p className="text-gray-600 text-lg">
-                Manage and monitor your advertising campaigns with real-time analytics
+                Manage and monitor your advertising campaigns with real-time
+                analytics
               </p>
             </div>
             <div className="flex items-center space-x-4 mt-4 lg:mt-0">
@@ -388,6 +438,7 @@ const CampaignManagement: React.FC = () => {
                 className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold shadow-lg"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setShowCreateWorkflow(true)}
               >
                 <Plus size={20} />
                 <span>Create Campaign</span>
@@ -426,7 +477,12 @@ const CampaignManagement: React.FC = () => {
                     Total Budget
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ₹<AnimatedCounter value={totalBudget / 100000} decimals={1} suffix="L" />
+                    ₹
+                    <AnimatedCounter
+                      value={totalBudget / 100000}
+                      decimals={1}
+                      suffix="L"
+                    />
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg">
@@ -451,7 +507,12 @@ const CampaignManagement: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Spent</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ₹<AnimatedCounter value={totalSpent / 100000} decimals={1} suffix="L" />
+                    ₹
+                    <AnimatedCounter
+                      value={totalSpent / 100000}
+                      decimals={1}
+                      suffix="L"
+                    />
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg">
@@ -478,7 +539,11 @@ const CampaignManagement: React.FC = () => {
                     Impressions
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    <AnimatedCounter value={totalImpressions / 1000000} decimals={1} suffix="M" />
+                    <AnimatedCounter
+                      value={totalImpressions / 1000000}
+                      decimals={1}
+                      suffix="M"
+                    />
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-purple-100 to-violet-100 rounded-lg">
@@ -544,14 +609,16 @@ const CampaignManagement: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + (index * 0.1) }}
+                  transition={{ delay: 0.6 + index * 0.1 }}
                 >
                   {tab}
-                  <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                    selectedTab === tab 
-                      ? "bg-blue-200 text-blue-800" 
-                      : "bg-gray-200 text-gray-600"
-                  }`}>
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      selectedTab === tab
+                        ? "bg-blue-200 text-blue-800"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
                     {tab === "All"
                       ? campaignData.length
                       : campaignData.filter((c) => c.status === tab).length}
@@ -688,7 +755,7 @@ const CampaignManagement: React.FC = () => {
               key={campaign.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 + (0.1 * index) }}
+              transition={{ delay: 0.8 + 0.1 * index }}
               className="bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer overflow-hidden group"
               whileHover={{ y: -5, scale: 1.02 }}
               onClick={() => setSelectedCampaign(campaign)}
@@ -717,7 +784,7 @@ const CampaignManagement: React.FC = () => {
                             <span>{campaign.status}</span>
                           </div>
                         </div>
-                        <motion.button 
+                        <motion.button
                           className="p-1 hover:bg-gray-100 rounded transition-colors"
                           whileHover={{ rotate: 90 }}
                         >
@@ -756,7 +823,10 @@ const CampaignManagement: React.FC = () => {
                               100
                             )}%`,
                           }}
-                          transition={{ duration: 1.5, delay: 0.8 + (index * 0.1) }}
+                          transition={{
+                            duration: 1.5,
+                            delay: 0.8 + index * 0.1,
+                          }}
                         />
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-500">
@@ -781,33 +851,42 @@ const CampaignManagement: React.FC = () => {
                   <div className="p-6">
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="text-center">
-                        <motion.p 
+                        <motion.p
                           className="text-2xl font-bold text-blue-600"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ delay: 1 + (index * 0.1), type: "spring" }}
+                          transition={{
+                            delay: 1 + index * 0.1,
+                            type: "spring",
+                          }}
                         >
                           {(campaign.impressions / 1000000).toFixed(1)}M
                         </motion.p>
                         <p className="text-xs text-gray-600">Impressions</p>
                       </div>
                       <div className="text-center">
-                        <motion.p 
+                        <motion.p
                           className="text-2xl font-bold text-green-600"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ delay: 1.1 + (index * 0.1), type: "spring" }}
+                          transition={{
+                            delay: 1.1 + index * 0.1,
+                            type: "spring",
+                          }}
                         >
                           {campaign.clicks.toLocaleString()}
                         </motion.p>
                         <p className="text-xs text-gray-600">Clicks</p>
                       </div>
                       <div className="text-center">
-                        <motion.p 
+                        <motion.p
                           className="text-2xl font-bold text-purple-600"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ delay: 1.2 + (index * 0.1), type: "spring" }}
+                          transition={{
+                            delay: 1.2 + index * 0.1,
+                            type: "spring",
+                          }}
                         >
                           {campaign.ctr.toFixed(2)}%
                         </motion.p>
@@ -826,7 +905,7 @@ const CampaignManagement: React.FC = () => {
                             key={idx}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 1.3 + (idx * 0.1) }}
+                            transition={{ delay: 1.3 + idx * 0.1 }}
                             className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs"
                           >
                             {screen.city}
@@ -941,7 +1020,7 @@ const CampaignManagement: React.FC = () => {
                           <span>{campaign.status}</span>
                         </div>
                       </div>
-                      <motion.button 
+                      <motion.button
                         className="p-2 hover:bg-gray-100 rounded transition-colors"
                         whileHover={{ rotate: 90 }}
                       >
@@ -1005,7 +1084,7 @@ const CampaignManagement: React.FC = () => {
 
                   {/* Quick Stats with gradient backgrounds */}
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-                    <motion.div 
+                    <motion.div
                       className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4"
                       whileHover={{ scale: 1.05 }}
                     >
@@ -1019,7 +1098,7 @@ const CampaignManagement: React.FC = () => {
                         </div>
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4"
                       whileHover={{ scale: 1.05 }}
                     >
@@ -1033,7 +1112,7 @@ const CampaignManagement: React.FC = () => {
                         </div>
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-4"
                       whileHover={{ scale: 1.05 }}
                     >
@@ -1050,7 +1129,7 @@ const CampaignManagement: React.FC = () => {
                         </div>
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4"
                       whileHover={{ scale: 1.05 }}
                     >
@@ -1064,7 +1143,7 @@ const CampaignManagement: React.FC = () => {
                         </div>
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="bg-gradient-to-r from-red-50 to-rose-50 rounded-lg p-4"
                       whileHover={{ scale: 1.05 }}
                     >
@@ -1097,7 +1176,7 @@ const CampaignManagement: React.FC = () => {
                               key={index}
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.4 + (index * 0.1) }}
+                              transition={{ delay: 0.4 + index * 0.1 }}
                               className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors"
                             >
                               <h4 className="font-medium text-gray-900">
@@ -1133,7 +1212,7 @@ const CampaignManagement: React.FC = () => {
                                   key={index}
                                   initial={{ opacity: 0, scale: 0.8 }}
                                   animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ delay: 0.5 + (index * 0.1) }}
+                                  transition={{ delay: 0.5 + index * 0.1 }}
                                   className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
                                 >
                                   {slot}
@@ -1151,7 +1230,7 @@ const CampaignManagement: React.FC = () => {
                                   key={index}
                                   initial={{ opacity: 0, scale: 0.8 }}
                                   animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ delay: 0.7 + (index * 0.1) }}
+                                  transition={{ delay: 0.7 + index * 0.1 }}
                                   className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
                                 >
                                   {day.slice(0, 3)}
@@ -1165,7 +1244,7 @@ const CampaignManagement: React.FC = () => {
                   </div>
 
                   {/* Professional Action Buttons */}
-                  <motion.div 
+                  <motion.div
                     className="flex space-x-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1205,6 +1284,41 @@ const CampaignManagement: React.FC = () => {
                     </motion.button>
                   </motion.div>
                 </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Campaign Creation Workflow Modal */}
+        <AnimatePresence>
+          {showCreateWorkflow && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setShowCreateWorkflow(false);
+                }
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl"
+              >
+                <CampaignCreationWorkflow
+                  onClose={() => setShowCreateWorkflow(false)}
+                  onCampaignCreated={(campaign: any) => {
+                    // Handle successful campaign creation
+                    console.log("Campaign created:", campaign);
+                    setShowCreateWorkflow(false);
+                    // You can add campaign to the local state or refetch data
+                    setCampaignData((prev) => [...prev, campaign]);
+                  }}
+                />
               </motion.div>
             </motion.div>
           )}

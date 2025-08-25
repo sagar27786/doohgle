@@ -419,7 +419,7 @@ const ProfessionalVenueDashboard: React.FC = () => {
 
   const renderDashboard = () => (
     <motion.div
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50"
+      className="min-h-screen bg-white"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1 }}

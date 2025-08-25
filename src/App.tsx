@@ -42,6 +42,15 @@ import IntegratedAdsManager from "./components/adds Manager/Dashboard/Integrated
 // Campaign Components
 import CampaignCreationWorkflow from "./components/Campaign/CampaignCreationWorkflow";
 
+// Notification Components
+import NotificationBar from "./components/Notifications/NotificationBar";
+
+// Auth Service
+import { authService } from "./services/authService";
+
+// Add NotificationService to window for debugging
+import NotificationService from "./services/notificationService";
+
 // Map Components
 import MapDemo from "./pages/MapDemo";
 import MapDashboardPage from "./pages/MapDashboardPage";
@@ -143,6 +152,49 @@ const AdsManagerDashboard = () => {
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Add debug functionality for testing notifications
+  useEffect(() => {
+    // Add to window for console debugging
+    (window as any).testNotifications = {
+      addTestBooking: () => {
+        const service = NotificationService.getInstance();
+        const id = service.addTestBookingRequest();
+        console.log("Test booking request created with ID:", id);
+        return id;
+      },
+      acceptBooking: (id: string) => {
+        const service = NotificationService.getInstance();
+        service.acceptBookingRequest(id);
+        console.log("Accepted booking request:", id);
+      },
+      rejectBooking: (id: string) => {
+        const service = NotificationService.getInstance();
+        service.rejectBookingRequest(id);
+        console.log("Rejected booking request:", id);
+      },
+      getRequests: () => {
+        const service = NotificationService.getInstance();
+        const requests = service.getPendingBookingRequests();
+        console.log("Current booking requests:", requests);
+        return requests;
+      },
+    };
+  }, []);
+
+  // Helper function to determine user type
+  const getUserType = (): "screen_manager" | "ads_manager" => {
+    const currentUser = authService.getCurrentUser();
+    if (
+      currentUser?.role === "venue_owner" ||
+      currentUser?.roles?.includes("venue_owner")
+    ) {
+      return "screen_manager";
+    }
+    // Default to ads_manager for advertisers or any other users
+    return "ads_manager";
+  };
+
   const hideHeaderRoutes = [
     "/auth/login",
     "/auth/signup",
@@ -157,6 +209,7 @@ function App() {
     <ThemeProvider>
       <div className="min-h-screen bg-white">
         {shouldShowHeader && <Header />}
+        {shouldShowHeader && <NotificationBar userType={getUserType()} />}
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
@@ -225,7 +278,14 @@ function App() {
             />
             <Route
               path="/products/ads-manager/campaigns/create"
-              element={<CampaignCreationWorkflow />}
+              element={
+                <CampaignCreationWorkflow
+                  onClose={() => navigate("/products/ads-manager/dashboard")}
+                  onCampaignCreated={() =>
+                    navigate("/products/ads-manager/dashboard")
+                  }
+                />
+              }
             />
           </Route>
         </Routes>

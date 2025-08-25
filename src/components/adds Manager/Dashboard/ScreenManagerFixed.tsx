@@ -6,6 +6,7 @@ import {
   Filter,
   MapPin,
   Monitor,
+  Settings,
   Eye,
   BarChart3,
   AlertCircle,
@@ -13,12 +14,20 @@ import {
   RefreshCw,
   Plus,
   Download,
+  Upload,
+  Zap,
+  Activity,
+  Globe,
   ArrowUp,
+  ArrowDown,
+  Target,
   X,
   TrendingUp,
   Users,
   Clock,
   DollarSign,
+  Calendar,
+  MapIcon,
 } from "lucide-react";
 
 // Backend Integration
@@ -134,7 +143,7 @@ const ScreenManager: React.FC = () => {
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [bookingRequests, setBookingRequests] = useState<any[]>([]);
 
   // PDF Generation Function
   const generateAnalyticsReport = (screen: Screen) => {
@@ -151,7 +160,7 @@ const ScreenManager: React.FC = () => {
     const avgViewTime = 8.5;
     const peakTraffic = Math.floor(dailyFootfall * 1.3);
     const engagementRate = ((uniqueViewers / dailyFootfall) * 100).toFixed(1);
-    const roi = ((screen.price_per_hour || 100) * 0.35).toFixed(1);
+    const roi = ((screen.cost_per_hour || 100) * 0.35).toFixed(1);
     const demographicData = screen.demographics || "Mixed demographic";
 
     // Professional PDF HTML template
@@ -330,9 +339,7 @@ const ScreenManager: React.FC = () => {
     <div class="header">
       <h1>📊 Screen Analytics Report</h1>
       <p><strong>${screen.name || "Digital Screen"}</strong></p>
-      <p>Location: ${
-        screen.location_name || screen.city || "Metropolitan Area"
-      }</p>
+      <p>Location: ${screen.location || screen.city || "Metropolitan Area"}</p>
       <p>Report Period: Last 30 Days | Generated: ${currentDate} at ${currentTime}</p>
     </div>
     <div class="content">
@@ -368,21 +375,15 @@ const ScreenManager: React.FC = () => {
             </div>
             <div class="info-item">
               <span class="info-label">Location:</span>
-              <span class="info-value">${
-                screen.location_name || screen.city
-              }</span>
+              <span class="info-value">${screen.location || screen.city}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Size:</span>
-              <span class="info-value">${screen.screen_size_width}x${
-      screen.screen_size_height
-    } inches</span>
+              <span class="info-value">${screen.size || '55" Display'}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Status:</span>
-              <span class="info-value">${
-                screen.is_active ? "Active" : "Inactive"
-              }</span>
+              <span class="info-value">${screen.status || "Active"}</span>
             </div>
           </div>
           <div class="info-card">
@@ -474,14 +475,11 @@ const ScreenManager: React.FC = () => {
     screens?.filter((screen) => {
       const matchesSearch =
         screen.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        screen.location_name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
+        screen.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         screen.city?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" ? screen.is_active : !screen.is_active);
+        statusFilter === "all" || screen.status === statusFilter;
 
       const matchesCity =
         cityFilter === "all" ||
@@ -497,10 +495,11 @@ const ScreenManager: React.FC = () => {
 
   // Calculate summary stats
   const totalScreens = screens?.length || 0;
-  const activeScreens = screens?.filter((s) => s.is_active).length || 0;
+  const activeScreens =
+    screens?.filter((s) => s.status === "active").length || 0;
   const totalRevenue =
     screens?.reduce((sum, screen) => {
-      const hourlyRate = screen.price_per_hour || 0;
+      const hourlyRate = screen.cost_per_hour || 0;
       const hoursPerDay = 12; // Assume 12 hours active per day
       return sum + hourlyRate * hoursPerDay * 30; // 30 days
     }, 0) || 0;
@@ -576,11 +575,7 @@ const ScreenManager: React.FC = () => {
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                refetch();
-                // Show success message
-                console.log("Screens refreshed successfully!");
-              }}
+              onClick={refetch}
             >
               <RefreshCw size={18} />
               <span>Refresh</span>
@@ -765,91 +760,14 @@ const ScreenManager: React.FC = () => {
             </select>
 
             <motion.button
-              className="flex items-center space-x-2 bg-white text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm"
+              className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowMoreFilters(!showMoreFilters)}
             >
               <Filter size={18} />
               <span>More Filters</span>
             </motion.button>
           </div>
-
-          {/* More Filters Panel */}
-          <AnimatePresence>
-            {showMoreFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm"
-              >
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Size Range
-                    </label>
-                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                      <option value="all">All Sizes</option>
-                      <option value="small">Small (20-40 inches)</option>
-                      <option value="medium">Medium (40-60 inches)</option>
-                      <option value="large">Large (60+ inches)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price Range
-                    </label>
-                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                      <option value="all">All Prices</option>
-                      <option value="budget">Budget (₹0-50)</option>
-                      <option value="mid">Mid-range (₹50-100)</option>
-                      <option value="premium">Premium (₹100+)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Footfall Range
-                    </label>
-                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                      <option value="all">All Traffic</option>
-                      <option value="low">Low (0-500)</option>
-                      <option value="medium">Medium (500-1500)</option>
-                      <option value="high">High (1500+)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Screen Type
-                    </label>
-                    <select className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                      <option value="all">All Types</option>
-                      <option value="led">LED</option>
-                      <option value="lcd">LCD</option>
-                      <option value="digital">Digital Billboard</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-3 mt-4">
-                  <motion.button
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowMoreFilters(false)}
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Apply Filters
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Results count */}
           <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
@@ -894,19 +812,21 @@ const ScreenManager: React.FC = () => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      screen.is_active
+                      screen.status === "active"
                         ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        : screen.status === "inactive"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {screen.is_active ? "Active" : "Inactive"}
+                    {screen.status}
                   </motion.div>
                 </div>
 
                 {/* Screen Size Badge */}
                 <div className="absolute top-4 left-4">
                   <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                    {screen.screen_size_width}x{screen.screen_size_height}"
+                    {screen.size || '55"'}
                   </div>
                 </div>
               </div>
@@ -920,7 +840,7 @@ const ScreenManager: React.FC = () => {
                     </h3>
                     <div className="flex items-center text-gray-600 text-sm mb-2">
                       <MapPin className="mr-1" size={14} />
-                      {screen.location_name || screen.city}
+                      {screen.location || screen.city}
                     </div>
                   </div>
                 </div>
@@ -943,7 +863,7 @@ const ScreenManager: React.FC = () => {
                       <span className="text-xs">Cost/Hour</span>
                     </div>
                     <p className="text-lg font-bold text-gray-900">
-                      ₹{screen.price_per_hour || 0}
+                      ₹{screen.cost_per_hour || 0}
                     </p>
                   </div>
                 </div>
@@ -1156,26 +1076,25 @@ const ScreenManager: React.FC = () => {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Location</p>
                       <p className="font-medium">
-                        {selectedScreen.location_name || selectedScreen.city}
+                        {selectedScreen.location || selectedScreen.city}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Status</p>
                       <p className="font-medium capitalize">
-                        {selectedScreen.is_active ? "Active" : "Inactive"}
+                        {selectedScreen.status}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Size</p>
                       <p className="font-medium">
-                        {selectedScreen.screen_size_width}x
-                        {selectedScreen.screen_size_height} inches
+                        {selectedScreen.size || '55" Display'}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Cost/Hour</p>
                       <p className="font-medium">
-                        ₹{selectedScreen.price_per_hour || 0}
+                        ₹{selectedScreen.cost_per_hour || 0}
                       </p>
                     </div>
                   </div>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Notification System</title>
+  </head>
+  <body>
+    <h1>Notification System Test</h1>
+    <p>To test the notification system:</p>
+    <ol>
+      <li>Open the browser console (F12)</li>
+      <li>Navigate to Campaign Management</li>
+      <li>Click "Create Campaign"</li>
+      <li>Select some screens in the workflow</li>
+      <li>Click "Next" to generate booking requests</li>
+      <li>Check console for debug logs</li>
+      <li>Look for notification bell icon in header</li>
+      <li>Click the bell to see booking requests</li>
+      <li>Click Accept/Reject buttons</li>
+      <li>Watch console for debug logs</li>
+    </ol>
+
+    <h2>Expected Behavior:</h2>
+    <ul>
+      <li>
+        Console logs should show "Booking request accepted/rejected: [id]"
+      </li>
+      <li>Status should update in notification UI</li>
+      <li>Accepted requests should create payment notifications</li>
+      <li>Notification count should update</li>
+    </ul>
+  </body>
+</html>

@@ -45,10 +45,7 @@ const WorldMapVideoSection: React.FC = () => {
           {/* Right Side - Video */}
           <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black">
             <video className="w-full h-auto" autoPlay loop muted playsInline>
-              <source
-                src=""
-                type="video/mp4"
-              />
+              <source src="" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>

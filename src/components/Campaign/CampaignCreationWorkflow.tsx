@@ -56,7 +56,6 @@ interface Creative {
 const CampaignCreationWorkflow: React.FC = () => {
   // Global state
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Handle viewing screen details
   // const onViewDetails = (screen: SelectedScreen) => {
@@ -149,19 +148,6 @@ const CampaignCreationWorkflow: React.FC = () => {
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(1, prev - 1));
-  };
-
-  const handlePayment = async () => {
-    setIsProcessingPayment(true);
-    try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      setCurrentStep(5);
-    } catch (error) {
-      console.error("Payment failed:", error);
-    } finally {
-      setIsProcessingPayment(false);
-    }
   };
 
   // ===== Step 1: Screen Selection =====
@@ -525,6 +511,41 @@ const CampaignCreationWorkflow: React.FC = () => {
     const isScreenSelected = (screenId: number) =>
       selectedScreens.some((s) => s.id === screenId);
 
+    // Load initial screens on component mount
+    useEffect(() => {
+      const loadInitialScreens = async () => {
+        if (availableScreens.length === 0) {
+          setIsLoading(true);
+          try {
+            // Load screens from popular cities
+            const popularCities = ["Mumbai", "Delhi"];
+            const allScreens: SelectedScreen[] = [];
+
+            for (const city of popularCities) {
+              try {
+                const results = await searchScreensByCity(city);
+                const formatted = results.map(mapToSelected);
+                allScreens.push(...formatted);
+              } catch (err) {
+                console.warn(`Failed to load screens for ${city}:`, err);
+              }
+            }
+
+            if (allScreens.length > 0) {
+              setAvailableScreens(allScreens.slice(0, 12)); // Show max 12 screens initially
+            }
+          } catch (err) {
+            console.error("Error loading initial screens:", err);
+            setError("Search for screens by city to get started");
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      loadInitialScreens();
+    }, [availableScreens.length]);
+
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
@@ -611,68 +632,152 @@ const CampaignCreationWorkflow: React.FC = () => {
           )}
 
         {/* Screen Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          {availableScreens.map((screen) => (
-            <div
-              key={screen.id}
-              className={`border rounded-lg overflow-hidden transition-all flex flex-col ${
-                isScreenSelected(screen.id)
-                  ? "ring-2 ring-blue-500"
-                  : "hover:shadow-md"
-              }`}
-            >
-              <div className="relative">
-                <div className="h-40 bg-gray-100 flex items-center justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
+          {availableScreens.map((screen, index) => {
+            const cardColors = [
+              "from-blue-500 to-indigo-600",
+              "from-purple-500 to-pink-600",
+              "from-green-500 to-teal-600",
+              "from-red-500 to-rose-600",
+              "from-yellow-500 to-amber-600",
+              "from-indigo-500 to-purple-600",
+              "from-pink-500 to-rose-600",
+              "from-teal-500 to-cyan-600",
+            ];
+            const colorClass = cardColors[index % cardColors.length];
+            const isSelected = isScreenSelected(screen.id);
+
+            return (
+              <motion.div
+                key={screen.id}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100,
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  y: -10,
+                  transition: { duration: 0.2 },
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => toggleScreenSelection(screen)}
+                className={`
+                  relative cursor-pointer group
+                  w-full aspect-square
+                  bg-white rounded-2xl 
+                  border-2 transition-all duration-300
+                  shadow-lg hover:shadow-2xl
+                  ${
+                    isSelected
+                      ? "border-blue-500 ring-4 ring-blue-200 shadow-blue-200/50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }
+                  overflow-hidden
+                `}
+              >
+                {/* Selection Indicator */}
+                <AnimatePresence>
+                  {isSelected && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-3 right-3 z-10"
+                    >
+                      <div className="bg-blue-500 text-white rounded-full p-2 shadow-lg">
+                        <CheckCircle className="h-5 w-5" />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Screen Image/Gradient */}
+                <div className="relative h-2/3 overflow-hidden">
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${colorClass} opacity-90`}
+                  />
                   {screen.imageUrl ? (
                     <img
                       src={screen.imageUrl}
                       alt={screen.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover mix-blend-overlay"
                     />
                   ) : (
-                    <Monitor className="h-12 w-12 text-gray-400" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <motion.div
+                          whileHover={{ rotate: 360 }}
+                          transition={{ duration: 0.6 }}
+                        >
+                          <Monitor className="h-12 w-12 mx-auto mb-2 drop-shadow-lg" />
+                        </motion.div>
+                        <p className="text-sm font-semibold drop-shadow">
+                          Premium Display
+                        </p>
+                      </div>
+                    </div>
                   )}
-                </div>
-                {isScreenSelected(screen.id) && (
-                  <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
-                    <Check className="h-4 w-4" />
-                  </div>
-                )}
-              </div>
-              <div className="p-4 flex flex-col flex-1">
-                <h3 className="font-medium text-lg">{screen.name}</h3>
-                <div className="flex items-center text-sm text-gray-500 mt-1">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>{screen.location}</span>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-sm flex-1">
-                  <div>
-                    <div className="text-gray-500">Size</div>
-                    <div>{screen.size}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">Daily Traffic</div>
-                    <div>{screen.traffic.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">Hourly Rate</div>
-                    <div>₹{screen.pricing.hourly.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">Daily Rate</div>
-                    <div>₹{screen.pricing.daily.toLocaleString()}</div>
+
+                  {/* Floating Elements */}
+                  <div className="absolute top-3 left-3">
+                    <div className="bg-black/20 backdrop-blur-sm rounded-full px-3 py-1">
+                      <span className="text-white text-xs font-medium">
+                        #{screen.id}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                {/* NEW: View Details button */}
-                <button
-                  onClick={() => setScreenInView(screen)}
-                  className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium self-start"
+
+                {/* Content Section */}
+                <div className="p-4 h-1/3 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1 group-hover:text-blue-600 transition-colors">
+                      {screen.name}
+                    </h3>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      <span className="truncate">{screen.location}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Size</p>
+                      <p className="font-semibold text-gray-900">
+                        {screen.size}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Traffic</p>
+                      <p className="font-semibold text-gray-900">
+                        {(screen.traffic / 1000).toFixed(0)}K
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                {/* Details Button */}
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  whileHover={{ opacity: 1, y: 0 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setScreenInView(screen);
+                  }}
+                  className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 font-medium py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white"
                 >
                   View Details
-                </button>
-              </div>
-            </div>
-          ))}
+                </motion.button>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Selected Summary */}
@@ -721,113 +826,325 @@ const CampaignCreationWorkflow: React.FC = () => {
   };
 
   // ===== Step 2: Schedule Selection =====
-  const ScheduleSelectionStep: React.FC = () => {
-    const today = new Date();
-    const next30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      return date.toISOString().split("T")[0];
-    });
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<{
+    [date: string]: string[];
+  }>({});
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    const toggleDate = (date: string) => {
-      setSelectedDates((prev) =>
-        prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
-      );
+  const ScheduleSelectionStep: React.FC = () => {
+    // Generate calendar days
+    const generateCalendarDays = (date: Date) => {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const firstDayWeek = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+      
+      const days = [];
+      
+      // Add empty cells for days before month starts
+      for (let i = 0; i < firstDayWeek; i++) {
+        days.push(null);
+      }
+      
+      // Add days of the month
+      for (let day = 1; day <= daysInMonth; day++) {
+        days.push(new Date(year, month, day));
+      }
+      
+      return days;
     };
 
-    const timeSlots = [
-      { label: "Morning (6 AM - 12 PM)", value: "06:00-12:00", price: 1.0 },
-      { label: "Afternoon (12 PM - 6 PM)", value: "12:00-18:00", price: 1.2 },
-      { label: "Evening (6 PM - 10 PM)", value: "18:00-22:00", price: 1.5 },
-      { label: "Night (10 PM - 6 AM)", value: "22:00-06:00", price: 0.8 },
-      { label: "Full Day (6 AM - 10 PM)", value: "06:00-22:00", price: 2.5 },
+    const formatDateKey = (date: Date) => {
+      return date.toISOString().split("T")[0];
+    };
+
+    const isDateSelected = (date: Date) => {
+      return selectedDates.includes(formatDateKey(date));
+    };
+
+    const toggleDate = (date: Date) => {
+      const dateKey = formatDateKey(date);
+      setSelectedDates((prev) =>
+        prev.includes(dateKey) 
+          ? prev.filter((d) => d !== dateKey) 
+          : [...prev, dateKey]
+      );
+      setSelectedDate(date);
+    };
+
+    const navigateMonth = (direction: 'prev' | 'next') => {
+      setCurrentMonth(prev => {
+        const newDate = new Date(prev);
+        if (direction === 'prev') {
+          newDate.setMonth(prev.getMonth() - 1);
+        } else {
+          newDate.setMonth(prev.getMonth() + 1);
+        }
+        return newDate;
+      });
+    };
+
+    const goToToday = () => {
+      setCurrentMonth(new Date());
+    };
+
+    const toggleTimeSlot = (hour: number) => {
+      if (!selectedDate) return;
+      
+      const dateKey = formatDateKey(selectedDate);
+      const slotId = `${hour.toString().padStart(2, '0')}:00`;
+      
+      setSelectedTimeSlots(prev => {
+        const dateSlots = prev[dateKey] || [];
+        const newDateSlots = dateSlots.includes(slotId)
+          ? dateSlots.filter(s => s !== slotId)
+          : [...dateSlots, slotId];
+        
+        return {
+          ...prev,
+          [dateKey]: newDateSlots
+        };
+      });
+    };
+
+    const calendarDays = generateCalendarDays(currentMonth);
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
     ];
+    const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Select Schedule
+            Choose a new date & time
           </h2>
           <p className="text-gray-600">
-            Choose your campaign dates and time slots
+            Select your campaign dates and time slots
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Date Selection */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Select Dates</h3>
-            <div className="border rounded-lg p-4 max-h-64 overflow-y-auto">
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                  (day) => (
-                    <div
-                      key={day}
-                      className="text-center text-sm font-medium text-gray-500 p-2"
-                    >
-                      {day}
-                    </div>
-                  )
-                )}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden max-w-6xl mx-auto"
+        >
+          {/* Calendar Header */}
+          <div className="bg-gradient-to-r from-purple-500 to-blue-600 p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigateMonth('prev')}
+                className="p-2 rounded-full hover:bg-white/20 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </motion.button>
+              
+              <div className="text-center">
+                <h3 className="text-xl font-semibold">
+                  {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                </h3>
               </div>
-              <div className="grid grid-cols-7 gap-1">
-                {next30Days.map((date) => {
-                  const dateObj = new Date(date);
-                  const isSelected = selectedDates.includes(date);
+              
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={goToToday}
+                  className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
+                >
+                  Today
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigateMonth('next')}
+                  className="p-2 rounded-full hover:bg-white/20 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex">
+            {/* Calendar Section */}
+            <div className="flex-1 p-6">
+              {/* Week Header */}
+              <div className="grid grid-cols-7 gap-2 mb-4">
+                {weekDays.map((day) => (
+                  <div key={day} className="text-center text-sm font-medium text-gray-500 p-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-2">
+                {calendarDays.map((day, index) => {
+                  if (!day) {
+                    return <div key={index} className="p-2"></div>;
+                  }
+
+                  const isSelected = isDateSelected(day);
+                  const isToday = day.toDateString() === new Date().toDateString();
+                  const isPast = day < new Date(new Date().setHours(0, 0, 0, 0));
+
                   return (
-                    <button
-                      key={date}
-                      onClick={() => toggleDate(date)}
-                      className={`p-2 text-sm rounded transition-colors ${
-                        isSelected
-                          ? "bg-blue-500 text-white"
-                          : "hover:bg-gray-100"
-                      }`}
+                    <motion.button
+                      key={day.getDate()}
+                      whileHover={{ scale: isPast ? 1 : 1.1 }}
+                      whileTap={{ scale: isPast ? 1 : 0.95 }}
+                      onClick={() => !isPast && toggleDate(day)}
+                      disabled={isPast}
+                      className={`
+                        relative p-3 rounded-xl text-sm font-medium transition-all duration-200
+                        ${isPast 
+                          ? 'text-gray-300 cursor-not-allowed' 
+                          : 'cursor-pointer hover:shadow-md'
+                        }
+                        ${isSelected 
+                          ? 'bg-blue-500 text-white shadow-lg ring-2 ring-blue-300' 
+                          : isToday 
+                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                            : 'hover:bg-gray-100 text-gray-700'
+                        }
+                      `}
                     >
-                      {dateObj.getDate()}
-                    </button>
+                      {day.getDate()}
+                      {isToday && (
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"></div>
+                      )}
+                    </motion.button>
                   );
                 })}
               </div>
             </div>
-          </div>
 
-          {/* Time Slot Selection (display only for now) */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Select Time Slots</h3>
-            <div className="space-y-3">
-              {timeSlots.map((slot) => (
-                <div
-                  key={slot.value}
-                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{slot.label}</div>
-                      <div className="text-sm text-gray-500">
-                        Multiplier: {slot.price}x base rate
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 text-blue-600"
-                      disabled
-                    />
-                  </div>
+            {/* Time Slots Section */}
+            {selectedDate && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="w-80 border-l border-gray-200 p-6 bg-gray-50"
+              >
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    {selectedDate.toLocaleDateString('en-US', { 
+                      weekday: 'long',
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h4>
+                  <p className="text-sm text-gray-600">Select time slots</p>
                 </div>
-              ))}
+
+                {/* Time Slots Grid */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const hour = i + 9; // 9 AM to 8 PM
+                    const dateKey = formatDateKey(selectedDate);
+                    const slotId = `${hour.toString().padStart(2, '0')}:00`;
+                    const isSelected = selectedTimeSlots[dateKey]?.includes(slotId);
+
+                    return (
+                      <motion.button
+                        key={hour}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => toggleTimeSlot(hour)}
+                        className={`
+                          w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                          ${isSelected
+                            ? 'bg-green-100 border-green-300 shadow-md'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">
+                            {hour}:00 - {hour + 1}:00
+                          </span>
+                          {isSelected && (
+                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening'}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Summary */}
+                {selectedTimeSlots[formatDateKey(selectedDate)]?.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200"
+                  >
+                    <h5 className="font-medium text-blue-900 mb-2">
+                      Selected ({selectedTimeSlots[formatDateKey(selectedDate)]?.length} hours)
+                    </h5>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTimeSlots[formatDateKey(selectedDate)]?.slice(0, 3).map((slot) => (
+                        <span key={slot} className="px-2 py-1 bg-blue-200 text-blue-800 rounded-md text-sm">
+                          {slot}
+                        </span>
+                      ))}
+                      {selectedTimeSlots[formatDateKey(selectedDate)]?.length > 3 && (
+                        <span className="text-blue-600 text-sm">
+                          +{selectedTimeSlots[formatDateKey(selectedDate)]?.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Overall Summary */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6"
+        >
+          <h4 className="font-semibold text-gray-900 mb-3">Campaign Schedule Summary</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span className="text-gray-700">
+                <strong>{selectedDates.length}</strong> days selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-gray-700">
+                <strong>{Object.values(selectedTimeSlots).flat().length}</strong> time slots
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <span className="text-gray-700">
+                <strong>{selectedScreens.length}</strong> screens selected
+              </span>
             </div>
           </div>
-        </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-medium text-green-900 mb-2">Selected Schedule</h4>
-          <div className="text-sm text-green-700">
-            <p>Dates: {selectedDates.length} days selected</p>
-            <p>Estimated duration: {selectedDates.length} days</p>
-          </div>
-        </div>
+        </motion.div>
       </div>
     );
   };
@@ -1086,18 +1403,10 @@ const CampaignCreationWorkflow: React.FC = () => {
 
         <div className="text-center">
           <button
-            onClick={handlePayment}
-            disabled={isProcessingPayment}
-            className="bg-green-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center mx-auto gap-2"
+            onClick={() => setCurrentStep(5)}
+            className="bg-green-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
           >
-            {isProcessingPayment ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Processing Payment...
-              </>
-            ) : (
-              `Pay ₹${totalBudget.toLocaleString()} & Launch Campaign`
-            )}
+            Pay ₹{totalBudget.toLocaleString()} & Launch Campaign
           </button>
         </div>
       </div>
@@ -1159,66 +1468,7 @@ const CampaignCreationWorkflow: React.FC = () => {
 
   // ===== Render =====
   return (
-    <div className="min-h-screen bg-gray-50 py-8 relative">
-      {/* Payment Processing Overlay */}
-      <AnimatePresence>
-        {isProcessingPayment && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          >
-            <motion.div
-              initial={{ scale: 0.8, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 50 }}
-              className="bg-white rounded-lg p-8 max-w-md mx-4 text-center"
-            >
-              <div className="mb-6">
-                <motion.div
-                  animate={{
-                    rotate: 360,
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-                    scale: { duration: 1, repeat: Infinity },
-                  }}
-                  className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                >
-                  <CreditCard className="w-8 h-8 text-blue-600" />
-                </motion.div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Processing Payment
-                </h3>
-                <p className="text-gray-600">
-                  Please wait while we process your payment...
-                </p>
-                <div className="mt-4 flex justify-center space-x-1">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 1, 0.5],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        delay: i * 0.2,
-                      }}
-                      className="w-2 h-2 bg-blue-600 rounded-full"
-                    />
-                  ))}
-                </div>
-              </div>
-              <p className="text-sm text-gray-500">Do not close this window</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Progress Steps */}
         <div className="mb-8">

@@ -7,8 +7,7 @@ type LottieData = any | null;
 const LOTTIE_URL =
   "https://cdn.prod.website-files.com/6364e4e0baec60a3a1eff938/65649b88a87e4de2bb35f526_World%20Map.json";
 
-const VIDEO_SRC =
-  "";
+const VIDEO_SRC = "";
 
 const WorldMapSection: React.FC = () => {
   const [ref, inView] = useInView({
