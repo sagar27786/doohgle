@@ -10,10 +10,12 @@ export const screensService = {
   },
 
   async getMyScreens() {
-    const { ok, data } = await screensApi.getMyScreens();
-    if (!ok) {
-      throw new Error(data.message || 'Failed to fetch screens.');
-    }
-    return { screens: data.screens || [] };
+    const data = await screensApi.getMyScreens();
+    return data;
+  },
+
+  async getScreenById(id: string) {
+    const data = await screensApi.getScreenById(id);
+    return data;
   },
 };

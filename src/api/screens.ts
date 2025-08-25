@@ -108,6 +108,31 @@ export async function getMyScreens() {
   }
 }
 
+export async function getScreenById(id: string) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+
+  try {
+    const response = await fetch(`http://localhost:4000/api/screens/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch screen details');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching screen details:', error);
+    throw error;
+  }
+}
+
 export async function searchScreensByCity(city: string): Promise<ScreenSearchResult[]> {
   try {
     const response = await fetch(`http://localhost:4000/api/screens/search?city=${encodeURIComponent(city)}`);

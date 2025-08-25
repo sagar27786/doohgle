@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { screensService } from '../../services/screensService';
+import ScreenDetailsModal from './ScreenDetailsModal';
+
+interface ScreenAsset {
+  asset_type: 'photo_day' | 'photo_night' | 'video';
+  url: string;
+}
 
 interface Screen {
   id: number;
@@ -15,6 +21,7 @@ interface Screen {
   viewing_distance: 'close' | 'medium' | 'far';
   typical_viewer_duration: string | null;
   peak_viewing_hours: string[];
+  assets: ScreenAsset[];
   created_at: string;
   updated_at: string;
   user_id: number;
@@ -24,6 +31,7 @@ const ScreenList = () => {
   const [screens, setScreens] = useState<Screen[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
 
   useEffect(() => {
     const fetchScreens = async () => {
@@ -39,6 +47,15 @@ const ScreenList = () => {
 
     fetchScreens();
   }, []);
+
+  const handleScreenClick = (screen: Screen) => {
+    console.log("Screen clicked:", screen);
+    setSelectedScreen(screen);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedScreen(null);
+  };
 
   if (loading) {
     return <div>Loading screens...</div>;
@@ -56,13 +73,14 @@ const ScreenList = () => {
       ) : (
         <ul className="mt-4 space-y-2">
           {screens.map((screen) => (
-            <li key={screen.id} className="p-4 border rounded-md">
+            <li key={screen.id} className="p-4 border rounded-md cursor-pointer hover:bg-gray-100" onClick={() => handleScreenClick(screen)}>
               <p className="font-bold">{screen.screen_name}</p>
               <p>{screen.location_in_venue}</p>
             </li>
           ))}
         </ul>
       )}
+      <ScreenDetailsModal screen={selectedScreen} onClose={handleCloseModal} />
     </div>
   );
 };
