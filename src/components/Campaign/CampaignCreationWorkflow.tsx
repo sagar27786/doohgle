@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Search,
@@ -14,8 +14,10 @@ import {
   AlertCircle,
   CreditCard,
   Smartphone,
+  Map,
 } from "lucide-react";
 import { searchScreensByCity, ScreenSearchResult } from "../../api/screens";
+import { campaignRequestService } from "../../services/campaignRequestService";
 
 // ===== Types =====
 interface SelectedScreen {
@@ -73,6 +75,13 @@ const CampaignCreationWorkflow: React.FC = () => {
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showMapView, setShowMapView] = useState(false);
+  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
+  const [campaignCreationResult, setCampaignCreationResult] = useState<{
+    success: boolean;
+    createdRequests: number;
+    errors: string[];
+  } | null>(null);
 
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [uploadedCreatives, setUploadedCreatives] = useState<Creative[]>([]);
@@ -148,6 +157,83 @@ const CampaignCreationWorkflow: React.FC = () => {
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(1, prev - 1));
+  };
+
+  // Handle campaign creation - send requests to venue owners
+  const handleCreateCampaign = async () => {
+    if (selectedScreens.length === 0 || selectedDates.length === 0) {
+      setError("Please select screens and dates before creating campaign");
+      return;
+    }
+
+    setIsCreatingCampaign(true);
+    setError(null);
+
+    try {
+      const results: Array<{ success: boolean; screenName: string; error?: string }> = [];
+      
+      // Create a campaign request for each selected screen
+      for (const screen of selectedScreens) {
+        try {
+          const requestData = {
+            screen_id: screen.id,
+            campaign_name: `Campaign for ${screen.name}`, // Could be made customizable
+            campaign_description: `Digital advertising campaign targeting ${screen.city || screen.location}`,
+            start_date: selectedDates[0], // Start from first selected date
+            end_date: selectedDates[selectedDates.length - 1], // End at last selected date
+            requested_hours: getSelectedTimeSlots(), // You'll need to implement this based on your time selection
+            budget_offered: calculateScreenBudget(screen), // Calculate individual screen budget
+            creative_assets: uploadedCreatives.map(c => ({ type: c.type, url: c.preview })),
+            target_audience: `General audience in ${screen.city || screen.location}`,
+            notes: `Campaign created via Doohgle platform. Duration: ${selectedDates.length} days.`
+          };
+
+          const response = await campaignRequestService.createRequest(requestData);
+          results.push({
+            success: response.success,
+            screenName: screen.name,
+            error: response.success ? undefined : response.message
+          });
+        } catch (error) {
+          results.push({
+            success: false,
+            screenName: screen.name,
+            error: 'Network error occurred'
+          });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      const errors = results.filter(r => !r.success).map(r => `${r.screenName}: ${r.error}`);
+
+      setCampaignCreationResult({
+        success: successCount > 0,
+        createdRequests: successCount,
+        errors
+      });
+
+      if (successCount > 0) {
+        setCurrentStep(5); // Move to confirmation
+      }
+    } catch (error) {
+      setError('Failed to create campaign requests. Please try again.');
+      console.error('Campaign creation error:', error);
+    } finally {
+      setIsCreatingCampaign(false);
+    }
+  };
+
+  // Helper function to get selected time slots (placeholder - implement based on your time selection UI)
+  const getSelectedTimeSlots = (): number[] => {
+    // Return hours based on your time selection logic
+    // For now, return a default set of peak hours
+    return [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+  };
+
+  // Helper function to calculate budget per screen
+  const calculateScreenBudget = (_screen: SelectedScreen): number => {
+    const totalBudget = calculateBudget();
+    return Math.round(totalBudget / selectedScreens.length);
   };
 
   // ===== Step 1: Screen Selection =====
@@ -467,7 +553,7 @@ const CampaignCreationWorkflow: React.FC = () => {
       };
     };
 
-    const handleSearch = async (city: string) => {
+    const handleSearch = useCallback(async (city: string) => {
       if (!city.trim()) return;
       setError(null);
       setIsLoading(true);
@@ -483,7 +569,7 @@ const CampaignCreationWorkflow: React.FC = () => {
       } finally {
         setIsLoading(false);
       }
-    };
+    }, []);
 
     // Handle city selection from dropdown
     const handleCitySelect = (city: string) => {
@@ -546,6 +632,22 @@ const CampaignCreationWorkflow: React.FC = () => {
       loadInitialScreens();
     }, [availableScreens.length]);
 
+    // Subscribe to campaign request updates for screen refresh
+    useEffect(() => {
+      // For now, we'll skip the subscription since the service doesn't have getInstance
+      // In the future, we can add a subscription mechanism to the service
+      
+      // Refresh screens periodically or on focus
+      const handleFocus = () => {
+        if (searchQuery) {
+          handleSearch(searchQuery);
+        }
+      };
+
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
+    }, [searchQuery, handleSearch]);
+
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
@@ -555,6 +657,45 @@ const CampaignCreationWorkflow: React.FC = () => {
           <p className="text-gray-600">
             Choose the digital screens for your campaign
           </p>
+        </div>
+
+        {/* View Toggle and Search Bar */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
+          {/* View Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setShowMapView(false)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-200 ${
+                !showMapView
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <Monitor className="w-4 h-4" />
+              <span className="text-sm font-medium">Grid View</span>
+            </button>
+            <button
+              onClick={() => setShowMapView(true)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-200 ${
+                showMapView
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <Map className="w-4 h-4" />
+              <span className="text-sm font-medium">Map View</span>
+            </button>
+          </div>
+
+          {/* Selected Screens Counter */}
+          {selectedScreens.length > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+              <CheckCircle className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">
+                {selectedScreens.length} screen{selectedScreens.length !== 1 ? 's' : ''} selected
+              </span>
+            </div>
+          )}
         </div>
 
         {/* City Search */}
@@ -631,8 +772,40 @@ const CampaignCreationWorkflow: React.FC = () => {
             </div>
           )}
 
-        {/* Screen Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
+        {/* Screen Display - Grid or Map View */}
+        {showMapView ? (
+          <div className="mt-8">
+            <div className="h-96 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <Map className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">Map View</h3>
+                  <p className="text-gray-500 max-w-sm">
+                    Interactive map showing available screens across cities. 
+                    Click on screen markers to select them for your campaign.
+                  </p>
+                  <div className="mt-4 flex items-center justify-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm text-gray-600">Available</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="text-sm text-gray-600">Selected</span>
+                    </div>
+                  </div>
+                  {availableScreens.length > 0 && (
+                    <div className="mt-4 text-sm text-gray-500">
+                      {availableScreens.length} screens available{searchQuery && ` in ${searchQuery}`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Screen Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
           {availableScreens.map((screen, index) => {
             const cardColors = [
               "from-blue-500 to-indigo-600",
@@ -778,7 +951,8 @@ const CampaignCreationWorkflow: React.FC = () => {
               </motion.div>
             );
           })}
-        </div>
+          </div>
+        )}
 
         {/* Selected Summary */}
         {selectedScreens.length > 0 && (
@@ -1403,10 +1577,18 @@ const CampaignCreationWorkflow: React.FC = () => {
 
         <div className="text-center">
           <button
-            onClick={() => setCurrentStep(5)}
-            className="bg-green-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            onClick={handleCreateCampaign}
+            disabled={isCreatingCampaign}
+            className="bg-green-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Pay ₹{totalBudget.toLocaleString()} & Launch Campaign
+            {isCreatingCampaign ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Creating Campaign Requests...
+              </div>
+            ) : (
+              `Pay ₹${totalBudget.toLocaleString()} & Launch Campaign`
+            )}
           </button>
         </div>
       </div>
@@ -1421,44 +1603,79 @@ const CampaignCreationWorkflow: React.FC = () => {
       </div>
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Campaign Created Successfully!
+          Campaign Requests Sent Successfully!
         </h2>
         <p className="text-gray-600">
-          Your campaign has been submitted and will go live as scheduled.
+          Your campaign requests have been sent to venue owners for approval.
         </p>
       </div>
-      <div className="bg-gray-50 rounded-lg p-6 text-left max-w-md mx-auto">
-        <h3 className="font-semibold mb-4">Campaign Details:</h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Campaign ID:</span>
-            <span className="font-medium">
-              #CAM{Date.now().toString().slice(-6)}
-            </span>
+      
+      {campaignCreationResult && (
+        <div className="bg-gray-50 rounded-lg p-6 text-left max-w-md mx-auto">
+          <h3 className="font-semibold mb-4">Request Summary:</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Campaign ID:</span>
+              <span className="font-medium">
+                #CAM{Date.now().toString().slice(-6)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Requests Sent:</span>
+              <span className="font-medium text-green-600">
+                {campaignCreationResult.createdRequests} / {selectedScreens.length}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Budget:</span>
+              <span className="font-medium">
+                ₹{calculateBudget().toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Duration:</span>
+              <span className="font-medium">{selectedDates.length} days</span>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span>Screens:</span>
-            <span className="font-medium">{selectedScreens.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Duration:</span>
-            <span className="font-medium">{selectedDates.length} days</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Total Paid:</span>
-            <span className="font-medium text-green-600">
-              ₹{calculateBudget().toLocaleString()}
-            </span>
-          </div>
+          
+          {campaignCreationResult.errors.length > 0 && (
+            <div className="mt-4 p-3 bg-red-50 rounded-lg">
+              <h4 className="font-medium text-red-800 text-sm mb-2">Failed Requests:</h4>
+              <div className="text-xs text-red-600 space-y-1">
+                {campaignCreationResult.errors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+      )}
+
+      <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800 max-w-lg mx-auto">
+        <strong>What happens next?</strong>
+        <ul className="mt-2 space-y-1 text-left">
+          <li>• Venue owners will review your campaign requests</li>
+          <li>• You'll receive notifications when they approve/reject</li>
+          <li>• Approved campaigns will go live on scheduled dates</li>
+          <li>• You can track progress in your campaign dashboard</li>
+        </ul>
       </div>
+
       <div className="space-x-4">
         <button className="bg-blue-600 text-white px-6 py-2 rounded-lg">
           View Campaign Dashboard
         </button>
         <button
           className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg"
-          onClick={() => setCurrentStep(1)}
+          onClick={() => {
+            setCurrentStep(1);
+            setCampaignCreationResult(null);
+            // Reset all form state
+            setSelectedScreens([]);
+            setSelectedDates([]);
+            setUploadedCreatives([]);
+            setError(null);
+          }}
         >
           Create Another Campaign
         </button>
