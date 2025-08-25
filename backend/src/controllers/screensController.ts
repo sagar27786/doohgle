@@ -25,6 +25,9 @@ export async function createScreen(
     viewing_distance,
     typical_viewer_duration,
     peak_viewing_hours,
+    day_photo_url,
+    night_photo_url,
+    video_url,
   } = req.body || {};
 
   if (!screen_name || !location_in_venue) {
@@ -38,8 +41,8 @@ export async function createScreen(
       `INSERT INTO screens
        (user_id, screen_name, location_in_venue, city, latitude, longitude, screen_size_inches, resolution, 
         orientation, device_type, device_model, ads_enabled, ad_frequency, viewing_distance, 
-        typical_viewer_duration, peak_viewing_hours)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::text[])
+        typical_viewer_duration, peak_viewing_hours, day_photo_url, night_photo_url, video_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::text[], $17, $18, $19)
        RETURNING *`,
       [
         userId,
@@ -58,6 +61,9 @@ export async function createScreen(
         viewing_distance ?? "close",
         typical_viewer_duration ?? null,
         Array.isArray(peak_viewing_hours) ? peak_viewing_hours.map(String) : [],
+        day_photo_url || null,
+        night_photo_url || null,
+        video_url || null,
       ]
     );
 

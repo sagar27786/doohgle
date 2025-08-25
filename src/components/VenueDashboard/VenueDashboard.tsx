@@ -148,7 +148,9 @@ const screenInitialState = {
   peak_viewing_hours: ['09:00-17:00'],
   
   // Assets
-  assets: [{ asset_type: 'photo_day', url: '' }],
+  day_photo_url: '',
+  night_photo_url: '',
+  video_url: '',
   
   // Pricing
   pricing: {
@@ -202,7 +204,9 @@ const VenueDashboard = () => {
     peak_viewing_hours: ['09:00-17:00'],
     
     // Assets
-    assets: [{ asset_type: 'photo_day', url: '' }],
+    day_photo_url: '',
+    night_photo_url: '',
+    video_url: '',
     
     // Pricing
     pricing: {
@@ -216,6 +220,11 @@ const VenueDashboard = () => {
   const [screen, setScreen] = useState(screenInitialState);
   const [screenMsg, setScreenMsg] = useState('');
   const [screenLoading, setScreenLoading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState({
+    day_photo: false,
+    night_photo: false,
+    video: false
+  });
 
   const handleScreenChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -230,26 +239,48 @@ const VenueDashboard = () => {
     }));
   };
 
-  const handleAssetChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    const newAssets = [...screen.assets];
-    // @ts-ignore
-    newAssets[index][name] = value;
-    setScreen(prev => ({ ...prev, assets: newAssets }));
+  const handleFileUpload = async (file: File, mediaType: 'day_photo' | 'night_photo' | 'video') => {
+    if (!file) return;
+
+    setUploadingFiles(prev => ({ ...prev, [mediaType]: true }));
+    
+    try {
+      const formData = new FormData();
+      formData.append(mediaType, file);
+      
+      const response = await fetch('http://localhost:4000/api/upload/screen-media', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+      
+      const data = await response.json();
+      const urlField = `${mediaType}_url` as keyof typeof screen;
+      
+      setScreen(prev => ({
+        ...prev,
+        [urlField]: data.urls[mediaType]
+      }));
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      setScreenMsg('Failed to upload file. Please try again.');
+    } finally {
+      setUploadingFiles(prev => ({ ...prev, [mediaType]: false }));
+    }
   };
 
-  const addAssetField = () => {
-    setScreen(prev => ({
-      ...prev,
-      assets: [...prev.assets, { asset_type: 'photo_day', url: '' }]
-    }));
-  };
-
-  const removeAssetField = (index: number) => {
-    setScreen(prev => ({
-      ...prev,
-      assets: prev.assets.filter((_, i) => i !== index)
-    }));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, mediaType: 'day_photo' | 'night_photo' | 'video') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file, mediaType);
+    }
   };
 
   const handlePeakViewingHoursChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -280,7 +311,9 @@ const VenueDashboard = () => {
           daily_rate: screen.pricing.daily_rate ? Number(screen.pricing.daily_rate) : undefined,
           weekly_rate: screen.pricing.weekly_rate ? Number(screen.pricing.weekly_rate) : undefined,
         },
-        assets: screen.assets.filter(asset => asset.url.trim() !== '')
+        day_photo_url: screen.day_photo_url,
+        night_photo_url: screen.night_photo_url,
+        video_url: screen.video_url
       };
       await venueService.createScreen(screenData);
       setScreenMsg('Screen registered successfully!');
@@ -655,55 +688,121 @@ const VenueDashboard = () => {
                     </div>
                   </div>
                   <hr className="my-4 border-blue-100" />
-                  {/* Assets */}
+                  {/* Media Upload */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 text-blue-600">Assets</h3>
-                    {screen.assets.map((asset, index) => (
-                      <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
-                        <div>
-                          <label htmlFor={`asset_type_${index}`} className="block text-sm font-medium text-gray-700">Asset Type</label>
-                          <select
-                            id={`asset_type_${index}`}
-                            name="asset_type"
-                            value={asset.asset_type}
-                            onChange={(e) => handleAssetChange(index, e)}
-                            className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
-                          >
-                            <option value="photo_day">Photo (Day)</option>
-                            <option value="photo_night">Photo (Night)</option>
-                            <option value="video">Video</option>
-                          </select>
+                    <h3 className="text-lg font-semibold mb-4 text-blue-600">Media Upload</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Day Photo */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Day Photo</label>
+                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center">
+                          {screen.day_photo_url ? (
+                            <div>
+                              <img src={screen.day_photo_url} alt="Day photo" className="w-full h-32 object-cover rounded mb-2" />
+                              <p className="text-sm text-green-600">✓ Uploaded</p>
+                            </div>
+                          ) : (
+                            <div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileChange(e, 'day_photo')}
+                                className="hidden"
+                                id="day_photo_input"
+                                disabled={uploadingFiles.day_photo}
+                              />
+                              <label htmlFor="day_photo_input" className="cursor-pointer">
+                                <div className="text-blue-500 hover:text-blue-700">
+                                  {uploadingFiles.day_photo ? (
+                                    <p>Uploading...</p>
+                                  ) : (
+                                    <>
+                                      <p className="text-lg">📷</p>
+                                      <p className="text-sm">Click to upload day photo</p>
+                                      <p className="text-xs text-gray-500">Max 10MB</p>
+                                    </>
+                                  )}
+                                </div>
+                              </label>
+                            </div>
+                          )}
                         </div>
-                        <div className="md:col-span-2">
-                          <label htmlFor={`asset_url_${index}`} className="block text-sm font-medium text-gray-700">Asset URL</label>
-                          <input
-                            type="url"
-                            id={`asset_url_${index}`}
-                            name="url"
-                            value={asset.url}
-                            onChange={(e) => handleAssetChange(index, e)}
-                            className="mt-1 block w-full border border-blue-200 rounded-lg shadow-sm p-3 focus:ring-2 focus:ring-blue-400"
-                            required
-                          />
-                        </div>
-                        {screen.assets.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeAssetField(index)}
-                            className="ml-2 p-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                          >
-                            Remove
-                          </button>
-                        )}
                       </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={addAssetField}
-                      className="mb-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                    >
-                      Add Asset
-                    </button>
+                      
+                      {/* Night Photo */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Night Photo</label>
+                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center">
+                          {screen.night_photo_url ? (
+                            <div>
+                              <img src={screen.night_photo_url} alt="Night photo" className="w-full h-32 object-cover rounded mb-2" />
+                              <p className="text-sm text-green-600">✓ Uploaded</p>
+                            </div>
+                          ) : (
+                            <div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileChange(e, 'night_photo')}
+                                className="hidden"
+                                id="night_photo_input"
+                                disabled={uploadingFiles.night_photo}
+                              />
+                              <label htmlFor="night_photo_input" className="cursor-pointer">
+                                <div className="text-blue-500 hover:text-blue-700">
+                                  {uploadingFiles.night_photo ? (
+                                    <p>Uploading...</p>
+                                  ) : (
+                                    <>
+                                      <p className="text-lg">🌙</p>
+                                      <p className="text-sm">Click to upload night photo</p>
+                                      <p className="text-xs text-gray-500">Max 10MB</p>
+                                    </>
+                                  )}
+                                </div>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Video */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Video</label>
+                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center">
+                          {screen.video_url ? (
+                            <div>
+                              <video src={screen.video_url} className="w-full h-32 object-cover rounded mb-2" controls />
+                              <p className="text-sm text-green-600">✓ Uploaded</p>
+                            </div>
+                          ) : (
+                            <div>
+                              <input
+                                type="file"
+                                accept="video/*"
+                                onChange={(e) => handleFileChange(e, 'video')}
+                                className="hidden"
+                                id="video_input"
+                                disabled={uploadingFiles.video}
+                              />
+                              <label htmlFor="video_input" className="cursor-pointer">
+                                <div className="text-blue-500 hover:text-blue-700">
+                                  {uploadingFiles.video ? (
+                                    <p>Uploading...</p>
+                                  ) : (
+                                    <>
+                                      <p className="text-lg">🎥</p>
+                                      <p className="text-sm">Click to upload video</p>
+                                      <p className="text-xs text-gray-500">Max 100MB</p>
+                                    </>
+                                  )}
+                                </div>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <hr className="my-4 border-blue-100" />
                   {/* Pricing */}

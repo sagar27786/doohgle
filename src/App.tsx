@@ -11,13 +11,9 @@ import GlobalFeed from "./components/Home/GlobalFeed";
 import WhyFramen from "./components/Home/WhyFramen";
 import SuccessStories from "./components/Home/SuccessStories";
 import ContentCreator from "./components/Home/ContentCreator";
-import ScreenManager from "./components/Home/ScreenManager";
 import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
 import Footer from "./components/Home/Footer";
-
-// Screen Manager page components
-import ScreenManagerDashboard from "./components/Screen Manager/ScreenManagerDashboard";
 
 // Auth components
 import LoginSignup from "./components/Auth/LoginSignup";
@@ -48,6 +44,7 @@ const ThemeContext = createContext<ThemeContextType>({
   theme: "light",
   toggleTheme: () => {},
 });
+
 export const useTheme = () => useContext(ThemeContext);
 
 interface ThemeProviderProps {
@@ -55,20 +52,23 @@ interface ThemeProviderProps {
 }
 
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem("theme") || "light"
-  );
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+  const [theme, setTheme] = useState("light");
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
   };
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setTheme(savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
@@ -91,17 +91,11 @@ const HomePage = () => {
       <WhyFramen />
       <SuccessStories />
       <ContentCreator />
-      <ScreenManager />
       <FAQ />
       <Contact />
       <Footer />
     </div>
   );
-};
-
-// Screen Manager page component
-const ScreenManagerPage = () => {
-  return <ScreenManagerDashboard />;
 };
 
 // Ads Manager page component - Marketing Landing
@@ -112,16 +106,8 @@ const AdsManagerPage = () => {
       <VisibilitySection />
       <WorldMapSection />
       <YouTubeSection />
-      {/* <AdsManagerHero /> */}
-      {/* <DashboardSection /> */}
-      {/* <DashboardClaritySection /> */}
-      {/* <AdsManagerFeatureSection /> */}
-      {/* <VideoFeatureSection title={""} videoUrl={""} /> */}
-      {/* <BillingSection /> */}
       <ChartsSection />
       <LottieRowSection />
-      {/* <ScrollTextSection /> */}
-      {/* <VideoSection title={""} videoUrl={""} /> */}
       <AdsManagerFooter />
     </div>
   );
@@ -139,7 +125,6 @@ function App() {
     "/auth/login",
     "/auth/signup",
     "/auth/select-role",
-    "/products/screen-manager",
     "/venue-dashboard",
     "/products/ads-manager",
     "/products/ads-manager/dashboard",
@@ -152,14 +137,6 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route
-            path="/products/screen-manager"
-            element={<ScreenManagerPage />}
-          />
-          <Route
-            path="/ScreenManagerDashboard"
-            element={<ScreenManagerDashboard />}
-          />
 
           {/* Ads Manager Routes */}
           <Route path="/products/ads-manager" element={<AdsManagerPage />} />
@@ -191,10 +168,6 @@ function App() {
 
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
-            <Route
-              path="/ScreenManagerDashboard"
-              element={<ScreenManagerDashboard />}
-            />
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />
             <Route
               path="/products/ads-manager/dashboard"

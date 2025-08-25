@@ -1,14 +1,18 @@
-import express from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
+
+// Load env vars with an explicit path to be safe
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import express from 'express';
 import authRoutes from './routes/auth';
 import screensRoutes from './routes/screens';
 import venueRoutes from './routes/venue';
 import earningsRoutes from './routes/earnings';
 import bookingRoutes from "./routes/bookings";
 import locationRoutes from "./routes/locations";
+import uploadRoutes from './routes/upload';
 
 // Load env vars
-dotenv.config();
 
 const app = express();
 app.use(express.json());
@@ -33,6 +37,7 @@ app.use('/api/venue', venueRoutes);
 app.use('/api/earnings', earningsRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/locations", locationRoutes);
+app.use('/api/upload', uploadRoutes);
 // app.use('/api/campaigns', campaignRoutes);
 
 // Temporary campaigns endpoints
