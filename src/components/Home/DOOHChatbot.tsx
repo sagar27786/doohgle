@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User } from "lucide-react";
 
 const DOOHChatbot = () => {
@@ -16,7 +16,7 @@ const DOOHChatbot = () => {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // WhatsApp configuration - replace with your actual WhatsApp number
   const whatsappNumber = "+1234567890"; // Replace with your WhatsApp business number

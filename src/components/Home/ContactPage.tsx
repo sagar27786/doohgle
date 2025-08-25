@@ -1,13 +1,13 @@
+"use client";
+
 import React, { useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 
 // --- SVG Icons ---
-// You can keep these in the component file or move them to a separate icons file.
-
 const MailIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-blue-600"
+    className="h-8 w-8 text-purple-600 dark:text-purple-400"
     viewBox="0 0 24 24"
     fill="currentColor"
   >
@@ -18,7 +18,7 @@ const MailIcon = () => (
 const PhoneIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 text-blue-600"
+    className="h-8 w-8 text-purple-600 dark:text-purple-400"
     viewBox="0 0 24 24"
     fill="currentColor"
   >
@@ -44,7 +44,6 @@ const ArrowIcon = () => (
 );
 
 // --- Main Contact Component ---
-
 const ContactPage = () => {
   const form = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<
@@ -55,7 +54,6 @@ const ContactPage = () => {
   const sendEmail = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // --- Validation ---
     if (!form.current) return;
     const formData = new FormData(form.current);
     const name = formData.get("user_name") as string;
@@ -71,8 +69,6 @@ const ContactPage = () => {
     setStatus("loading");
     setStatusMessage("Sending...");
 
-    // --- EmailJS Integration ---
-    // These values should come from your .env.local file
     const serviceID = process.env.REACT_APP_EMAILJS_SERVICE_ID as string;
     const templateID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID as string;
     const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY as string;
@@ -103,17 +99,17 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="max-w-6xl w-full mx-auto bg-white rounded-2xl shadow-lg overflow-hidden grid md:grid-cols-2">
+    <div className="bg-gray-50 dark:bg-slate-900 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="max-w-6xl w-full mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-lg overflow-hidden grid md:grid-cols-2">
         {/* Left Column: Information */}
-        <div className="p-8 sm:p-12 lg:p-16 text-gray-800">
-          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+        <div className="p-8 sm:p-12 lg:p-16 text-gray-800 dark:text-gray-200">
+          <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
             We're here to help you
           </p>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
             Get in Touch
           </h1>
-          <p className="text-gray-600 leading-relaxed mb-10">
+          <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-10">
             Digital Out-of-Home solutions — Whether you’re here to advertise or
             manage screens, we’re ready to help.
           </p>
@@ -122,10 +118,12 @@ const ContactPage = () => {
             <div className="flex items-center space-x-4">
               <MailIcon />
               <div>
-                <p className="text-gray-500 font-medium">E-mail</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium">
+                  E-mail
+                </p>
                 <a
                   href="mailto:soluvent***@gmail.com"
-                  className="text-lg text-gray-800 hover:text-blue-600 transition-colors"
+                  className="text-lg text-gray-800 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
                   soluvent***@gmail.com
                 </a>
@@ -134,10 +132,12 @@ const ContactPage = () => {
             <div className="flex items-center space-x-4">
               <PhoneIcon />
               <div>
-                <p className="text-gray-500 font-medium">Phone number</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium">
+                  Phone number
+                </p>
                 <a
                   href="tel:+1234567890"
-                  className="text-lg text-gray-800 hover:text-blue-600 transition-colors"
+                  className="text-lg text-gray-800 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
                   +123 - 456 - 7890
                 </a>
@@ -147,14 +147,14 @@ const ContactPage = () => {
         </div>
 
         {/* Right Column: Form */}
-        <div className="bg-white p-8 sm:p-12 lg:p-16">
+        <div className="p-8 sm:p-12 lg:p-16">
           <form ref={form} onSubmit={sendEmail} noValidate>
             <div className="space-y-6">
               {/* Name Field */}
               <div>
                 <label
                   htmlFor="user_name"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Name
                 </label>
@@ -163,7 +163,7 @@ const ContactPage = () => {
                   name="user_name"
                   id="user_name"
                   required
-                  className="mt-1 block w-full bg-gray-100 border-transparent rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="mt-1 block w-full bg-gray-100 dark:bg-slate-800 border-transparent rounded-lg py-3 px-4 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                   placeholder="Jane Smith"
                 />
               </div>
@@ -172,7 +172,7 @@ const ContactPage = () => {
               <div>
                 <label
                   htmlFor="user_email"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Email
                 </label>
@@ -181,34 +181,31 @@ const ContactPage = () => {
                   name="user_email"
                   id="user_email"
                   required
-                  className="mt-1 block w-full bg-gray-100 border-transparent rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="mt-1 block w-full bg-gray-100 dark:bg-slate-800 border-transparent rounded-lg py-3 px-4 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                   placeholder="jane@email.com"
                 />
               </div>
 
               {/* Industry Field */}
               <div>
-                {/* Industry Field - Radio Buttons */}
-                <div>
-                  <span className="text-sm font-medium text-gray-700">
-                    Industry
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
-                    {["Advertiser", "Screen Owner", "Other"].map((option) => (
-                      <label key={option} className="relative block">
-                        <input
-                          type="radio"
-                          name="industry"
-                          value={option}
-                          className="peer sr-only"
-                          required
-                        />
-                        <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 text-gray-700 text-center cursor-pointer peer-checked:bg-blue-600 peer-checked:text-white transition-all duration-200 shadow-sm hover:shadow-md">
-                          {option}
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Industry
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+                  {["Advertiser", "Screen Owner", "Other"].map((option) => (
+                    <label key={option} className="relative block">
+                      <input
+                        type="radio"
+                        name="industry"
+                        value={option}
+                        className="peer sr-only"
+                        required
+                      />
+                      <div className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 text-center cursor-pointer peer-checked:bg-purple-600 peer-checked:text-white transition-all duration-200 shadow-sm hover:shadow-md">
+                        {option}
+                      </div>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -216,7 +213,7 @@ const ContactPage = () => {
               <div>
                 <label
                   htmlFor="message"
-                  className="text-sm font-medium text-gray-700"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Message
                 </label>
@@ -225,7 +222,7 @@ const ContactPage = () => {
                   id="message"
                   required
                   rows={5}
-                  className="mt-1 block w-full bg-gray-100 border-transparent rounded-lg py-3 px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="mt-1 block w-full bg-gray-100 dark:bg-slate-800 border-transparent rounded-lg py-3 px-4 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition"
                   placeholder="Type your message"
                 ></textarea>
               </div>
@@ -235,7 +232,7 @@ const ContactPage = () => {
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="w-full flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 ease-in-out disabled:bg-blue-400 disabled:cursor-not-allowed group"
+                  className="w-full flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-300 ease-in-out disabled:bg-purple-400 disabled:cursor-not-allowed group"
                 >
                   {status === "loading" ? "Sending..." : "Get a Solution"}
                   <span className="ml-2 transform transition-transform duration-300 group-hover:translate-x-1">
@@ -250,8 +247,14 @@ const ContactPage = () => {
           {status !== "idle" && (
             <div
               className={`mt-4 text-center p-3 rounded-lg text-sm ${
-                status === "success" ? "bg-green-100 text-green-800" : ""
-              } ${status === "error" ? "bg-red-100 text-red-800" : ""}`}
+                status === "success"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-400"
+                  : ""
+              } ${
+                status === "error"
+                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-400"
+                  : ""
+              }`}
             >
               {statusMessage}
             </div>

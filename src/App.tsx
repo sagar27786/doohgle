@@ -35,13 +35,13 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import VenueDashboard from "./components/VenueDashboard/VenueDashboard";
 
 // Ads Manager page components
-import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
-import ChartsSection from "./components/adds Manager/ChartsSection";
-import WorldMapSection from "./components/adds Manager/WorldMapSection";
-import LottieRowSection from "./components/adds Manager/LottieRowSection";
-import VisibilitySection from "./components/adds Manager/VisibilitySection";
-import YouTubeSection from "./components/adds Manager/YouTubeSection";
-import AdsManagerFooter from "./components/adds Manager/Footer";
+// import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
+// import ChartsSection from "./components/adds Manager/ChartsSection";
+// import WorldMapSection from "./components/adds Manager/WorldMapSection";
+// import LottieRowSection from "./components/adds Manager/LottieRowSection";
+// import VisibilitySection from "./components/adds Manager/VisibilitySection";
+// import YouTubeSection from "./components/adds Manager/YouTubeSection";
+// import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
@@ -114,29 +114,6 @@ const ScreenManagerPage = () => {
   return <ScreenManagerDashboard />;
 };
 
-// Ads Manager page component - Marketing Landing
-const AdsManagerPage = () => {
-  return (
-    <div className="min-h-screen bg-white">
-      <Page3DStandUp />
-      <VisibilitySection />
-      <WorldMapSection />
-      <YouTubeSection />
-      {/* <AdsManagerHero /> */}
-      {/* <DashboardSection /> */}
-      {/* <DashboardClaritySection /> */}
-      {/* <AdsManagerFeatureSection /> */}
-      {/* <VideoFeatureSection title={""} videoUrl={""} /> */}
-      {/* <BillingSection /> */}
-      <ChartsSection />
-      <LottieRowSection />
-      {/* <ScrollTextSection /> */}
-      {/* <VideoSection title={""} videoUrl={""} /> */}
-      <AdsManagerFooter />
-    </div>
-  );
-};
-
 // Ads Manager Dashboard - Full Backend Integration
 const AdsManagerDashboard = () => {
   return <IntegratedAdsManager />;
@@ -173,7 +150,7 @@ function App() {
             element={<ScreenManagerDashboard />}
           />
           {/* Ads Manager Routes */}
-          <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+          {/* <Route path="/products/ads-manager" element={<AdsManagerPage />} /> */}
           <Route
             path="/products/ads-manager/dashboard"
             element={<AdsManagerDashboard />}
@@ -208,7 +185,7 @@ function App() {
               path="/ScreenManagerDashboard"
               element={<ScreenManagerDashboard />}
             />
-            <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+            {/* <Route path="/products/ads-manager" element={<AdsManagerPage />} /> */}
             <Route
               path="/products/ads-manager/dashboard"
               element={<AdsManagerDashboard />}

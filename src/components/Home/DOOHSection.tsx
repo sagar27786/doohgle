@@ -26,11 +26,12 @@ const DOOHSection = () => {
 
             <p className="text-gray-600 dark:text-slate-300 leading-relaxed">
               We turn physical spaces into intelligent media channels. Our
-              DOOHGLE technology gives brands access to qualified audiences
-              across coworking spaces, gyms, retail and more. With programmatic
-              booking, contextual targeting and live performance tracking, your
-              message meets the right people, exactly when it matters. On the
-              Ads Manager, you can book your campaigns across diverse venues.
+              DOOHGLE Media technology gives brands access to qualified
+              audiences across coworking spaces, gyms, retail and more. With
+              programmatic booking, contextual targeting and live performance
+              tracking, your message meets the right people, exactly when it
+              matters. On the Ads Manager, you can book your campaigns across
+              diverse venues.
             </p>
           </div>
         </div>

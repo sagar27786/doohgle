@@ -9,10 +9,10 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
-  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
   const steps = [
     {
@@ -61,6 +61,30 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
 
   const stepIcons = [MapPin, Clock, Zap];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.3,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { y: 30, opacity: 0, scale: 0.9 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
   return (
     <div
       ref={ref}
@@ -78,23 +102,27 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ amount: 0.2 }} // ✨ REMOVED 'once: true'
+        >
           {steps.map((step, idx) => {
             const StepIcon = step.icon;
             const isActive = activeStep === idx;
-            const isHovered = hoveredStep === idx;
 
             return (
-              <div
+              <motion.div
                 key={idx}
-                className={`relative cursor-pointer transition-all duration-500 transform ${
-                  isHovered ? "scale-105 -translate-y-2" : ""
-                } ${isActive ? "scale-110 -translate-y-4" : ""}`}
+                variants={cardVariants}
+                whileHover={{ y: -8, scale: 1.05 }}
+                animate={isActive ? { y: -16, scale: 1.1 } : { y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="relative cursor-pointer"
                 onClick={() => setActiveStep(activeStep === idx ? null : idx)}
-                onMouseEnter={() => setHoveredStep(idx)}
-                onMouseLeave={() => setHoveredStep(null)}
               >
-                {/* Connection line for desktop */}
                 {idx < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-px bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 z-10">
                     <ChevronRight className="absolute -top-2 -right-1 h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -105,22 +133,18 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                   className={`relative overflow-hidden rounded-2xl border-2 transition-all duration-500 ${
                     isActive
                       ? "border-transparent shadow-2xl"
-                      : isHovered
-                      ? "border-gray-300 dark:border-slate-600 shadow-lg"
                       : "border-gray-200 dark:border-slate-700 shadow-md hover:shadow-lg"
                   } bg-white dark:bg-slate-800`}
                 >
-                  {/* Animated background gradient */}
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${
                       step.color
                     } opacity-0 transition-opacity duration-500 ${
-                      isActive ? "opacity-10" : isHovered ? "opacity-5" : ""
+                      isActive ? "opacity-10" : "hover:opacity-5"
                     }`}
                   />
 
                   <div className="relative p-8">
-                    {/* Step number */}
                     <div className="absolute top-4 right-4">
                       <span
                         className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-300 ${
@@ -133,11 +157,9 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       </span>
                     </div>
 
-                    {/* Icon with animation */}
-                    <div
-                      className={`mb-6 transition-all duration-500 ${
-                        isActive || isHovered ? "scale-110" : ""
-                      }`}
+                    <motion.div
+                      animate={{ scale: isActive ? 1.1 : 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
                     >
                       <div
                         className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${
@@ -148,9 +170,9 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       >
                         <StepIcon className="h-8 w-8 text-white" />
                       </div>
-                    </div>
+                    </motion.div>
 
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white my-3">
                       {step.title}
                     </h3>
 
@@ -158,9 +180,8 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       {step.description}
                     </p>
 
-                    {/* Expandable content */}
                     <div
-                      className={`transition-all duration-500 overflow-hidden ${
+                      className={`transition-all duration-500 ease-in-out overflow-hidden ${
                         isActive
                           ? "max-h-[600px] opacity-100"
                           : "max-h-0 opacity-0"
@@ -186,7 +207,6 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                           })}
                         </div>
 
-                        {/* Image */}
                         <img
                           src={step.image}
                           alt={step.title}
@@ -195,7 +215,6 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       </div>
                     </div>
 
-                    {/* Click indicator */}
                     <div
                       className={`mt-4 text-xs text-center transition-all duration-300 ${
                         isActive
@@ -207,12 +226,11 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
-        {/* Progress indicator */}
         <div className="flex justify-center space-x-2">
           {steps.map((_, idx) => (
             <button
@@ -221,21 +239,22 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 activeStep === idx
                   ? "bg-indigo-500 scale-125"
-                  : hoveredStep === idx
-                  ? "bg-gray-400 dark:bg-gray-500"
-                  : "bg-gray-300 dark:bg-gray-600"
+                  : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
               }`}
             />
           ))}
         </div>
 
-        {/* Call to action */}
         <div className="text-center mt-16">
           <Link to="/auth">
-            <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300"
+            >
               Get Started Today
               <ChevronRight className="pl-2 inline h-5 w-5" />
-            </button>
+            </motion.button>
           </Link>
         </div>
       </div>

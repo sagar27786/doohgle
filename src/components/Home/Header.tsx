@@ -190,7 +190,7 @@ const Header = () => {
                   </div>
                 )}
               </div>
-              <NavLink to="/resources">About Us</NavLink>
+              <NavLink to="/about-us">About Us</NavLink>
             </nav>
           </div>
 
@@ -200,9 +200,11 @@ const Header = () => {
               <NavLink to="/contact">Contact</NavLink>
               <button
                 onClick={() => navigate("/auth")}
-                className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+                className="bg-gray-800 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
               >
-                Login / Sign up
+                <span className="purple-gray-gradient font-medium">
+                  Login / Sign up
+                </span>
               </button>
             </div>
 
@@ -299,7 +301,7 @@ const Header = () => {
               )}
             </div>
 
-            <MobileNavLink to="/resources">About Us</MobileNavLink>
+            <MobileNavLink to="/about-us">About Us</MobileNavLink>
             <MobileNavLink to="/contact">Contact</MobileNavLink>
 
             {/* Mobile Auth Button */}
@@ -309,7 +311,7 @@ const Header = () => {
                   navigate("/auth");
                   setIsMenuOpen(false);
                 }}
-                className="w-full bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+                className="w-full  bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
               >
                 Login / Sign up
               </button>

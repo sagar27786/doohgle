@@ -3,15 +3,46 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MapPin, Monitor, Tv, Building2 } from "lucide-react";
+import { renderToStaticMarkup } from "react-dom/server";
 
-// Fix default marker icon
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+// Create custom monitor icon
+const createMonitorIcon = (color = "#3b82f6") => {
+  const iconHtml = renderToStaticMarkup(
+    <div
+      style={{
+        backgroundColor: "white",
+        borderRadius: "50%",
+        padding: "8px",
+        border: `2px solid ${color}`,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+      }}
+    >
+      <Monitor size={20} color={color} />
+    </div>
+  );
+
+  return L.divIcon({
+    html: iconHtml,
+    className: "custom-monitor-icon",
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+  });
+};
+
+// Get custom icon based on screen type
+const getCustomIcon = (type: string) => {
+  switch (type) {
+    case "Billboard":
+      return createMonitorIcon("#3b82f6"); // blue
+    case "Transit Display":
+      return createMonitorIcon("#16a34a"); // green
+    case "Mall Screen":
+      return createMonitorIcon("#9333ea"); // purple
+    default:
+      return createMonitorIcon("#6b7280"); // gray
+  }
+};
 
 // Country data with coordinates
 const countries = [
@@ -338,7 +369,7 @@ const doohScreens = {
   ],
 };
 
-// Get icon for screen type
+// Get icon for screen type (for popup display)
 const getScreenTypeIcon = (type: string) => {
   switch (type) {
     case "Billboard":
@@ -580,9 +611,9 @@ export default function InteractiveMap() {
   );
 
   return (
-    <div className="flex h-auto justify-between align-middle pl-[10%] bg-gray-200 dark:bg-slate-900 p-4">
+    <div className="flex flex-col lg:flex-row h-auto justify-between align-middle p-4 bg-gray-200 dark:bg-slate-900 lg:pl-[10%]">
       {/* Sidebar */}
-      <div className="w-64 bg-white dark:bg-slate-800 shadow-md border-r border-gray-200 dark:border-slate-700 flex flex-col rounded-lg overflow-hidden">
+      <div className="w-full lg:w-64 bg-white dark:bg-slate-800 shadow-md border-b lg:border-r border-gray-200 dark:border-slate-700 flex flex-col rounded-lg overflow-hidden mb-4 lg:mb-0">
         <div className="p-4 border-b border-gray-200 dark:border-slate-700">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
             DOOH Platform
@@ -664,8 +695,8 @@ export default function InteractiveMap() {
         </div>
       </div>
 
-      <div className="flex-1 pl-4">
-        <div className="h-[600px] w-[70vw] rounded-lg shadow-md overflow-hidden">
+      <div className="flex-1 lg:pl-4">
+        <div className="h-[400px] sm:h-[500px] lg:h-[600px] w-full lg:w-[70vw] rounded-lg shadow-md overflow-hidden">
           <MapContainer
             center={[selectedCountry.lat, selectedCountry.lng]}
             zoom={selectedCountry.zoom}
@@ -681,9 +712,13 @@ export default function InteractiveMap() {
               selectedCountry={selectedCountry}
               searchLocation={searchLocation}
             />
-            {/* Screen markers */}
+            {/* Screen markers with custom monitor icons */}
             {filteredScreens.map((screen, idx) => (
-              <Marker key={idx} position={[screen.lat, screen.lng]}>
+              <Marker
+                key={idx}
+                position={[screen.lat, screen.lng]}
+                icon={getCustomIcon(screen.type)}
+              >
                 <Popup>
                   <div className="p-1">
                     <div className="flex items-center gap-1 mb-1">

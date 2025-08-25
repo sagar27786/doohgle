@@ -28,7 +28,7 @@ const Footer = () => {
           <div className="lg:col-span-4 text-center lg:text-left">
             <div className="text-2xl font-bold text-gray-900 dark:text-white mb-4 inline-block lg:block">
               <span className="text-gray-600 dark:text-slate-400">◊</span>{" "}
-              DOOHGLE
+              DOOHGLE Media
             </div>
             <p className="text-sm text-gray-600 dark:text-slate-400 mb-4">
               Part of Axel Springer SE

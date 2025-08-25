@@ -95,11 +95,21 @@ export default {
         },
       },
       fontFamily: {
+        bebas: [
+          "Inter",
+          "Poppins",
+          "Montserrat",
+          "Epilogue",
+          "Julius Sans One",
+          "Prata",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
         sans: [
           "Inter",
           "ui-sans-serif",
           "system-ui",
-          "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
           "Roboto",
@@ -108,6 +118,7 @@ export default {
           "Noto Sans",
           "sans-serif",
         ],
+        apple: ["-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
       spacing: {
         18: "4.5rem",

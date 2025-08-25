@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import HeroVideo from "./HeroVideo";
 
@@ -39,32 +39,40 @@ const MainHero = () => {
         </video>
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-40 z-0 dark:bg-opacity-60" />
+        <div className="absolute inset-0 bg-black bg-opacity-70 z-0 dark:bg-opacity-70 backdrop-blur-sm" />
 
         {/* Main Content */}
-        <div className="relative z-10 text-center max-w-4xl mx-auto text-white dark:text-slate-200">
-          <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tighter mb-5">
+        <div className="relative z-10 text-center max-w-6xl mx-auto text-white dark:text-slate-200">
+          <h1 className="font-bebas font-bold text-5xl md:text-7xl lg:text-[5rem] tracking-tight mb-5 whitespace-nowrap">
             Connect{" "}
             <span className="purple-gray-gradient">Digital Screens</span>
           </h1>
-          <h1 className="text-5xl md:text-7xl lg:text-[5rem] font-bold tracking-tighter mb-5">
-            With <span className="purple-gray-gradient">Perfect Ads</span>
+
+          <h1 className="font-bebas font-bold text-5xl md:text-7xl lg:text-[5rem] tracking-tight mb-5 whitespace-nowrap">
+            With <span className="purple-gray-gradient"> Perfect Ads</span>
           </h1>
 
           <p className="max-w-4xl mx-auto text-xl md:text-2xl lg:text-[1.4rem] leading-relaxed mb-2 text-gray-300">
-            The largest marketplace for{" "}
             <span className="purple-gray-gradient">
-              digital out-of-home advertising.
+              The largest marketplace{" "}
             </span>
+            for digital out-of-home advertising.
           </p>
+
           <p className="max-w-3xl mx-auto text-xl md:text-2xl lg:text-[1.4rem] leading-relaxed mb-2 text-gray-300">
             List your screens,{" "}
-            <span className="purple-gray-gradient"> elevate your income.</span>
+            <span className="purple-gray-gradient">elevate your income.</span>
           </p>
+
           <p className="max-w-3xl mx-auto text-xl md:text-2xl lg:text-[1.4rem] leading-relaxed mb-4 text-gray-300">
-            Book <span className="purple-gray-gradient">Premium location </span>
-            for your ad and maximize your reach with{" "}
-            <span className="purple-gray-gradient">AI driven insights.</span>
+            Book <span className="purple-gray-gradient">Premium location</span>{" "}
+            for your ad and maximize your reach{" "}
+            <span className="inline-flex whitespace-nowrap">
+              with&nbsp;
+              <span className="purple-gray-gradient">
+                AI&nbsp;driven&nbsp;insights.
+              </span>
+            </span>
           </p>
 
           {/* Buttons */}

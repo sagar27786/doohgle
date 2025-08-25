@@ -51,11 +51,11 @@ const WhyFramen = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-14">
           <h2 className="text-4xl font-bold text-white tracking-tight">
-            Why DOOHGLE?
+            Why DOOHGLE Media?
           </h2>
           <Link
             to="/auth"
-            className="mt-4 sm:mt-0 inline-block px-6 py-2.5 rounded-lg font-medium text-indigo-600 bg-white shadow hover:shadow-lg hover:bg-gray-50 transition"
+            className="mt-4 sm:mt-0 inline-block px-6 py-2.5 rounded-lg font-medium text-purple-600 bg-white shadow hover:shadow-lg hover:bg-gray-50 transition"
           >
             Sign up for free
           </Link>
