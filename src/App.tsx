@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import LoaderAnimation from "./components/Home/LoaderAnimation";
 import Header from "./components/Home/Header";
 import MainHero from "./components/Home/MainHero";
 import CompanyLogos from "./components/Home/CompanyLogos";
@@ -54,7 +55,7 @@ interface ThemeContextType {
   toggleTheme: () => void;
 }
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "light",
+  theme: "dark",
   toggleTheme: () => {},
 });
 export const useTheme = () => useContext(ThemeContext);
@@ -65,7 +66,7 @@ interface ThemeProviderProps {
 
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState(
-    () => localStorage.getItem("theme") || "light"
+    () => localStorage.getItem("theme") || "dark"
   );
 
   useEffect(() => {
@@ -119,9 +120,11 @@ const AdsManagerDashboard = () => {
   return <IntegratedAdsManager />;
 };
 
-function App() {
+function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
   const hideHeaderRoutes = [
     "/auth/login",
     "/auth/signup",
@@ -132,9 +135,18 @@ function App() {
     "/products/ads-manager/dashboard",
   ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+
+  const handleLoadingComplete = () => {
+    setIsLoading(false);
+  };
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-white">
+    <>
+      {isLoading && <LoaderAnimation onComplete={handleLoadingComplete} />}
+      <div
+        className={`min-h-screen bg-white transition-opacity duration-500 ${
+          isLoading ? "opacity-0" : "opacity-100"
+        }`}
+      >
         {shouldShowHeader && <Header />}
         <Routes>
           {/* Public Routes */}
@@ -193,6 +205,14 @@ function App() {
           </Route>
         </Routes>
       </div>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
     </ThemeProvider>
   );
 }

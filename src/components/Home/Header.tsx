@@ -200,10 +200,15 @@ const Header = () => {
               <NavLink to="/contact">Contact</NavLink>
               <button
                 onClick={() => navigate("/auth")}
-                className="bg-gray-800 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
+                className="
+      relative px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm
+      bg-white text-gray-900
+      dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700
+    "
               >
-                <span className="purple-gray-gradient font-medium">
-                  Login / Sign up
+                <span className="relative z-10 flex items-center space-x-2">
+                  <span className="text-lg"></span>
+                  <span className="purple-gray-gradient">Login / Sign up</span>
                 </span>
               </button>
             </div>
@@ -311,9 +316,16 @@ const Header = () => {
                   navigate("/auth");
                   setIsMenuOpen(false);
                 }}
-                className="w-full  bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+                className="
+                  w-full relative px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm
+                  bg-white text-gray-900
+                  dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700
+                "
               >
-                Login / Sign up
+                <span className="relative z-10 flex items-center justify-center space-x-2">
+                  <span className="text-lg"></span>
+                  <span className="purple-gray-gradient">Login / Sign up</span>
+                </span>
               </button>
             </div>
           </div>
