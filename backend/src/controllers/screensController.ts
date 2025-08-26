@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { pool } from "../db";
 import { AuthUser } from "../middleware/auth";
+import { generatePresignedUrl } from "../config/s3Config";
 
 export async function createScreen(
   req: Request & { user?: AuthUser },
@@ -86,10 +87,21 @@ export async function getMyScreens(
 
   try {
     const result = await pool.query(
-      "SELECT * FROM screens WHERE user_id = $1 ORDER BY created_at DESC",
+      `SELECT s.*
+       FROM screens s
+       WHERE s.user_id = $1
+       ORDER BY s.created_at DESC`,
       [userId]
     );
-    return res.json({ screens: result.rows });
+
+    const screensWithAssets = await Promise.all(
+      result.rows.map(async (row) => {
+        const assets = await buildAssetsFromScreenRow(row);
+        return { ...row, assets };
+      })
+    );
+
+    return res.json({ screens: screensWithAssets });
   } catch (err) {
     return res.status(500).json({ message: "Server error", error: err });
   }
@@ -245,24 +257,12 @@ export async function getScreenById(req: Request, res: Response) {
   try {
     const { id } = req.params;
 
-    // First get the screen details
     const screenQuery = `
       SELECT 
         s.*,
         p.hourly_rate,
         p.daily_rate,
         p.weekly_rate,
-        (
-          SELECT json_agg(
-            jsonb_build_object(
-              'asset_type', sa.asset_type,
-              'url', sa.url,
-              'created_at', sa.created_at
-            )
-          )
-          FROM screen_assets sa
-          WHERE sa.screen_id = s.id
-        ) as assets,
         (
           SELECT json_agg(
             jsonb_build_object(
@@ -290,16 +290,17 @@ export async function getScreenById(req: Request, res: Response) {
       return;
     }
 
-    // Format the response to match the frontend expectations
     const screen = result.rows[0];
+    const assets = await buildAssetsFromScreenRow(screen);
+
     const response = {
       ...screen,
+      assets,
       pricing: {
         hourly: screen.hourly_rate || 0,
         daily: screen.daily_rate || 0,
         weekly: screen.weekly_rate || 0,
       },
-      // Add any other necessary transformations here
     };
 
     res.json({
@@ -478,4 +479,77 @@ export async function getDashboardStats(
       message: "Failed to fetch dashboard statistics",
     });
   }
+}
+
+// Helper: check if a string is an HTTP(S) URL
+function isHttpUrl(value?: string | null): boolean {
+  if (!value) return false;
+  return /^https?:\/\//i.test(value);
+}
+
+// Helper: try to extract S3 object key from a known S3 URL
+function extractS3KeyFromUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const host = u.host.toLowerCase();
+
+    if (!host.includes("amazonaws.com")) {
+      // Not an S3 URL (could be CDN or public URL) -> we won't try to presign
+      return null;
+    }
+
+    // Path always starts with "/"
+    const pathname = decodeURIComponent(u.pathname.replace(/^\/+/, ""));
+
+    // Handle path-style: https://s3.amazonaws.com/bucket/key or https://s3.<region>.amazonaws.com/bucket/key
+    if (host === "s3.amazonaws.com" || host.startsWith("s3.")) {
+      const segments = pathname.split("/");
+      if (segments.length >= 2) {
+        // first segment is bucket, rest is key
+        return segments.slice(1).join("/");
+      }
+      return null;
+    }
+
+    // Handle virtual-hosted-style: https://bucket.s3.amazonaws.com/key or https://bucket.s3.<region>.amazonaws.com/key
+    // In this case, pathname is the key
+    return pathname || null;
+  } catch {
+    return null;
+  }
+}
+
+// Given a DB field (which can be a key or URL), return a presigned URL if private, or the original if already public
+async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null> {
+  if (!urlOrKey) return null;
+
+  // If it's a URL
+  if (isHttpUrl(urlOrKey)) {
+    const key = extractS3KeyFromUrl(urlOrKey);
+    if (key) {
+      // It's an S3 URL -> generate presigned
+      return await generatePresignedUrl(key);
+    }
+    // Not an S3 URL (e.g., CDN or public HTTPS) -> return as-is
+    return urlOrKey;
+  }
+
+  // Otherwise, treat as a raw S3 key
+  return await generatePresignedUrl(urlOrKey);
+}
+
+// Build assets array from the three columns in the screens table
+async function buildAssetsFromScreenRow(screen: any) {
+  const assets: { asset_type: "photo_day" | "photo_night" | "video"; url: string }[] = [];
+
+  const dayUrl = await getRenderableUrl(screen.day_photo_url);
+  if (dayUrl) assets.push({ asset_type: "photo_day", url: dayUrl });
+
+  const nightUrl = await getRenderableUrl(screen.night_photo_url);
+  if (nightUrl) assets.push({ asset_type: "photo_night", url: nightUrl });
+
+  const videoUrl = await getRenderableUrl(screen.video_url);
+  if (videoUrl) assets.push({ asset_type: "video", url: videoUrl });
+
+  return assets;
 }

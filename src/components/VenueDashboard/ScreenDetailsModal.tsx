@@ -23,6 +23,10 @@ interface Screen {
   created_at: string;
   updated_at: string;
   user_id: number;
+  // Added: fallbacks from screens table
+  day_photo_url?: string | null;
+  night_photo_url?: string | null;
+  video_url?: string | null;
 }
 
 interface ScreenDetailsModalProps {
@@ -45,6 +49,11 @@ const ScreenDetailsModal: React.FC<ScreenDetailsModalProps> = ({ screen, onClose
     asset => asset.asset_type === 'photo_night'
   );
   const video = assets.find(asset => asset.asset_type === 'video');
+
+  // FALLBACK TO URLS ON THE SCREEN ROW IF ASSETS ARE NOT PRESENT
+  const dayPhotoUrl = dayPhoto?.url || screen.day_photo_url || '';
+  const nightPhotoUrl = nightPhoto?.url || screen.night_photo_url || '';
+  const videoUrl = video?.url || screen.video_url || '';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -73,24 +82,24 @@ const ScreenDetailsModal: React.FC<ScreenDetailsModalProps> = ({ screen, onClose
                 <div>
                 <h3 className="text-xl font-semibold">Media</h3>
                 <div className="mt-2 space-y-4">
-                    {dayPhoto && (
+                  {dayPhotoUrl && (
                     <div>
-                        <h4 className="font-semibold">Day Photo</h4>
-                        <img src={dayPhoto.url} alt="Daytime view of the screen" className="mt-1 rounded-md shadow-md" />
+                      <h4 className="font-semibold">Day Photo</h4>
+                      <img src={dayPhotoUrl} alt="Daytime view of the screen" className="mt-1 rounded-md shadow-md" />
                     </div>
-                    )}
-                    {nightPhoto && (
+                  )}
+                  {nightPhotoUrl && (
                     <div>
-                        <h4 className="font-semibold">Night Photo</h4>
-                        <img src={nightPhoto.url} alt="Nighttime view of the screen" className="mt-1 rounded-md shadow-md" />
+                      <h4 className="font-semibold">Night Photo</h4>
+                      <img src={nightPhotoUrl} alt="Nighttime view of the screen" className="mt-1 rounded-md shadow-md" />
                     </div>
-                    )}
-                    {video && (
+                  )}
+                  {videoUrl && (
                     <div>
-                        <h4 className="font-semibold">Video</h4>
-                        <video src={video.url} controls className="mt-1 rounded-md shadow-md w-full" />
+                      <h4 className="font-semibold">Video</h4>
+                      <video src={videoUrl} controls className="mt-1 rounded-md shadow-md w-full" />
                     </div>
-                    )}
+                  )}
                 </div>
                 </div>
             </div>
