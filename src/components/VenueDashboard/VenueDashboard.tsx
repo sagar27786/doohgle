@@ -346,7 +346,7 @@ const VenueDashboard: React.FC = () => {
                   <FaPlus size={18} />
                 </span>
                 <span className={`${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'} transition-opacity`}>
-                  Register New Screen
+                  List New Screen
                 </span>
               </button>
             </div>
@@ -455,15 +455,18 @@ const VenueDashboard: React.FC = () => {
                           <label htmlFor="location_in_venue" className="block text-xs font-medium text-gray-400">
                             Location in Venue
                           </label>
-                          <input
-                            type="text"
+                          <select
                             id="location_in_venue"
                             name="location_in_venue"
-                            value={screen.location_in_venue}
+                            value={screen.location_in_venue || ''}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             required
-                          />
+                            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          >
+                            <option value="" disabled>Select location type</option>
+                            <option value="indoor">Indoor</option>
+                            <option value="outdoor">Outdoor</option>
+                          </select>
                         </div>
                       </div>
                       <div className="mt-4">

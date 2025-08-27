@@ -27,7 +27,7 @@ interface Screen {
   user_id: number;
 }
 
-const ScreenList = () => {
+function ScreenList() {
   const [screens, setScreens] = useState<Screen[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +73,11 @@ const ScreenList = () => {
       ) : (
         <ul className="mt-4 space-y-2">
           {screens.map((screen) => (
-            <li key={screen.id} className="p-4 border rounded-md cursor-pointer hover:bg-gray-100" onClick={() => handleScreenClick(screen)}>
+            <li
+              key={screen.id}
+              className="p-4 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              onClick={() => handleScreenClick(screen)}
+            >
               <p className="font-bold">{screen.screen_name}</p>
               <p>{screen.location_in_venue}</p>
             </li>
