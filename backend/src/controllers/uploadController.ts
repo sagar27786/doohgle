@@ -52,6 +52,12 @@ export const uploadSingleMedia = async (req: MulterRequest, res: Response) => {
       });
     }
 
+    console.log('File upload request received:', {
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+    });
+
     const file = req.file as S3File;
     
     // Validate file type

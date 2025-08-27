@@ -12,6 +12,7 @@ import {
   FaSun,
   FaMoon,
 } from 'react-icons/fa';
+import MapPicker from './MapPicker';
 
 type UploadingFlags = {
   day_photo: boolean;
@@ -76,13 +77,21 @@ const VenueDashboard: React.FC = () => {
   const [screen, setScreen] = useState<typeof screenInitialState>(screenInitialState);
   const [screenMsg, setScreenMsg] = useState('');
   const [screenLoading, setScreenLoading] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFlags>({
     day_photo: false,
     night_photo: false,
     video: false,
   });
 
-  // Apply theme to <html> via Tailwind's 'dark' class
+  const handleMapSelect = (coords: { lat: number; lng: number }) => {
+    setScreen(prev => ({
+      ...prev,
+      latitude: String(coords.lat),
+      longitude: String(coords.lng),
+    }));
+  };
+
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') root.classList.add('dark');
@@ -573,6 +582,15 @@ const VenueDashboard: React.FC = () => {
                             required
                           />
                         </div>
+                        </div>
+                        <div className="mt-6">
+                            <label className="block text-xs font-medium text-gray-400 mb-2">Pinpoint Location on Map</label>
+                            <MapPicker
+                                selectedLocation={screen.latitude && screen.longitude ? { lat: Number(screen.latitude), lng: Number(screen.longitude) } : null}
+                                onMapSelect={handleMapSelect}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-6 mt-4">
                         <div>
                           <label htmlFor="latitude" className="block text-xs font-medium text-gray-400">
                             Latitude
@@ -583,6 +601,7 @@ const VenueDashboard: React.FC = () => {
                             name="latitude"
                             value={screen.latitude}
                             onChange={handleScreenChange}
+                            readOnly
                             className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
                           />
                         </div>
@@ -596,6 +615,7 @@ const VenueDashboard: React.FC = () => {
                             name="longitude"
                             value={screen.longitude}
                             onChange={handleScreenChange}
+                            readOnly
                             className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
                           />
                         </div>
