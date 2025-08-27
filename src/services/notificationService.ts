@@ -45,9 +45,6 @@ class NotificationService {
     this.bookingRequests.push(newRequest);
     this.notifyListeners();
 
-    // Simulate sending to screen manager
-    this.sendToScreenManager(newRequest);
-
     return newRequest.id;
   }
 
@@ -138,17 +135,6 @@ class NotificationService {
 
   private notifyListeners() {
     this.listeners.forEach((callback) => callback());
-  }
-
-  private sendToScreenManager(request: BookingRequest) {
-    // Simulate API call to screen manager
-    console.log("Sending booking request to screen manager:", request);
-
-    // In a real app, this would be an HTTP request
-    // fetch('http://localhost:5173/products/screen-manager/api/booking-requests', {
-    //   method: 'POST',
-    //   body: JSON.stringify(request)
-    // });
   }
 
   // Debug method - add test booking requests

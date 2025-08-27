@@ -13,7 +13,6 @@ import {
   Plus,
   Eye,
   Filter,
-  Monitor,
   FileText,
   Target,
   Cloud,
@@ -64,12 +63,10 @@ import ProfessionalDashboard from "./ProfessionalDashboard";
 
 // Existing Components
 import CampaignManager from "./CampaignManager";
-import ScreenManager from "./ScreenManager";
 
 // New Enhanced Components
 import CampaignManagement from "../../Campaign/CampaignManagement";
 import ReportsAnalytics from "../../Reports/ReportsAnalytics";
-import ProfessionalVenueDashboard from "../../VenueDashboard/ProfessionalVenueDashboard";
 import MyCampaignRequests from "../../Campaign/MyCampaignRequests";
 import NotificationPanel from "../../Campaign/NotificationPanel";
 
@@ -81,7 +78,6 @@ type ViewType =
   | "campaigns"
   | "campaignManagement"
   | "campaignRequests"
-  | "screens"
   | "reports"
   | "settings"
   | "venueDashboard";
@@ -105,7 +101,6 @@ const IntegratedAdsManager: React.FC = () => {
     { id: "campaignManagement", label: "Campaign Management", icon: Target },
     { id: "campaignRequests", label: "My Campaign Requests", icon: Bell },
     { id: "campaigns", label: "Campaigns", icon: TrendingUp },
-    { id: "screens", label: "Screens", icon: Monitor },
     { id: "reports", label: "Reports & Analytics", icon: FileText },
     { id: "settings", label: "Settings", icon: Settings },
   ];
@@ -115,7 +110,7 @@ const IntegratedAdsManager: React.FC = () => {
       case "dashboard":
         return <ProfessionalDashboard />;
       case "venueDashboard":
-        return <ProfessionalVenueDashboard />;
+        return <ProfessionalDashboard />;
       // AWS tabs removed
       case "campaignManagement":
         return <CampaignManagement />;
@@ -123,8 +118,6 @@ const IntegratedAdsManager: React.FC = () => {
         return <MyCampaignRequests />;
       case "campaigns":
         return <CampaignManager />;
-      case "screens":
-        return <ScreenManager />;
       case "reports":
         return <ReportsAnalytics />;
       case "settings":
@@ -186,7 +179,7 @@ const IntegratedAdsManager: React.FC = () => {
               </h1>
               <p className="text-gray-600">
                 {currentView === "dashboard" &&
-                  "Overview of your campaigns and screens"}
+                  "Overview of your campaigns and performance"}
                 {currentView === "venueDashboard" &&
                   "Complete venue management dashboard"}
                 {currentView === "campaignManagement" &&
@@ -195,7 +188,6 @@ const IntegratedAdsManager: React.FC = () => {
                   "Track your campaign booking requests"}
                 {currentView === "campaigns" &&
                   "Manage your advertising campaigns"}
-                {currentView === "screens" && "Monitor your digital screens"}
                 {currentView === "reports" &&
                   "Analytics and performance reports"}
                 {currentView === "settings" && "Platform configuration"}

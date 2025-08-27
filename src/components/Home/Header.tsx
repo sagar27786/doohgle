@@ -178,12 +178,6 @@ const Header = () => {
                   <div className="absolute top-full left-0 mt-3 w-96 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-down">
                     <div className="p-4 space-y-2">
                       <ProductLink
-                        to="/products/screen-manager"
-                        icon={<Monitor className="h-6 w-6 text-blue-500" />}
-                        title="Screen Manager"
-                        subtitle="Manage and monetize your screens"
-                      />
-                      <ProductLink
                         to="/products/ads-manager"
                         icon={<Target className="h-6 w-6 text-purple-500" />}
                         title="Ads Manager"
@@ -324,12 +318,6 @@ const Header = () => {
                 </button>
                 {isProductsOpen && (
                   <div className="pl-4 space-y-1 border-l-2 border-slate-200 dark:border-slate-700 ml-3">
-                    <ProductLink
-                      to="/products/screen-manager"
-                      icon={<Monitor className="h-5 w-5 text-blue-500" />}
-                      title="Screen Manager"
-                      subtitle="Manage your screens"
-                    />
                     <ProductLink
                       to="/products/ads-manager"
                       icon={<Target className="h-5 w-5 text-purple-500" />}

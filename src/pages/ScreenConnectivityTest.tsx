@@ -82,12 +82,12 @@ const ScreenConnectivityTest: React.FC = () => {
             </button>
 
             <a
-              href="/products/screen-manager"
+              href="/products/ads-manager"
               target="_blank"
               className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
               <Monitor size={16} />
-              <span>Open Screen Manager</span>
+              <span>Open Ads Manager</span>
             </a>
 
             <a

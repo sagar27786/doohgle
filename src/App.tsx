@@ -11,20 +11,17 @@ import GlobalFeed from "./components/Home/GlobalFeed";
 import WhyFramen from "./components/Home/WhyFramen";
 import SuccessStories from "./components/Home/SuccessStories";
 import ContentCreator from "./components/Home/ContentCreator";
-import ScreenManager from "./components/Home/ScreenManager";
 import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
 import Footer from "./components/Home/Footer";
 
 // Screen Manager page components
-import ScreenManagerDashboard from "./components/Screen Manager/ScreenManagerDashboard";
 
 // Auth components
 import EnhancedSignup from "./components/Auth/EnhancedSignup";
 import PhoneLogin from "./components/Auth/PhoneLogin";
 import RoleSelect from "./components/Auth/RoleSelect";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
-import ProfessionalVenueDashboard from "./components/VenueDashboard/ProfessionalVenueDashboard";
 
 // Ads Manager page components
 import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
@@ -114,7 +111,6 @@ const HomePage = () => {
       <WhyFramen />
       <SuccessStories />
       <ContentCreator />
-      <ScreenManager />
       <FAQ />
       <Contact />
       <Footer />
@@ -123,9 +119,9 @@ const HomePage = () => {
 };
 
 // Screen Manager page component
-const ScreenManagerPage = () => {
-  return <ScreenManagerDashboard />;
-};
+// const ScreenManagerPage = () => {
+//   return <ScreenManagerDashboard />;
+// };
 
 // Ads Manager page component - Marketing Landing
 const AdsManagerPage = () => {
@@ -206,7 +202,6 @@ function App() {
     "/auth/login",
     "/auth/signup",
     "/auth/select-role",
-    "/products/screen-manager",
     "/venue-dashboard",
     "/products/ads-manager",
     "/products/ads-manager/dashboard",
@@ -227,14 +222,6 @@ function App() {
               <ProtectedRoute allowedRoles={["venue_owner", "advertiser"]} />
             }
           >
-            <Route
-              path="/products/screen-manager"
-              element={<ScreenManagerPage />}
-            />
-            <Route
-              path="/ScreenManagerDashboard"
-              element={<ScreenManagerDashboard />}
-            />
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />
             <Route
               path="/products/ads-manager/dashboard"
@@ -293,20 +280,8 @@ function App() {
             <Route path="/auth/select-role" element={<RoleSelect />} />
           </Route>
 
-          {/* Protected Venue Owner Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
-            <Route
-              path="/venue-dashboard"
-              element={<ProfessionalVenueDashboard />}
-            />
-          </Route>
-
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
-            <Route
-              path="/ScreenManagerDashboard"
-              element={<ScreenManagerDashboard />}
-            />
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />
             <Route
               path="/products/ads-manager/dashboard"
