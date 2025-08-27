@@ -37,6 +37,7 @@ import {
 
 // Notification components
 import NotificationBar from "../../../components/Notifications/NotificationBar";
+import AdsManagerNotifications from "../../Notifications/AdsManagerNotifications";
 
 // Chart imports
 import {
@@ -202,8 +203,9 @@ const IntegratedAdsManager: React.FC = () => {
             </div>
 
             {/* NotificationBar for Ads Managers */}
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
               <NotificationBar userType="ads_manager" />
+              <AdsManagerNotifications />
             </div>
           </div>
         </div>

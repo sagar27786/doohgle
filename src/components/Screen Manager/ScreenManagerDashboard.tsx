@@ -8,6 +8,8 @@ import {
   ScreenPricing,
   ScreenAvailability,
 } from "../../api/screens";
+import ScreenVisibilityService from "../../services/screenVisibilityService";
+import { ImageUploadService } from "../../services/imageUploadService";
 import {
   Grid,
   Search,
@@ -24,9 +26,11 @@ import {
   User,
   Building2,
   LogOut,
+  RefreshCw,
 } from "lucide-react";
 import BookingList from "../VenueDashboard/BookingList";
 import NotificationBar from "../Notifications/NotificationBar";
+import BookingRequests from "../Booking/BookingRequests";
 interface NavigationItem {
   id: string;
   label: string;
@@ -224,14 +228,16 @@ const TABS = [
   { id: "all", label: "Show all" },
   { id: "screen", label: "Screen Manager" },
   { id: "ads", label: "Ads Manager" },
+  { id: "bookings", label: "Booking Requests" },
   { id: "content", label: "Content" },
   { id: "framen", label: "Doohgle" },
 ];
 
 const tabDummyContent: Record<string, string[]> = {
   all: ["All Content Block 1", "All Content Block 2", "All Content Block 3"],
-  screen: ["Screen Manager Content 1", "Screen Manager Content 2"],
-  ads: ["Ads Manager Content 1", "Ads Manager Content 2"],
+  screen: ["Screen Tab Example 1", "Screen Tab Example 2"],
+  ads: ["Ads Tab Example 1", "Ads Tab Example 2"],
+  bookings: [], // Handled by BookingRequests component
   content: ["Content Tab Example 1", "Content Tab Example 2"],
   framen: ["Doohgle Tab Example 1", "Doohgle Tab Example 2"],
 };
@@ -265,14 +271,18 @@ const MainContent: React.FC = () => {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {tabDummyContent[activeTab].map((content, idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-xl shadow p-8 text-lg text-gray-800"
-            >
-              {content}
-            </div>
-          ))}
+          {activeTab === "bookings" ? (
+            <BookingRequests />
+          ) : (
+            tabDummyContent[activeTab]?.map((content, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-xl shadow p-8 text-lg text-gray-800"
+              >
+                {content}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -285,16 +295,21 @@ const ScreenRegistrationForm: React.FC = () => {
     // Basic Details
     screen_name: "",
     location_in_venue: "",
+    city: "",
     screen_size_inches: "",
     resolution: "",
     orientation: "landscape" as const,
     device_type: "smart_tv" as const,
     device_model: "",
-    ads_enabled: false,
-    ad_frequency: 0,
+    ads_enabled: true, // Enable ads by default for better visibility
+    ad_frequency: 20, // Default 20% ad frequency
     viewing_distance: "close" as const,
     typical_viewer_duration: "",
     peak_viewing_hours: [] as string[],
+    // Image fields for AWS integration (future)
+    day_photo_url: "",
+    night_photo_url: "",
+    promotional_video_url: "",
     // Assets
     assets: [] as Array<{
       asset_type: "photo_day" | "photo_night" | "video";
@@ -302,9 +317,9 @@ const ScreenRegistrationForm: React.FC = () => {
     }>,
     // Pricing
     pricing: {
-      hourly_rate: 0,
-      daily_rate: 0,
-      weekly_rate: 0,
+      hourly_rate: 500, // Default pricing
+      daily_rate: 3000,
+      weekly_rate: 18000,
       currency: "INR",
     },
     // Availability
@@ -312,6 +327,8 @@ const ScreenRegistrationForm: React.FC = () => {
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ text: string; error: boolean } | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -346,6 +363,72 @@ const ScreenRegistrationForm: React.FC = () => {
       peak_viewing_hours: prev.peak_viewing_hours.filter((_, i) => i !== idx),
     }));
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+
+    // Validate files
+    const validation = ImageUploadService.validateImages(newFiles);
+    if (!validation.valid) {
+      setMsg({
+        text: validation.errors.join(", "),
+        error: true,
+      });
+      return;
+    }
+
+    // Add to selected images for preview (don't upload yet)
+    setSelectedImages((prev) => [...prev, ...newFiles]);
+    setMsg({
+      text: `${newFiles.length} image(s) selected. They will be uploaded when you create the screen.`,
+      error: false,
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files).filter((file) =>
+      file.type.startsWith("image/")
+    );
+
+    if (newFiles.length === 0) {
+      setMsg({
+        text: "Please drop only image files",
+        error: true,
+      });
+      return;
+    }
+
+    // Validate files
+    const validation = ImageUploadService.validateImages(newFiles);
+    if (!validation.valid) {
+      setMsg({
+        text: validation.errors.join(", "),
+        error: true,
+      });
+      return;
+    }
+
+    setSelectedImages((prev) => [...prev, ...newFiles]);
+    setMsg({
+      text: `${newFiles.length} image(s) selected. They will be uploaded when you create the screen.`,
+      error: false,
+    });
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -354,6 +437,7 @@ const ScreenRegistrationForm: React.FC = () => {
       const payload: ScreenPayload = {
         screen_name: form.screen_name.trim(),
         location_in_venue: form.location_in_venue.trim(),
+        city: form.city.trim() || null,
         screen_size_inches: form.screen_size_inches
           ? Number(form.screen_size_inches)
           : null,
@@ -368,7 +452,7 @@ const ScreenRegistrationForm: React.FC = () => {
         peak_viewing_hours: form.peak_viewing_hours.filter((hour) =>
           hour.trim()
         ),
-        assets: form.assets,
+        assets: form.assets, // Keep existing form assets, don't add images yet
         pricing: {
           hourly_rate: form.pricing.hourly_rate || undefined,
           daily_rate: form.pricing.daily_rate || undefined,
@@ -382,10 +466,85 @@ const ScreenRegistrationForm: React.FC = () => {
       };
       const { ok, data } = await createScreen(payload);
       if (ok) {
-        setMsg({
-          text: data?.message || "Screen registered successfully!",
-          error: false,
+        console.log("✅ Screen created successfully:", data);
+
+        // If we have images selected, upload them to the newly created screen
+        if (selectedImages.length > 0 && data?.screen?.id) {
+          console.log(
+            `📸 Uploading ${selectedImages.length} images to screen ${data.screen.id}`
+          );
+          const uploadResult = await ImageUploadService.uploadImages(
+            selectedImages,
+            data.screen.id.toString()
+          );
+
+          if (uploadResult.success) {
+            console.log("✅ Images uploaded successfully to screen");
+            setMsg({
+              text: `Screen registered successfully with ${
+                uploadResult.data?.count || 0
+              } images!`,
+              error: false,
+            });
+          } else {
+            console.warn(
+              "⚠️ Screen created but image upload failed:",
+              uploadResult.error
+            );
+            setMsg({
+              text: `Screen registered successfully, but image upload failed: ${uploadResult.error}`,
+              error: false, // Still success since screen was created
+            });
+          }
+        } else {
+          setMsg({
+            text: data?.message || "Screen registered successfully!",
+            error: false,
+          });
+        }
+
+        // 🎯 CRITICAL: Refresh ads manager visibility after screen creation
+        try {
+          const visibilityService = ScreenVisibilityService.getInstance();
+          await visibilityService.refreshAfterScreenCreation();
+          console.log(
+            "✅ Screen successfully added to ads manager visibility!"
+          );
+        } catch (refreshError) {
+          console.warn("⚠️ Failed to refresh ads manager:", refreshError);
+        }
+
+        // Clear the form after successful registration
+        setForm({
+          screen_name: "",
+          location_in_venue: "",
+          city: "",
+          screen_size_inches: "",
+          resolution: "",
+          orientation: "landscape" as const,
+          device_type: "smart_tv" as const,
+          device_model: "",
+          ads_enabled: true,
+          ad_frequency: 20,
+          viewing_distance: "close" as const,
+          typical_viewer_duration: "",
+          peak_viewing_hours: [] as string[],
+          day_photo_url: "",
+          night_photo_url: "",
+          promotional_video_url: "",
+          assets: [] as Array<{
+            asset_type: "photo_day" | "photo_night" | "video";
+            url: string;
+          }>,
+          pricing: {
+            hourly_rate: 500,
+            daily_rate: 3000,
+            weekly_rate: 18000,
+            currency: "INR",
+          },
+          availability: [] as Array<{ date: string; is_available: boolean }>,
         });
+        setSelectedImages([]); // Clear selected images
       } else {
         setMsg({
           text: data?.message || "Failed to register screen",
@@ -449,6 +608,20 @@ const ScreenRegistrationForm: React.FC = () => {
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
               placeholder="Main Reception"
+              required
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              City
+            </label>
+            <input
+              name="city"
+              value={form.city}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition"
+              placeholder="Mumbai, Delhi, Bangalore, etc."
               required
             />
           </div>
@@ -611,70 +784,98 @@ const ScreenRegistrationForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Assets Section */}
+          {/* Image Upload Section */}
           <div className="md:col-span-2 border-t pt-6 mt-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Screen Assets
+              Screen Images
             </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Upload images to showcase your screen (Day photos, Night photos,
+              etc.)
+            </p>
+
             <div className="space-y-4">
-              {form.assets.map((asset, idx) => (
-                <div key={idx} className="flex items-center gap-4">
-                  <select
-                    value={asset.asset_type}
-                    onChange={(e) => {
-                      const newAssets = [...form.assets];
-                      newAssets[idx] = {
-                        ...asset,
-                        asset_type: e.target.value as any,
-                      };
-                      setForm((prev) => ({ ...prev, assets: newAssets }));
-                    }}
-                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5"
-                  >
-                    <option value="photo_day">Day Photo</option>
-                    <option value="photo_night">Night Photo</option>
-                    <option value="video">Video</option>
-                  </select>
-                  <input
-                    type="url"
-                    value={asset.url}
-                    onChange={(e) => {
-                      const newAssets = [...form.assets];
-                      newAssets[idx] = { ...asset, url: e.target.value };
-                      setForm((prev) => ({ ...prev, assets: newAssets }));
-                    }}
-                    placeholder="Asset URL"
-                    className="flex-[2] rounded-lg border border-gray-300 bg-white px-3 py-2.5"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForm((prev) => ({
-                        ...prev,
-                        assets: prev.assets.filter((_, i) => i !== idx),
-                      }));
-                    }}
-                    className="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
-                  >
-                    Remove
-                  </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Images
+                </label>
+                <div
+                  className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors cursor-pointer"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="space-y-1 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600">
+                      <span className="font-medium text-blue-600 hover:text-blue-500">
+                        Click to upload
+                      </span>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
+                  </div>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setForm((prev) => ({
-                    ...prev,
-                    assets: [
-                      ...prev.assets,
-                      { asset_type: "photo_day", url: "" },
-                    ],
-                  }));
-                }}
-                className="px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
-              >
-                + Add Asset
-              </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+
+                {/* Selected Images Preview */}
+                {selectedImages.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Selected Images ({selectedImages.length})
+                      <span className="text-blue-600 ml-2">
+                        • Ready for upload
+                      </span>
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {selectedImages.map((file, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                          >
+                            ×
+                          </button>
+                          <p className="text-xs text-gray-500 mt-1 truncate">
+                            {file.name}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -861,6 +1062,10 @@ const MyScreensGrid: React.FC = () => {
       id: number;
       screen_name: string;
       location_in_venue: string;
+      image_url?: string;
+      image_urls?: string;
+      city?: string;
+      created_at?: string;
     }>
   >([]);
 
@@ -869,30 +1074,77 @@ const MyScreensGrid: React.FC = () => {
     (async () => {
       setLoading(true);
       setError(null);
-      const { ok, data } = await getMyScreens();
-      if (!mounted) return;
-      if (ok && data?.screens) {
-        setScreens(data.screens);
-      } else {
-        setError(data?.message || "Failed to load screens");
+      try {
+        const { ok, data } = await getMyScreens();
+        if (!mounted) return;
+
+        if (ok && data?.screens) {
+          console.log(`✅ Loaded ${data.screens.length} user screens`);
+          setScreens(data.screens);
+        } else {
+          console.error("❌ Failed to load screens:", data?.message);
+          setError(data?.message || "Failed to load screens");
+        }
+      } catch (err) {
+        if (!mounted) return;
+        console.error("❌ Error loading screens:", err);
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load screens";
+        setError(errorMessage);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     })();
     return () => {
       mounted = false;
     };
   }, []);
 
+  const refreshScreens = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { ok, data } = await getMyScreens();
+
+      if (ok && data?.screens) {
+        console.log(`✅ Refreshed: ${data.screens.length} user screens`);
+        setScreens(data.screens);
+      } else {
+        console.error("❌ Failed to refresh screens:", data?.message);
+        setError(data?.message || "Failed to load screens");
+      }
+    } catch (err) {
+      console.error("❌ Error refreshing screens:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load screens";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto p-8 md:p-10 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
-            My Screens
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Your registered screens appear here.
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
+              My Screens
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Your registered screens appear here.
+            </p>
+          </div>
+          <button
+            onClick={refreshScreens}
+            disabled={loading}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            <span>Refresh</span>
+          </button>
         </div>
         {loading && <div className="text-gray-600">Loading screens...</div>}
         {error && (
@@ -906,31 +1158,87 @@ const MyScreensGrid: React.FC = () => {
             <div className="text-gray-600">No screens found.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {screens.map((s) => (
-                <div
-                  key={s.id}
-                  className="bg-white rounded-2xl shadow ring-1 ring-gray-100 overflow-hidden"
-                >
-                  {/* Image area (3/4th of the card) */}
-                  <div className="aspect-video bg-gray-100">
-                    <img
-                      src={`https://picsum.photos/seed/screen-${s.id}/640/360`}
-                      alt={s.screen_name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  {/* Footer */}
-                  <div className="px-4 py-3 border-t border-gray-100">
-                    <div className="text-sm font-medium text-gray-900 truncate">
-                      {s.screen_name}
+              {screens.map((s) => {
+                // Helper function to get the primary image URL
+                const getPrimaryImageUrl = (screen: any): string => {
+                  // Check if we have uploaded images in image_urls
+                  if (screen.image_urls) {
+                    try {
+                      const urls = JSON.parse(screen.image_urls);
+                      if (Array.isArray(urls) && urls.length > 0) {
+                        // Use first uploaded image
+                        const imageUrl = urls[0];
+                        // Convert relative paths to full URLs
+                        if (imageUrl.startsWith("/api/")) {
+                          return `http://localhost:4000${imageUrl}`;
+                        }
+                        return imageUrl;
+                      }
+                    } catch (e) {
+                      console.warn("Failed to parse image_urls:", e);
+                    }
+                  }
+
+                  // Check if we have a primary image_url
+                  if (screen.image_url) {
+                    // Convert relative paths to full URLs
+                    if (screen.image_url.startsWith("/api/")) {
+                      return `http://localhost:4000${screen.image_url}`;
+                    }
+                    return screen.image_url;
+                  }
+
+                  // No fallback image - return empty string to show placeholder
+                  return "";
+                };
+
+                return (
+                  <div
+                    key={s.id}
+                    className="bg-white rounded-2xl shadow ring-1 ring-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+                  >
+                    {/* Image area (3/4th of the card) */}
+                    <div className="aspect-video bg-gray-100 relative">
+                      {getPrimaryImageUrl(s) ? (
+                        <img
+                          src={getPrimaryImageUrl(s)}
+                          alt={s.screen_name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            // Hide image on error and show placeholder
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300">
+                          <div className="text-center text-gray-500">
+                            <div className="mb-2">📷</div>
+                            <div className="text-sm font-medium">No Image Available</div>
+                            <div className="text-xs">Upload images to display</div>
+                          </div>
+                        </div>
+                      )}
+                      {/* Upload indicator for screens with custom images */}
+                      {(s.image_urls || s.image_url) && (
+                        <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                          ✓ Custom Image
+                        </div>
+                      )}
                     </div>
-                    <div className="text-sm text-gray-500 truncate">
-                      {s.location_in_venue}
+                    {/* Footer */}
+                    <div className="px-4 py-3 border-t border-gray-100">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {s.screen_name}
+                      </div>
+                      <div className="text-sm text-gray-500 truncate">
+                        {s.location_in_venue}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
       </div>

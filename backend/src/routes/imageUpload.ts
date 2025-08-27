@@ -4,7 +4,8 @@ import path from "path";
 import fs from "fs";
 import { pool } from "../db";
 import { s3Client, AWS_CONSTANTS } from "../config/aws";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const router = Router();
 
@@ -42,12 +43,22 @@ async function uploadImageToS3(file: Express.Multer.File, screenId: string): Pro
     Key: key,
     Body: file.buffer,
     ContentType: file.mimetype,
-    ACL: 'public-read' as const,
   };
 
   try {
     await s3Client.send(new PutObjectCommand(uploadParams));
-    return `${AWS_CONSTANTS.S3_BASE_URL}/${key}`;
+    
+    // Generate a signed URL that's valid for 7 days
+    const getObjectParams = {
+      Bucket: AWS_CONSTANTS.S3_BUCKET,
+      Key: key,
+    };
+    
+    const signedUrl = await getSignedUrl(s3Client, new GetObjectCommand(getObjectParams), {
+      expiresIn: 7 * 24 * 60 * 60, // 7 days in seconds
+    });
+    
+    return signedUrl;
   } catch (error) {
     console.error("Error uploading to S3:", error);
     throw new Error("Failed to upload image to S3");

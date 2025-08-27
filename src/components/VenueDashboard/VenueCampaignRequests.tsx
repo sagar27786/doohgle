@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
   MapPin,
@@ -14,25 +14,33 @@ import {
   MessageSquare,
   Image as ImageIcon,
   FileText,
-} from 'lucide-react';
-import { campaignRequestService, CampaignRequest } from '../../services/campaignRequestService';
+} from "lucide-react";
+import {
+  campaignRequestService,
+  CampaignRequest,
+} from "../../services/campaignRequestService";
 
 interface VenueCampaignRequestsProps {
   className?: string;
 }
 
-const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className = "" }) => {
+const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({
+  className = "",
+}) => {
   const [requests, setRequests] = useState<CampaignRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [processingRequest, setProcessingRequest] = useState<number | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<CampaignRequest | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [processingRequest, setProcessingRequest] = useState<number | null>(
+    null
+  );
+  const [selectedRequest, setSelectedRequest] =
+    useState<CampaignRequest | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
 
   useEffect(() => {
     loadRequests();
-    
+
     // Subscribe to updates - we'll implement this later since the service doesn't have getInstance
     // const unsubscribe = campaignRequestService.subscribe(() => {
     //   loadRequests();
@@ -44,15 +52,15 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
     try {
       setLoading(true);
       const result = await campaignRequestService.getIncomingRequests();
-      
+
       if (result.success && result.data) {
         setRequests(result.data);
       } else {
-        setError('Failed to load requests');
+        setError("Failed to load requests");
       }
     } catch (err) {
-      setError('Network error occurred');
-      console.error('Error loading requests:', err);
+      setError("Network error occurred");
+      console.error("Error loading requests:", err);
     } finally {
       setLoading(false);
     }
@@ -62,16 +70,16 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
     try {
       setProcessingRequest(requestId);
       const result = await campaignRequestService.approveRequest(requestId);
-      
+
       if (result.success) {
         // Remove from pending requests
-        setRequests(prev => prev.filter(r => r.id !== requestId));
+        setRequests((prev) => prev.filter((r) => r.id !== requestId));
       } else {
-        setError(result.message || 'Failed to approve request');
+        setError(result.message || "Failed to approve request");
       }
     } catch (err) {
-      setError('Network error occurred');
-      console.error('Error approving request:', err);
+      setError("Network error occurred");
+      console.error("Error approving request:", err);
     } finally {
       setProcessingRequest(null);
     }
@@ -79,23 +87,26 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
 
   const handleReject = async () => {
     if (!selectedRequest) return;
-    
+
     try {
       setProcessingRequest(selectedRequest.id);
-      const result = await campaignRequestService.rejectRequest(selectedRequest.id, rejectionReason);
-      
+      const result = await campaignRequestService.rejectRequest(
+        selectedRequest.id,
+        rejectionReason
+      );
+
       if (result.success) {
         // Remove from pending requests
-        setRequests(prev => prev.filter(r => r.id !== selectedRequest.id));
+        setRequests((prev) => prev.filter((r) => r.id !== selectedRequest.id));
         setShowRejectModal(false);
-        setRejectionReason('');
+        setRejectionReason("");
         setSelectedRequest(null);
       } else {
-        setError(result.message || 'Failed to reject request');
+        setError(result.message || "Failed to reject request");
       }
     } catch (err) {
-      setError('Network error occurred');
-      console.error('Error rejecting request:', err);
+      setError("Network error occurred");
+      console.error("Error rejecting request:", err);
     } finally {
       setProcessingRequest(null);
     }
@@ -108,8 +119,8 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
   };
 
   const formatHours = (hours: number[]) => {
-    if (!hours || hours.length === 0) return 'All day';
-    
+    if (!hours || hours.length === 0) return "All day";
+
     const sortedHours = [...hours].sort((a, b) => a - b);
     const ranges: string[] = [];
     let start = sortedHours[0];
@@ -119,14 +130,16 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
       if (sortedHours[i] === end + 1) {
         end = sortedHours[i];
       } else {
-        ranges.push(start === end ? `${start}:00` : `${start}:00-${end + 1}:00`);
+        ranges.push(
+          start === end ? `${start}:00` : `${start}:00-${end + 1}:00`
+        );
         start = sortedHours[i];
         end = start;
       }
     }
     ranges.push(start === end ? `${start}:00` : `${start}:00-${end + 1}:00`);
 
-    return ranges.join(', ');
+    return ranges.join(", ");
   };
 
   if (loading) {
@@ -145,7 +158,7 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
           <AlertCircle className="h-5 w-5 text-red-500" />
           <div className="ml-3">
             <p className="text-sm text-red-700">{error}</p>
-            <button 
+            <button
               onClick={loadRequests}
               className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
             >
@@ -161,12 +174,14 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
     <div className={`space-y-6 ${className}`}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Campaign Requests</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Campaign Requests
+          </h2>
           <p className="text-gray-600 mt-1">
             {requests.length} pending requests from advertisers
           </p>
         </div>
-        <button 
+        <button
           onClick={loadRequests}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
@@ -177,8 +192,12 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
       {requests.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm border">
           <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No pending requests</h3>
-          <p className="text-gray-500">New campaign requests will appear here when advertisers send them.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No pending requests
+          </h3>
+          <p className="text-gray-500">
+            New campaign requests will appear here when advertisers send them.
+          </p>
         </div>
       ) : (
         <div className="grid gap-6">
@@ -208,7 +227,9 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        <span>{new Date(request.created_at).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(request.created_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -245,50 +266,70 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
                       <DollarSign className="w-4 h-4 text-green-600" />
                       <span className="font-medium">Screen</span>
                     </div>
-                    <p className="text-sm text-gray-700">{request.screen_name}</p>
+                    <p className="text-sm text-gray-700">
+                      {request.screen_name}
+                    </p>
                   </div>
                 </div>
 
                 {/* Campaign Description */}
                 {request.campaign_description && (
                   <div className="mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Campaign Description</h4>
-                    <p className="text-gray-700 text-sm">{request.campaign_description}</p>
+                    <h4 className="font-medium text-gray-900 mb-2">
+                      Campaign Description
+                    </h4>
+                    <p className="text-gray-700 text-sm">
+                      {request.campaign_description}
+                    </p>
                   </div>
                 )}
 
                 {/* Target Audience */}
                 {request.target_audience && (
                   <div className="mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Target Audience</h4>
-                    <p className="text-gray-700 text-sm">{request.target_audience}</p>
+                    <h4 className="font-medium text-gray-900 mb-2">
+                      Target Audience
+                    </h4>
+                    <p className="text-gray-700 text-sm">
+                      {request.target_audience}
+                    </p>
                   </div>
                 )}
 
                 {/* Creative Assets */}
-                {request.creative_assets && request.creative_assets.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Creative Assets</h4>
-                    <div className="flex gap-2">
-                      {request.creative_assets.map((asset, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
-                          {asset.type === 'image' ? (
-                            <ImageIcon className="w-4 h-4 text-blue-600" />
-                          ) : (
-                            <FileText className="w-4 h-4 text-green-600" />
-                          )}
-                          <span className="text-sm">{asset.type}</span>
-                        </div>
-                      ))}
+                {request.creative_assets &&
+                  request.creative_assets.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Creative Assets
+                      </h4>
+                      <div className="flex gap-2">
+                        {request.creative_assets.map((asset, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2"
+                          >
+                            {asset.type === "image" ? (
+                              <ImageIcon className="w-4 h-4 text-blue-600" />
+                            ) : (
+                              <FileText className="w-4 h-4 text-green-600" />
+                            )}
+                            <span className="text-sm">{asset.type}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Notes */}
                 {request.notes && (
                   <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Additional Notes</h4>
-                    <p className="text-gray-700 text-sm bg-gray-50 rounded-lg p-3">{request.notes}</p>
+                    <h4 className="font-medium text-gray-900 mb-2">
+                      Additional Notes
+                    </h4>
+                    <p className="text-gray-700 text-sm bg-gray-50 rounded-lg p-3">
+                      {request.notes}
+                    </p>
                   </div>
                 )}
 
@@ -346,9 +387,12 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-lg p-6 w-full max-w-md"
             >
-              <h3 className="text-lg font-semibold mb-4">Reject Campaign Request</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                Reject Campaign Request
+              </h3>
               <p className="text-gray-600 mb-4">
-                Are you sure you want to reject the campaign request for "{selectedRequest.campaign_name}"?
+                Are you sure you want to reject the campaign request for "
+                {selectedRequest.campaign_name}"?
               </p>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -366,7 +410,7 @@ const VenueCampaignRequests: React.FC<VenueCampaignRequestsProps> = ({ className
                 <button
                   onClick={() => {
                     setShowRejectModal(false);
-                    setRejectionReason('');
+                    setRejectionReason("");
                     setSelectedRequest(null);
                   }}
                   className="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50"

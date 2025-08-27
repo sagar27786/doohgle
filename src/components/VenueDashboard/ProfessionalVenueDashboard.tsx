@@ -32,7 +32,7 @@ import {
 import ScreenList from "./ScreenList";
 import BookingList from "./BookingList";
 import EarningsList from "./EarningsList";
-import IncomingCampaignRequests from "../Campaign/IncomingCampaignRequests";
+import EnhancedIncomingCampaignRequests from "../Campaign/EnhancedIncomingCampaignRequests";
 import NotificationPanel from "../Campaign/NotificationPanel";
 
 const ProfessionalVenueDashboard: React.FC = () => {
@@ -411,7 +411,7 @@ const ProfessionalVenueDashboard: React.FC = () => {
       case "earnings":
         return <EarningsList />;
       case "requests":
-        return <IncomingCampaignRequests />;
+        return <EnhancedIncomingCampaignRequests />;
       default:
         return renderDashboard();
     }

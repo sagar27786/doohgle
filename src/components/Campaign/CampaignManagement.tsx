@@ -586,6 +586,7 @@ const CampaignManagement: React.FC = () => {
           </div>
         </motion.div>
 
+
         {/* Professional Tabs and Controls Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

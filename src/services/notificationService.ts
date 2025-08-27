@@ -122,7 +122,10 @@ class NotificationService {
     );
     // Trigger screen refresh for campaign workflow
     this.notifyListeners();
-    console.log("Payment completed, triggering screen refresh:", notificationId);
+    console.log(
+      "Payment completed, triggering screen refresh:",
+      notificationId
+    );
   }
 
   // Subscribe to notifications

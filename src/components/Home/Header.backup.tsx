@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../../App";
+import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
 import { authService } from "../../services/authService";
 import BookingNotificationCenter from "../Notifications/BookingNotificationCenter";
 
@@ -84,20 +84,33 @@ const Header = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      const screenHeight = window.innerHeight;
 
-      if (currentScrollY < 10) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      // If scrolled down more than screen height, hide navbar
+      if (currentScrollY > screenHeight && currentScrollY > lastScrollY) {
         setIsVisible(false);
-      } else if (currentScrollY < lastScrollY) {
+      }
+      // If scrolling up or at top, show navbar
+      else if (currentScrollY < lastScrollY || currentScrollY < 100) {
         setIsVisible(true);
       }
 
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    // Throttle scroll events for better performance
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const throttledHandleScroll = () => {
+      if (timeoutId === null) {
+        timeoutId = setTimeout(() => {
+          handleScroll();
+          timeoutId = null;
+        }, 10);
+      }
+    };
+
+    window.addEventListener("scroll", throttledHandleScroll);
+    return () => window.removeEventListener("scroll", throttledHandleScroll);
   }, [lastScrollY]);
 
   interface NavLinkProps {
@@ -275,6 +288,9 @@ const Header = () => {
                 </div>
               )}
             </div>
+                </div>
+              )}
+            </div>
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -308,43 +324,38 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            {/* Only show products menu for authenticated users */}
-            {isAuthenticated && (
-              <>
-                <button
-                  onClick={toggleProductsMenu}
-                  className="flex items-center justify-between w-full px-3 py-3 text-base font-medium text-gray-800 dark:text-gray-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  Products
-                  <ChevronDown
-                    className={`h-5 w-5 transition-transform ${
-                      isProductsOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isProductsOpen && (
-                  <div className="pl-4 space-y-1 border-l-2 border-slate-200 dark:border-slate-700 ml-3">
-                    <ProductLink
-                      to="/products/screen-manager"
-                      icon={<Monitor className="h-5 w-5 text-blue-500" />}
-                      title="Screen Manager"
-                      subtitle="Manage your screens"
-                    />
-                    <ProductLink
-                      to="/products/ads-manager"
-                      icon={<Target className="h-5 w-5 text-purple-500" />}
-                      title="Ads Manager"
-                      subtitle="Create ad campaigns"
-                    />
-                    <ProductLink
-                      to="/products/ads-manager/dashboard"
-                      icon={<Monitor className="h-5 w-5 text-green-500" />}
-                      title="Campaign Dashboard"
-                      subtitle="Manage campaigns"
-                    />
-                  </div>
-                )}
-              </>
+            <button
+              onClick={toggleProductsMenu}
+              className="flex items-center justify-between w-full px-3 py-3 text-base font-medium text-gray-800 dark:text-gray-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              Products
+              <ChevronDown
+                className={`h-5 w-5 transition-transform ${
+                  isProductsOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {isProductsOpen && (
+              <div className="pl-4 space-y-1 border-l-2 border-slate-200 dark:border-slate-700 ml-3">
+                <ProductLink
+                  to="/products/screen-manager"
+                  icon={<Monitor className="h-5 w-5 text-blue-500" />}
+                  title="Screen Manager"
+                  subtitle="Manage your screens"
+                />
+                <ProductLink
+                  to="/products/ads-manager"
+                  icon={<Target className="h-5 w-5 text-purple-500" />}
+                  title="Ads Manager"
+                  subtitle="Create ad campaigns"
+                />
+                <ProductLink
+                  to="/products/ads-manager/dashboard"
+                  icon={<Monitor className="h-5 w-5 text-green-500" />}
+                  title="Campaign Dashboard"
+                  subtitle="Manage campaigns"
+                />
+              </div>
             )}
             <Link
               to="/solutions"
@@ -374,39 +385,13 @@ const Header = () => {
             >
               Contact
             </Link>
-            
-            {/* Mobile Auth Section */}
-            {!isAuthenticated ? (
-              <Link
-                to="/auth"
-                onClick={toggleMenu}
-                className="block w-full text-center bg-indigo-600 text-white px-3 py-3 mt-2 rounded-md text-base font-medium hover:bg-indigo-700"
-              >
-                Login / Sign up
-              </Link>
-            ) : (
-              <div className="border-t border-slate-200 dark:border-slate-700 mt-2 pt-2">
-                <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                  {currentUser?.name} ({currentUser?.role === 'venue_owner' ? 'Venue Owner' : 'Advertiser'})
-                </div>
-                <Link
-                  to={currentUser?.role === 'venue_owner' ? '/venue-dashboard' : '/products/ads-manager/dashboard'}
-                  onClick={toggleMenu}
-                  className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    toggleMenu();
-                  }}
-                  className="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
+            <Link
+              to="/login"
+              onClick={toggleMenu}
+              className="block w-full text-center bg-indigo-600 text-white px-3 py-3 mt-2 rounded-md text-base font-medium hover:bg-indigo-700"
+            >
+              Login / Sign up
+            </Link>
           </div>
         </div>
       )}

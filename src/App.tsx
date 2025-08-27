@@ -20,9 +20,8 @@ import Footer from "./components/Home/Footer";
 import ScreenManagerDashboard from "./components/Screen Manager/ScreenManagerDashboard";
 
 // Auth components
-import LoginSignup from "./components/Auth/LoginSignup";
-import Login from "./components/Auth/Login";
-import Signup from "./components/Auth/Signup";
+import EnhancedSignup from "./components/Auth/EnhancedSignup";
+import PhoneLogin from "./components/Auth/PhoneLogin";
 import RoleSelect from "./components/Auth/RoleSelect";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import ProfessionalVenueDashboard from "./components/VenueDashboard/ProfessionalVenueDashboard";
@@ -45,6 +44,10 @@ import CampaignCreationWorkflow from "./components/Campaign/CampaignCreationWork
 // Notification Components
 import NotificationBar from "./components/Notifications/NotificationBar";
 
+// Demo Pages
+import ScreenVisibilityDemo from "./pages/ScreenVisibilityDemo";
+import ScreenConnectivityTest from "./pages/ScreenConnectivityTest";
+
 // Auth Service
 import { authService } from "./services/authService";
 
@@ -55,6 +58,9 @@ import NotificationService from "./services/notificationService";
 import MapDemo from "./pages/MapDemo";
 import MapDashboardPage from "./pages/MapDashboardPage";
 import MapQuickNav from "./components/Navigation/MapQuickNav";
+
+// Dashboard Components
+import MainDashboard from "./components/Dashboard/MainDashboard";
 
 // ThemeProvider for dark mode
 interface ThemeContextType {
@@ -196,6 +202,7 @@ function App() {
   };
 
   const hideHeaderRoutes = [
+    "/auth",
     "/auth/login",
     "/auth/signup",
     "/auth/select-role",
@@ -213,38 +220,67 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route
-            path="/products/screen-manager"
-            element={<ScreenManagerPage />}
-          />
-          <Route
-            path="/ScreenManagerDashboard"
-            element={<ScreenManagerDashboard />}
-          />
 
-          {/* Ads Manager Routes */}
-          <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+          {/* Protected Product Routes - Require Authentication */}
           <Route
-            path="/products/ads-manager/dashboard"
-            element={<AdsManagerDashboard />}
-          />
+            element={
+              <ProtectedRoute allowedRoles={["venue_owner", "advertiser"]} />
+            }
+          >
+            <Route
+              path="/products/screen-manager"
+              element={<ScreenManagerPage />}
+            />
+            <Route
+              path="/ScreenManagerDashboard"
+              element={<ScreenManagerDashboard />}
+            />
+            <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+            <Route
+              path="/products/ads-manager/dashboard"
+              element={<AdsManagerDashboard />}
+            />
+          </Route>
 
           {/* Auth Routes */}
-          <Route
-            path="/auth"
-            element={<Login onSwitch={() => navigate("/auth/signup")} />}
-          />
+          <Route path="/auth" element={<PhoneLogin />} />
           <Route
             path="/auth/signup"
-            element={<Signup onSwitch={() => navigate("/auth")} />}
+            element={<EnhancedSignup onSwitch={() => navigate("/auth")} />}
           />
-          <Route path="/auth/login" element={<LoginSignup />} />
+          <Route path="/auth/login" element={<PhoneLogin />} />
+
+          {/* Direct routes for backward compatibility */}
+          <Route
+            path="/signup"
+            element={<EnhancedSignup onSwitch={() => navigate("/auth")} />}
+          />
+          <Route path="/login" element={<PhoneLogin />} />
+
+          {/* Main Dashboard - Protected for all authenticated users */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={["venue_owner", "advertiser"]} />
+            }
+          >
+            <Route path="/dashboard" element={<MainDashboard />} />
+          </Route>
 
           {/* Map Routes */}
           <Route path="/map" element={<MapDemo />} />
           <Route path="/map-dashboard" element={<MapDashboardPage />} />
           <Route path="/map-analytics" element={<MapDashboardPage />} />
           <Route path="/map-locations" element={<MapDashboardPage />} />
+
+          {/* Demo Routes */}
+          <Route
+            path="/screen-visibility-demo"
+            element={<ScreenVisibilityDemo />}
+          />
+          <Route
+            path="/screen-connectivity-test"
+            element={<ScreenConnectivityTest />}
+          />
 
           {/* Role Selection - Protected but accessible to all authenticated users */}
           <Route
@@ -278,14 +314,7 @@ function App() {
             />
             <Route
               path="/products/ads-manager/campaigns/create"
-              element={
-                <CampaignCreationWorkflow
-                  onClose={() => navigate("/products/ads-manager/dashboard")}
-                  onCampaignCreated={() =>
-                    navigate("/products/ads-manager/dashboard")
-                  }
-                />
-              }
+              element={<CampaignCreationWorkflow />}
             />
           </Route>
         </Routes>
