@@ -1,16 +1,31 @@
 import { Request, Response } from "express";
 import { pool } from "../db";
 import { AuthUser } from "../middleware/auth";
+import {
+  awsNotificationService,
+  BookingNotificationData,
+} from "../services/awsNotificationService";
 
-interface BookingRequest {
-  screen_id: number;
-  start_date: string;
-  end_date: string;
-  campaign_id?: number;
-  total_amount: number;
-  booking_hours: number[];
-  content_url?: string;
-  notes?: string;
+interface BookingRequest extends Request {
+  body: {
+    screenId: number;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    companyName?: string;
+    startDate: string;
+    endDate: string;
+    urgency: "low" | "medium" | "high";
+    message?: string;
+    screen_id: number;
+    start_date: string;
+    end_date: string;
+    campaign_id?: number;
+    total_amount: number;
+    booking_hours: number[];
+    content_url?: string;
+    notes?: string;
+  };
 }
 
 interface ScreenAvailability {
@@ -20,523 +35,543 @@ interface ScreenAvailability {
   available_slots: any[];
 }
 
-// Check screen availability for given time slots
-export async function checkScreenAvailability(req: Request, res: Response) {
-  try {
-    const { screen_id, start_date, end_date, booking_hours } = req.query;
+// Create new booking request with enhanced location-wide notifications
+export async function createBooking(req: BookingRequest, res: Response) {
+  const client = await pool.connect();
 
-    if (!screen_id || !start_date || !end_date) {
-      return res.status(400).json({
-        success: false,
-        message: "screen_id, start_date, and end_date are required",
-      });
+  try {
+    await client.query("BEGIN");
+
+    const {
+      screenId,
+      customerName,
+      customerEmail,
+      customerPhone,
+      companyName,
+      startDate,
+      endDate,
+      urgency,
+      message,
+    } = req.body;
+
+    // Get screen details
+    const screenQuery = `
+      SELECT s.*, u.email as owner_email, u.phone as owner_phone, u.name as owner_name
+      FROM screens s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.id = $1
+    `;
+    const screenResult = await client.query(screenQuery, [screenId]);
+
+    if (screenResult.rows.length === 0) {
+      return res.status(404).json({ error: "Screen not found" });
     }
 
-    const client = await pool.connect();
-    
-    try {
-      // Check if screen exists and is active
-      const screenCheck = await client.query(
-        "SELECT id, is_active, screen_name FROM screens WHERE id = $1",
-        [screen_id]
-      );
+    const screen = screenResult.rows[0];
 
-      if (screenCheck.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Screen not found",
-        });
-      }
+    // Get all screen owners in the same city for location-wide notifications
+    const locationOwnersQuery = `
+      SELECT DISTINCT u.id, u.name, u.email, u.phone, s.city
+      FROM screens s
+      JOIN users u ON s.user_id = u.id
+      WHERE LOWER(s.city) = LOWER($1) AND s.ads_enabled = true AND s.is_active = true
+    `;
+    const locationOwnersResult = await client.query(locationOwnersQuery, [screen.city]);
+    const locationOwners = locationOwnersResult.rows;
 
-      if (!screenCheck.rows[0].is_active) {
-        return res.status(400).json({
-          success: false,
-          message: "Screen is not active for bookings",
-        });
-      }
+    console.log(`📍 Found ${locationOwners.length} screen owners in ${screen.city} for booking notification`);
 
-      // Check for conflicting bookings
-      const conflictQuery = `
-        SELECT 
-          b.*,
-          c.name as campaign_name,
-          u.email as advertiser_email
-        FROM bookings b
-        LEFT JOIN campaigns c ON b.campaign_id = c.id
-        LEFT JOIN users u ON b.advertiser_id = u.id
-        WHERE b.screen_id = $1
-          AND b.status IN ('pending', 'confirmed', 'active')
-          AND (
-            (b.start_date <= $2 AND b.end_date >= $2)
-            OR (b.start_date <= $3 AND b.end_date >= $3)
-            OR (b.start_date >= $2 AND b.end_date <= $3)
-          )
-        ORDER BY b.start_date
+    // Calculate total cost
+    const days = Math.ceil(
+      (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+    const totalCost = 500 * days; // Default pricing
+
+    // Create booking record
+    const bookingQuery = `
+      INSERT INTO bookings (
+        screen_id, customer_name, customer_email, customer_phone, company_name,
+        start_date, end_date, total_amount, urgency, notes, status, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', NOW())
+      RETURNING id
+    `;
+
+    const bookingResult = await client.query(bookingQuery, [
+      screenId,
+      customerName,
+      customerEmail,
+      customerPhone,
+      companyName,
+      startDate,
+      endDate,
+      totalCost,
+      urgency,
+      message,
+    ]);
+
+    const bookingId = bookingResult.rows[0].id;
+
+    // Create booking requests for all screen owners in the location
+    for (const owner of locationOwners) {
+      const bookingRequestQuery = `
+        INSERT INTO booking_requests (
+          booking_id, screen_owner_id, customer_name, customer_email, 
+          customer_phone, company_name, start_date, end_date, 
+          total_amount, urgency, message, location, status, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending', NOW())
       `;
-
-      const conflictResult = await client.query(conflictQuery, [
-        screen_id,
-        start_date,
-        end_date,
+      
+      await client.query(bookingRequestQuery, [
+        bookingId,
+        owner.id,
+        customerName,
+        customerEmail,
+        customerPhone,
+        companyName,
+        startDate,
+        endDate,
+        totalCost,
+        urgency,
+        message,
+        screen.city
       ]);
 
-      // Calculate available time slots
-      const availableSlots = calculateAvailableSlots(
-        start_date as string,
-        end_date as string,
-        conflictResult.rows,
-        booking_hours as string
-      );
+      console.log(`📨 Created booking request for owner ${owner.name} (${owner.email})`);
+    }
 
-      const availability: ScreenAvailability = {
-        screen_id: parseInt(screen_id as string),
-        available: conflictResult.rows.length === 0 || availableSlots.length > 0,
-        conflicting_bookings: conflictResult.rows,
-        available_slots: availableSlots,
+    await client.query("COMMIT");
+
+    // Send notifications to all location owners
+    const notificationPromises = locationOwners.map(async (owner) => {
+      const notificationData: BookingNotificationData = {
+        bookingId: bookingId.toString(),
+        screenName: `${screen.city} Location Request`,
+        customerName,
+        customerEmail,
+        customerPhone,
+        startDate,
+        endDate,
+        totalCost,
+        urgency,
+        ownerEmail: owner.email,
+        ownerPhone: owner.phone,
       };
 
-      res.json({
-        success: true,
-        data: availability,
-        screen_info: screenCheck.rows[0],
-      });
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error("Error checking screen availability:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to check screen availability",
-      error: error instanceof Error ? error.message : "Unknown error",
+      return awsNotificationService.sendBookingNotification(notificationData);
     });
+
+    const notificationResults = await Promise.allSettled(notificationPromises);
+    const successfulNotifications = notificationResults.filter(result => result.status === 'fulfilled').length;
+
+    console.log(`📧 Sent ${successfulNotifications}/${locationOwners.length} booking notifications successfully`);
+
+    res.json({
+      success: true,
+      bookingId,
+      totalCost,
+      location: screen.city,
+      notifiedOwners: locationOwners.length,
+      successfulNotifications,
+      message: `Booking request created successfully. ${successfulNotifications} screen owners in ${screen.city} have been notified.`,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error creating booking:", error);
+    res.status(500).json({ error: "Failed to create booking request" });
+  } finally {
+    client.release();
   }
 }
 
-// Create a new booking with proper synchronization
-export async function createBooking(
+// Get all booking requests for a screen owner (Screen Manager)
+export async function getOwnerBookingRequests(
   req: Request & { user?: AuthUser },
   res: Response
 ) {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
-    }
+    const query = `
+      SELECT 
+        br.*,
+        COUNT(*) OVER() as total_requests,
+        CASE 
+          WHEN br.status = 'pending' AND br.created_at < (CURRENT_TIMESTAMP - INTERVAL '7 days') 
+          THEN true 
+          ELSE false 
+        END as is_expired
+      FROM booking_requests br
+      WHERE br.screen_owner_id = $1
+      ORDER BY 
+        CASE WHEN br.status = 'pending' THEN 1 ELSE 2 END,
+        br.created_at DESC
+    `;
 
-    const {
-      screen_id,
-      start_date,
-      end_date,
-      campaign_id,
-      total_amount,
-      booking_hours,
-      content_url,
-      notes,
-    }: BookingRequest = req.body;
+    const result = await pool.query(query, [userId]);
 
-    // Validation
-    if (!screen_id || !start_date || !end_date || !total_amount) {
-      return res.status(400).json({
-        success: false,
-        message: "screen_id, start_date, end_date, and total_amount are required",
-      });
-    }
-
-    const client = await pool.connect();
-    
-    try {
-      await client.query("BEGIN");
-
-      // Double-check availability with row-level locking
-      const lockQuery = `
-        SELECT id, is_active, screen_name, user_id as owner_id
-        FROM screens 
-        WHERE id = $1 
-        FOR UPDATE
-      `;
-      
-      const screenResult = await client.query(lockQuery, [screen_id]);
-      
-      if (screenResult.rows.length === 0) {
-        throw new Error("Screen not found");
-      }
-
-      const screen = screenResult.rows[0];
-      
-      if (!screen.is_active) {
-        throw new Error("Screen is not active for bookings");
-      }
-
-      // Check for conflicts again with lock
-      const conflictCheck = await client.query(
-        `
-        SELECT COUNT(*) as conflict_count
-        FROM bookings 
-        WHERE screen_id = $1
-          AND status IN ('pending', 'confirmed', 'active')
-          AND (
-            (start_date <= $2 AND end_date >= $2)
-            OR (start_date <= $3 AND end_date >= $3)
-            OR (start_date >= $2 AND end_date <= $3)
-          )
-        `,
-        [screen_id, start_date, end_date]
-      );
-
-      if (parseInt(conflictCheck.rows[0].conflict_count) > 0) {
-        throw new Error("Time slot is no longer available");
-      }
-
-      // Create booking
-      const bookingQuery = `
-        INSERT INTO bookings (
-          screen_id, 
-          advertiser_id, 
-          campaign_id,
-          start_date, 
-          end_date,
-          total_amount,
-          booking_hours,
-          content_url,
-          notes,
-          status,
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING *
-      `;
-
-      const bookingResult = await client.query(bookingQuery, [
-        screen_id,
-        userId,
-        campaign_id || null,
-        start_date,
-        end_date,
-        total_amount,
-        JSON.stringify(booking_hours || []),
-        content_url || null,
-        notes || null,
-        "pending", // Default status
-        new Date(),
-      ]);
-
-      const booking = bookingResult.rows[0];
-
-      // Update campaign if provided
-      if (campaign_id) {
-        await client.query(
-          `
-          UPDATE campaigns 
-          SET spent_amount = spent_amount + $1,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = $2 AND user_id = $3
-          `,
-          [total_amount, campaign_id, userId]
-        );
-      }
-
-      // Log booking activity
-      await client.query(
-        `
-        INSERT INTO booking_logs (
-          booking_id,
-          action,
-          details,
-          created_by,
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5)
-        `,
-        [
-          booking.id,
-          "created",
-          JSON.stringify({
-            screen_name: screen.screen_name,
-            owner_id: screen.owner_id,
-            amount: total_amount,
-          }),
-          userId,
-          new Date(),
-        ]
-      );
-
-      await client.query("COMMIT");
-
-      // Fetch complete booking data
-      const completeBooking = await getCompleteBookingData(booking.id);
-
-      res.status(201).json({
-        success: true,
-        message: "Booking created successfully",
-        data: completeBooking,
-      });
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error("Error creating booking:", error);
-    res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : "Failed to create booking",
+    res.json({
+      success: true,
+      requests: result.rows,
+      total: result.rows.length > 0 ? result.rows[0].total_requests : 0
     });
+  } catch (error) {
+    console.error("Error fetching booking requests:", error);
+    res.status(500).json({ error: "Failed to fetch booking requests" });
   }
 }
 
-// Get user's bookings (advertiser view)
+// Process booking request approval/rejection (Screen Manager)
+export async function processBookingApproval(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const { requestId } = req.params;
+    const { approved, ownerMessage } = req.body;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const newStatus = approved ? "accepted" : "rejected";
+
+    // Get booking request details
+    const requestQuery = `
+      SELECT br.*
+      FROM booking_requests br
+      WHERE br.id = $1 AND br.screen_owner_id = $2
+    `;
+    const requestResult = await client.query(requestQuery, [requestId, userId]);
+
+    if (requestResult.rows.length === 0) {
+      return res.status(404).json({ error: "Booking request not found or unauthorized" });
+    }
+
+    const bookingRequest = requestResult.rows[0];
+
+    // Update the booking request status
+    const updateQuery = `
+      UPDATE booking_requests 
+      SET status = $1, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $2 AND screen_owner_id = $3
+      RETURNING *
+    `;
+    await client.query(updateQuery, [newStatus, requestId, userId]);
+
+    // If approved, create a booking entry
+    if (approved) {
+      // Find an available screen from this owner in the location
+      const availableScreenQuery = `
+        SELECT id, screen_name FROM screens 
+        WHERE user_id = $1 AND LOWER(city) = LOWER($2) AND ads_enabled = true AND is_active = true
+        LIMIT 1
+      `;
+      const screenResult = await client.query(availableScreenQuery, [userId, bookingRequest.location]);
+      
+      if (screenResult.rows.length > 0) {
+        const selectedScreen = screenResult.rows[0];
+        
+        // Create new booking
+        const createBookingQuery = `
+          INSERT INTO bookings (
+            screen_id, customer_name, customer_email, customer_phone, 
+            company_name, start_date, end_date, total_amount, 
+            urgency, notes, status, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'approved', NOW())
+          RETURNING id
+        `;
+        await client.query(createBookingQuery, [
+          selectedScreen.id,
+          bookingRequest.customer_name,
+          bookingRequest.customer_email,
+          bookingRequest.customer_phone,
+          bookingRequest.company_name,
+          bookingRequest.start_date,
+          bookingRequest.end_date,
+          bookingRequest.total_amount,
+          bookingRequest.urgency,
+          ownerMessage || 'Booking approved'
+        ]);
+
+        console.log(`✅ Booking approved: Screen ${selectedScreen.screen_name} assigned to ${bookingRequest.customer_name}`);
+      }
+    }
+
+    // Create notification for ads manager about the booking status update
+    const notificationQuery = `
+      INSERT INTO notifications (user_id, type, title, message, data, created_at)
+      SELECT 
+        u.id,
+        $1,
+        $2,
+        $3,
+        $4,
+        CURRENT_TIMESTAMP
+      FROM users u, screens s
+      WHERE s.user_id = u.id AND LOWER(s.city) = LOWER($5)
+      GROUP BY u.id
+    `;
+    
+    const notificationTitle = approved ? 
+      `Booking Approved in ${bookingRequest.location}` : 
+      `Booking Declined in ${bookingRequest.location}`;
+    
+    const notificationMessage = approved ? 
+      `Great news! A screen owner in ${bookingRequest.location} has accepted a booking request.` :
+      `A booking request in ${bookingRequest.location} was declined by a screen owner.`;
+    
+    const notificationData = {
+      booking_request_id: requestId,
+      location: bookingRequest.location,
+      customer_name: bookingRequest.customer_name,
+      status: newStatus,
+      screen_owner_id: userId
+    };
+
+    await client.query(notificationQuery, [
+      approved ? 'booking_approved' : 'booking_rejected',
+      notificationTitle,
+      notificationMessage,
+      JSON.stringify(notificationData),
+      bookingRequest.location
+    ]);
+
+    await client.query("COMMIT");
+
+    console.log(`📧 Notification sent to ads managers about booking ${newStatus} in ${bookingRequest.location}`);
+
+    res.json({
+      success: true,
+      status: newStatus,
+      message: `Booking request ${newStatus} successfully. Ads managers have been notified.`,
+      bookingRequest: {
+        id: requestId,
+        location: bookingRequest.location,
+        customer_name: bookingRequest.customer_name,
+        status: newStatus
+      }
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error processing booking approval:", error);
+    res.status(500).json({ error: "Failed to process booking request" });
+  } finally {
+    client.release();
+  }
+}
+
+// Get notifications for ads manager
+export async function getAdsManagerNotifications(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const query = `
+      SELECT 
+        n.*,
+        COUNT(*) OVER() as total_notifications,
+        COUNT(*) FILTER (WHERE n.read = false) OVER() as unread_count
+      FROM notifications n
+      WHERE n.user_id = $1 AND n.type IN ('booking_approved', 'booking_rejected')
+      ORDER BY n.created_at DESC
+      LIMIT 50
+    `;
+
+    const result = await pool.query(query, [userId]);
+
+    res.json({
+      success: true,
+      notifications: result.rows,
+      total: result.rows.length > 0 ? result.rows[0].total_notifications : 0,
+      unread: result.rows.length > 0 ? result.rows[0].unread_count : 0
+    });
+  } catch (error) {
+    console.error("Error fetching ads manager notifications:", error);
+    res.status(500).json({ error: "Failed to fetch notifications" });
+  }
+}
+
+// Mark notification as read
+export async function markNotificationAsRead(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
+  const userId = req.user?.id;
+  const { notificationId } = req.params;
+  
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const query = `
+      UPDATE notifications 
+      SET read = true 
+      WHERE id = $1 AND user_id = $2
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [notificationId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+
+    res.json({
+      success: true,
+      notification: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    res.status(500).json({ error: "Failed to mark notification as read" });
+  }
+}
+
+// Legacy functions to maintain compatibility
+
+// For compatibility with existing booking modal
+export async function createBookingWithAuth(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
+  // This can redirect to the new createBooking function
+  return createBooking(req as BookingRequest, res);
+}
+
+// Check screen availability for given time slots
+export async function checkScreenAvailability(req: Request, res: Response) {
+  try {
+    const { screen_ids, start_date, end_date } = req.query;
+
+    if (!screen_ids || !start_date || !end_date) {
+      return res.status(400).json({
+        error: "Missing required parameters: screen_ids, start_date, end_date",
+      });
+    }
+
+    const screenIdsArray = Array.isArray(screen_ids) ? screen_ids : [screen_ids];
+    const availability: ScreenAvailability[] = [];
+
+    for (const screen_id of screenIdsArray) {
+      // Check for conflicting bookings
+      const conflictQuery = `
+        SELECT * FROM bookings 
+        WHERE screen_id = $1 
+        AND status = 'approved'
+        AND (
+          (start_date <= $2 AND end_date >= $2) OR
+          (start_date <= $3 AND end_date >= $3) OR
+          (start_date >= $2 AND end_date <= $3)
+        )
+      `;
+      
+      const conflictResult = await pool.query(conflictQuery, [screen_id, start_date, end_date]);
+      
+      availability.push({
+        screen_id: Number(screen_id),
+        available: conflictResult.rows.length === 0,
+        conflicting_bookings: conflictResult.rows,
+        available_slots: [],
+      });
+    }
+
+    res.json({
+      success: true,
+      availability,
+      checked_period: { start_date, end_date },
+    });
+  } catch (error) {
+    console.error("Error checking availability:", error);
+    res.status(500).json({ error: "Failed to check screen availability" });
+  }
+}
+
+// Get user's bookings
 export async function getMyBookings(
   req: Request & { user?: AuthUser },
   res: Response
 ) {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
-    }
-
-    const { status, limit = 50, offset = 0 } = req.query;
-
-    let query = `
+    const query = `
       SELECT 
         b.*,
         s.screen_name,
-        s.location_name,
         s.city,
-        s.state,
-        s.screen_type,
-        c.name as campaign_name,
-        u.email as owner_email,
-        (
-          SELECT COUNT(*) 
-          FROM proof_of_play pp 
-          WHERE pp.booking_id = b.id
-        ) as proof_count
+        s.location_in_venue
       FROM bookings b
       JOIN screens s ON b.screen_id = s.id
-      LEFT JOIN campaigns c ON b.campaign_id = c.id
-      LEFT JOIN users u ON s.user_id = u.id
-      WHERE b.advertiser_id = $1
+      WHERE b.customer_name = (SELECT name FROM users WHERE id = $1)
+      OR b.customer_email = (SELECT email FROM users WHERE id = $1)
+      ORDER BY b.created_at DESC
     `;
 
-    const params: any[] = [userId];
-    let paramIndex = 2;
-
-    if (status && status !== "all") {
-      query += ` AND b.status = $${paramIndex}`;
-      params.push(status);
-      paramIndex++;
-    }
-
-    query += ` ORDER BY b.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(parseInt(limit as string), parseInt(offset as string));
-
-    const result = await pool.query(query, params);
-
-    // Get total count
-    let countQuery = `
-      SELECT COUNT(*) as total
-      FROM bookings b
-      WHERE b.advertiser_id = $1
-    `;
-    const countParams: (number | string)[] = [userId];
-
-    if (status && status !== "all") {
-      countQuery += " AND b.status = $2";
-      countParams.push(status as string);
-    }
-
-    const countResult = await pool.query(countQuery, countParams);
+    const result = await pool.query(query, [userId]);
 
     res.json({
       success: true,
-      data: result.rows,
-      pagination: {
-        total: parseInt(countResult.rows[0].total),
-        limit: parseInt(limit as string),
-        offset: parseInt(offset as string),
-      },
+      bookings: result.rows
     });
   } catch (error) {
-    console.error("Error fetching bookings:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch bookings",
-    });
+    console.error("Error fetching user bookings:", error);
+    res.status(500).json({ error: "Failed to fetch bookings" });
   }
 }
 
-// Cancel booking (advertiser)
+// Cancel a booking
 export async function cancelBooking(
   req: Request & { user?: AuthUser },
   res: Response
 ) {
+  const userId = req.user?.id;
+  const { booking_id } = req.params;
+  
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
+    const query = `
+      UPDATE bookings 
+      SET status = 'cancelled' 
+      WHERE id = $1 AND (
+        customer_name = (SELECT name FROM users WHERE id = $2)
+        OR customer_email = (SELECT email FROM users WHERE id = $2)
+      )
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [booking_id, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Booking not found or unauthorized" });
     }
 
-    const { booking_id } = req.params;
-    const { reason } = req.body;
-
-    const client = await pool.connect();
-    
-    try {
-      await client.query("BEGIN");
-
-      // Check if booking belongs to user and can be cancelled
-      const bookingCheck = await client.query(
-        `
-        SELECT b.*, s.screen_name
-        FROM bookings b
-        JOIN screens s ON b.screen_id = s.id
-        WHERE b.id = $1 AND b.advertiser_id = $2
-        `,
-        [booking_id, userId]
-      );
-
-      if (bookingCheck.rows.length === 0) {
-        throw new Error("Booking not found or unauthorized");
-      }
-
-      const booking = bookingCheck.rows[0];
-
-      if (!["pending", "confirmed"].includes(booking.status)) {
-        throw new Error("Booking cannot be cancelled in current status");
-      }
-
-      // Update booking status
-      await client.query(
-        `
-        UPDATE bookings 
-        SET status = 'cancelled',
-            cancellation_reason = $1,
-            cancelled_at = CURRENT_TIMESTAMP
-        WHERE id = $2
-        `,
-        [reason || "Cancelled by advertiser", booking_id]
-      );
-
-      // Refund to campaign if applicable
-      if (booking.campaign_id) {
-        await client.query(
-          `
-          UPDATE campaigns 
-          SET spent_amount = spent_amount - $1,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = $2
-          `,
-          [booking.total_amount, booking.campaign_id]
-        );
-      }
-
-      // Log cancellation
-      await client.query(
-        `
-        INSERT INTO booking_logs (
-          booking_id,
-          action,
-          details,
-          created_by,
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5)
-        `,
-        [
-          booking.id,
-          "cancelled",
-          JSON.stringify({
-            reason: reason || "Cancelled by advertiser",
-            refund_amount: booking.total_amount,
-          }),
-          userId,
-          new Date(),
-        ]
-      );
-
-      await client.query("COMMIT");
-
-      res.json({
-        success: true,
-        message: "Booking cancelled successfully",
-      });
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
-    } finally {
-      client.release();
-    }
+    res.json({
+      success: true,
+      booking: result.rows[0],
+      message: "Booking cancelled successfully"
+    });
   } catch (error) {
     console.error("Error cancelling booking:", error);
-    res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : "Failed to cancel booking",
-    });
+    res.status(500).json({ error: "Failed to cancel booking" });
   }
-}
-
-// Utility functions
-function calculateAvailableSlots(
-  startDate: string,
-  endDate: string,
-  conflictingBookings: any[],
-  requestedHours?: string
-): any[] {
-  // Implementation for calculating available time slots
-  // This would involve complex date/time calculations
-  const availableSlots: any[] = [];
-  
-  // Simplified logic - in production, this would be more sophisticated
-  if (conflictingBookings.length === 0) {
-    availableSlots.push({
-      start: startDate,
-      end: endDate,
-      available_hours: requestedHours ? JSON.parse(requestedHours) : [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
-    });
-  }
-
-  return availableSlots;
-}
-
-async function getCompleteBookingData(bookingId: number): Promise<any> {
-  const query = `
-    SELECT 
-      b.*,
-      s.screen_name,
-      s.location_name,
-      s.city,
-      s.state,
-      s.screen_type,
-      c.name as campaign_name,
-      u.email as owner_email,
-      (
-        SELECT json_agg(
-          json_build_object(
-            'id', pp.id,
-            'url', pp.url,
-            'type', pp.type,
-            'captured_at', pp.captured_at
-          )
-        )
-        FROM proof_of_play pp 
-        WHERE pp.booking_id = b.id
-      ) as proof_of_play
-    FROM bookings b
-    JOIN screens s ON b.screen_id = s.id
-    LEFT JOIN campaigns c ON b.campaign_id = c.id
-    LEFT JOIN users u ON s.user_id = u.id
-    WHERE b.id = $1
-  `;
-
-  const result = await pool.query(query, [bookingId]);
-  return result.rows[0] || null;
 }

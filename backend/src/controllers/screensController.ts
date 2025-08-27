@@ -33,13 +33,18 @@ export async function createScreen(
       .json({ message: "screen_name and location_in_venue are required." });
   }
 
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    // Create the screen - ALWAYS set is_active=true for new screens
+    const result = await client.query(
       `INSERT INTO screens
        (user_id, screen_name, location_in_venue, city, latitude, longitude, screen_size_inches, resolution, 
         orientation, device_type, device_model, ads_enabled, ad_frequency, viewing_distance, 
-        typical_viewer_duration, peak_viewing_hours)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::text[])
+        typical_viewer_duration, peak_viewing_hours, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::text[], true)
        RETURNING *`,
       [
         userId,
@@ -61,13 +66,89 @@ export async function createScreen(
       ]
     );
 
+    const newScreen = result.rows[0];
+
+    // Add default pricing if ads_enabled is true
+    if (ads_enabled) {
+      const defaultPricing = {
+        hourly_rate: 500, // ₹500 per hour default
+        daily_rate: 3000, // ₹3000 per day default
+        weekly_rate: 18000, // ₹18000 per week default
+        currency: "INR",
+      };
+
+      await client.query(
+        `INSERT INTO screen_pricing (screen_id, hourly_rate, daily_rate, weekly_rate, currency)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          newScreen.id,
+          defaultPricing.hourly_rate,
+          defaultPricing.daily_rate,
+          defaultPricing.weekly_rate,
+          defaultPricing.currency,
+        ]
+      );
+
+      console.log(
+        `✅ Screen "${screen_name}" created and made available for ads with default pricing`
+      );
+    } else {
+      console.log(`📺 Screen "${screen_name}" created (ads disabled)`);
+    }
+
+    // Add to screen availability for the next 90 days (all available by default)
+    const availabilityInserts = [];
+    const startDate = new Date();
+    for (let i = 0; i < 90; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      availabilityInserts.push([
+        newScreen.id,
+        date.toISOString().split("T")[0],
+        true,
+      ]);
+    }
+
+    if (availabilityInserts.length > 0) {
+      const values = availabilityInserts
+        .map((_, i) => `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`)
+        .join(", ");
+
+      await client.query(
+        `INSERT INTO screen_availability (screen_id, date, is_available) 
+         VALUES ${values} 
+         ON CONFLICT (screen_id, date) DO NOTHING`,
+        availabilityInserts.flat()
+      );
+    }
+
+    await client.query("COMMIT");
+
+    // Log screen creation for ads manager visibility
+    console.log(`🚀 NEW SCREEN AVAILABLE FOR ADVERTISERS:`);
+    console.log(`   📺 Name: ${screen_name}`);
+    console.log(
+      `   📍 Location: ${location_in_venue}, ${city || "Unknown City"}`
+    );
+    console.log(`   🎯 Ads Enabled: ${ads_enabled ? "YES" : "NO"}`);
+    console.log(`   🆔 Screen ID: ${newScreen.id}`);
+    console.log(`   👤 Owner ID: ${userId}`);
+
     return res.status(201).json({
-      message: "Screen registered successfully",
-      screen: result.rows[0],
+      message:
+        "Screen registered successfully and is now available for advertisers",
+      screen: {
+        ...newScreen,
+        ads_enabled: !!ads_enabled,
+        is_active: true,
+      },
     });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("createScreen error:", err);
     return res.status(500).json({ message: "Server error" });
+  } finally {
+    client.release();
   }
 }
 
@@ -110,8 +191,8 @@ export async function getAllScreens(req: Request, res: Response) {
         'Premium advertising display' as description,
         s.device_type as screen_type,
         s.location_in_venue as location_name,
-        CONCAT(s.location_in_venue, ', ', s.city) as address,
-        s.city,
+        CONCAT(s.location_in_venue, ', ', COALESCE(s.city, 'Unknown City')) as address,
+        COALESCE(s.city, 'Unknown City') as city,
         'India' as state,
         '000000' as pincode,
         s.latitude,
@@ -124,28 +205,37 @@ export async function getAllScreens(req: Request, res: Response) {
         (2000 + (RANDOM() * 8000))::INT as vehicle_count,
         s.peak_viewing_hours as peak_hours,
         'Mixed demographics' as demographics,
-        COALESCE(p.daily_rate / 8640, 50) as cost_per_10_seconds,
+        COALESCE(p.hourly_rate / 1, 50) as cost_per_10_seconds,
         (
           SELECT sa.url 
           FROM screen_assets sa 
           WHERE sa.screen_id = s.id AND sa.asset_type = 'photo_day' 
           LIMIT 1
         ) as image_url,
+        s.image_urls,
         null as video_url,
         s.is_active,
-        p.hourly_rate,
-        p.daily_rate,
-        p.weekly_rate
+        s.ads_enabled,
+        COALESCE(p.hourly_rate, 500) as hourly_rate,
+        COALESCE(p.daily_rate, 3000) as daily_rate,
+        COALESCE(p.weekly_rate, 18000) as weekly_rate,
+        u.name as owner_name,
+        s.created_at,
+        s.resolution,
+        s.orientation,
+        s.viewing_distance,
+        s.ad_frequency
       FROM screens s
       LEFT JOIN screen_pricing p ON s.id = p.screen_id
-      WHERE s.is_active = true
+      LEFT JOIN users u ON s.user_id = u.id
+      WHERE s.is_active = true AND s.ads_enabled = true
     `;
 
     const params: any[] = [];
     let paramIndex = 1;
 
     if (city) {
-      query += ` AND LOWER(s.city) LIKE LOWER($${paramIndex})`;
+      query += ` AND LOWER(COALESCE(s.city, '')) LIKE LOWER($${paramIndex})`;
       params.push(`%${city}%`);
       paramIndex++;
     }
@@ -157,24 +247,43 @@ export async function getAllScreens(req: Request, res: Response) {
     }
 
     if (max_budget) {
-      query += ` AND p.daily_rate <= $${paramIndex}`;
+      query += ` AND COALESCE(p.daily_rate, 3000) <= $${paramIndex}`;
       params.push(parseFloat(max_budget as string));
       paramIndex++;
     }
 
-    query += ` ORDER BY s.city, p.daily_rate DESC, s.created_at DESC LIMIT $${paramIndex}`;
+    query += ` ORDER BY 
+      CASE 
+        WHEN s.city IS NOT NULL AND s.city != '' THEN 1 
+        ELSE 2 
+      END,
+      s.city, 
+      COALESCE(p.daily_rate, 3000) DESC, 
+      s.created_at DESC 
+      LIMIT $${paramIndex}`;
     params.push(parseInt(limit as string));
 
+    console.log(`🔍 Searching screens for ads manager:`, {
+      city,
+      screen_type,
+      max_budget,
+      limit,
+    });
+
     const result = await pool.query(query, params);
+
+    console.log(
+      `✅ Found ${result.rows.length} available screens for advertising`
+    );
 
     // Format results to include pricing information
     const formattedResults = result.rows.map((row) => ({
       ...row,
       pricing: {
-        hourly: row.hourly_rate || 0,
-        daily: row.daily_rate || 0,
-        weekly: row.weekly_rate || 0,
-        cost_per_10_seconds: row.cost_per_10_seconds || 50,
+        hourly: row.hourly_rate || 500,
+        daily: row.daily_rate || 3000,
+        weekly: row.weekly_rate || 18000,
+        cost_per_10_seconds: Math.ceil((row.hourly_rate || 500) / 360), // Convert hourly to 10-second slots
       },
     }));
 
@@ -183,9 +292,10 @@ export async function getAllScreens(req: Request, res: Response) {
       data: formattedResults,
       total: result.rows.length,
       filters: { city, state, screen_type, min_footfall, max_budget },
+      message: `Found ${result.rows.length} screens available for advertising`,
     });
   } catch (error) {
-    console.error("Error fetching screens:", error);
+    console.error("Error fetching screens for ads manager:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch screens",
@@ -200,6 +310,146 @@ export async function searchScreens(req: Request, res: Response) {
     const { city, location, screen_type, min_size, max_price } = req.query;
 
     let query = `
+      SELECT
+        s.id,
+        s.screen_name as name,
+        'Premium advertising display' as description,
+        s.device_type as screen_type,
+        s.location_in_venue as location_name,
+        CONCAT(s.location_in_venue, ', ', COALESCE(s.city, 'Unknown City')) as address,
+        COALESCE(s.city, 'Unknown City') as city,
+        'India' as state,
+        '000000' as pincode,
+        s.latitude,
+        s.longitude,
+        s.screen_size_inches as screen_size_width,
+        s.screen_size_inches as screen_size_height,
+        CASE WHEN s.resolution = '1080p' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE 1280 END as resolution_width,
+        CASE WHEN s.resolution = '1080p' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE 720 END as resolution_height,
+        (5000 + (RANDOM() * 20000))::INT as daily_footfall,
+        (2000 + (RANDOM() * 8000))::INT as vehicle_count,
+        s.peak_viewing_hours as peak_hours,
+        'Mixed demographics' as demographics,
+        COALESCE(p.hourly_rate / 1, 50) as cost_per_10_seconds,
+        (
+          SELECT sa.url 
+          FROM screen_assets sa 
+          WHERE sa.screen_id = s.id AND sa.asset_type = 'photo_day' 
+          LIMIT 1
+        ) as image_url,
+        s.image_urls,
+        null as video_url,
+        s.is_active,
+        s.ads_enabled,
+        COALESCE(p.hourly_rate, 500) as hourly_rate,
+        COALESCE(p.daily_rate, 3000) as daily_rate,
+        COALESCE(p.weekly_rate, 18000) as weekly_rate,
+        u.name as owner_name,
+        s.created_at,
+        s.resolution,
+        s.orientation,
+        s.viewing_distance,
+        s.ad_frequency
+      FROM screens s
+      LEFT JOIN screen_pricing p ON s.id = p.screen_id
+      LEFT JOIN users u ON s.user_id = u.id
+      WHERE s.is_active = true AND s.ads_enabled = true
+    `;
+
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (city) {
+      query += ` AND (
+        LOWER(COALESCE(s.city, '')) LIKE LOWER($${paramIndex}) OR 
+        LOWER(s.location_in_venue) LIKE LOWER($${paramIndex})
+      )`;
+      params.push(`%${city}%`);
+      paramIndex++;
+    }
+
+    if (location) {
+      query += ` AND LOWER(s.location_in_venue) LIKE LOWER($${paramIndex})`;
+      params.push(`%${location}%`);
+      paramIndex++;
+    }
+
+    if (screen_type) {
+      query += ` AND LOWER(s.device_type) LIKE LOWER($${paramIndex})`;
+      params.push(`%${screen_type}%`);
+      paramIndex++;
+    }
+
+    if (min_size) {
+      query += ` AND COALESCE(s.screen_size_inches, 0) >= $${paramIndex}`;
+      params.push(parseFloat(min_size as string));
+      paramIndex++;
+    }
+
+    if (max_price) {
+      query += ` AND COALESCE(p.daily_rate, 3000) <= $${paramIndex}`;
+      params.push(parseFloat(max_price as string));
+      paramIndex++;
+    }
+
+    query += ` ORDER BY 
+      CASE 
+        WHEN s.city IS NOT NULL AND s.city != '' THEN 1 
+        ELSE 2 
+      END,
+      s.city, 
+      COALESCE(p.daily_rate, 3000) DESC, 
+      s.created_at DESC 
+      LIMIT 50`;
+
+    console.log(`🔍 Searching screens with filters:`, {
+      city,
+      location,
+      screen_type,
+      min_size,
+      max_price,
+    });
+
+    const result = await pool.query(query, params);
+
+    console.log(
+      `✅ Found ${result.rows.length} screens matching search criteria`
+    );
+
+    // Format results to include pricing information
+    const formattedResults = result.rows.map((row) => ({
+      ...row,
+      pricing: {
+        hourly: row.hourly_rate || 500,
+        daily: row.daily_rate || 3000,
+        weekly: row.weekly_rate || 18000,
+        cost_per_10_seconds: Math.ceil((row.hourly_rate || 500) / 360),
+      },
+    }));
+
+    res.json({
+      success: true,
+      data: formattedResults,
+      total: result.rows.length,
+      filters: { city, location, screen_type, min_size, max_price },
+      message: `Found ${result.rows.length} screens matching your search`,
+    });
+  } catch (error) {
+    console.error("Error searching screens:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to search screens",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+
+// Get screen by ID for ads manager
+export async function getScreenById(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    const query = `
       SELECT 
         s.id,
         s.screen_name as name,
@@ -231,149 +481,26 @@ export async function searchScreens(req: Request, res: Response) {
         ) as image_url
       FROM screens s
       LEFT JOIN screen_pricing p ON s.id = p.screen_id
-      WHERE s.is_active = true
+      WHERE s.id = $1 AND s.is_active = true AND s.ads_enabled = true
     `;
 
-    const params: any[] = [];
-    let paramIndex = 1;
-
-    if (city) {
-      query += ` AND LOWER(s.city) LIKE LOWER($${paramIndex})`;
-      params.push(`%${city}%`);
-      paramIndex++;
-    }
-
-    if (location) {
-      query += ` AND LOWER(s.location_in_venue) LIKE LOWER($${paramIndex})`;
-      params.push(`%${location}%`);
-      paramIndex++;
-    }
-
-    if (screen_type) {
-      query += ` AND LOWER(s.device_type) LIKE LOWER($${paramIndex})`;
-      params.push(`%${screen_type}%`);
-      paramIndex++;
-    }
-
-    if (min_size) {
-      query += ` AND s.screen_size_inches >= $${paramIndex}`;
-      params.push(parseInt(min_size as string));
-      paramIndex++;
-    }
-
-    if (max_price) {
-      query += ` AND p.daily_rate <= $${paramIndex}`;
-      params.push(parseFloat(max_price as string));
-      paramIndex++;
-    }
-
-    query += " ORDER BY s.city, s.created_at DESC LIMIT 50";
-
-    const result = await pool.query(query, params);
-
-    // Format the response to include pricing and other details
-    const formattedResults = result.rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      location_name: row.location_name,
-      city: row.city,
-      latitude: row.latitude,
-      longitude: row.longitude,
-      screen_size_inches: row.screen_size_inches,
-      resolution: row.resolution,
-      orientation: row.orientation,
-      device_type: row.device_type,
-      device_model: row.device_model,
-      ads_enabled: row.ads_enabled,
-      ad_frequency: row.ad_frequency,
-      viewing_distance: row.viewing_distance,
-      typical_viewer_duration: row.typical_viewer_duration,
-      peak_hours: row.peak_hours,
-      is_active: row.is_active,
-      image_url: row.image_url,
-      pricing: {
-        hourly: row.hourly_rate || 0,
-        daily: row.daily_rate || 0,
-        weekly: row.weekly_rate || 0,
-      },
-    }));
-
-    res.json({
-      success: true,
-      data: formattedResults,
-      total: result.rows.length,
-      filters: { city, location, screen_type, min_size, max_price },
-    });
-  } catch (error) {
-    console.error("Error searching screens:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to search screens",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-}
-
-// Get screen by ID for ads manager
-export async function getScreenById(req: Request, res: Response) {
-  try {
-    const { id } = req.params;
-
-    // First get the screen details
-    const screenQuery = `
-      SELECT 
-        s.*,
-        p.hourly_rate,
-        p.daily_rate,
-        p.weekly_rate,
-        (
-          SELECT json_agg(
-            jsonb_build_object(
-              'asset_type', sa.asset_type,
-              'url', sa.url,
-              'created_at', sa.created_at
-            )
-          )
-          FROM screen_assets sa
-          WHERE sa.screen_id = s.id
-        ) as assets,
-        (
-          SELECT json_agg(
-            jsonb_build_object(
-              'date', sa.date,
-              'is_available', sa.is_available
-            )
-          )
-          FROM screen_availability sa
-          WHERE sa.screen_id = s.id
-            AND sa.date >= CURRENT_DATE
-            AND sa.date <= CURRENT_DATE + INTERVAL '30 days'
-        ) as availability
-      FROM screens s
-      LEFT JOIN screen_pricing p ON s.id = p.screen_id
-      WHERE s.id = $1 AND s.is_active = true
-    `;
-
-    const result = await pool.query(screenQuery, [id]);
+    const result = await pool.query(query, [id]);
 
     if (result.rows.length === 0) {
-      res.status(404).json({
+      return res.status(404).json({
         success: false,
-        message: "Screen not found",
+        message: "Screen not found or not available for advertising",
       });
-      return;
     }
 
-    // Format the response to match the frontend expectations
     const screen = result.rows[0];
     const response = {
       ...screen,
       pricing: {
-        hourly: screen.hourly_rate || 0,
-        daily: screen.daily_rate || 0,
-        weekly: screen.weekly_rate || 0,
+        hourly: screen.hourly_rate || 500,
+        daily: screen.daily_rate || 3000,
+        weekly: screen.weekly_rate || 18000,
       },
-      // Add any other necessary transformations here
     };
 
     res.json({
@@ -381,7 +508,7 @@ export async function getScreenById(req: Request, res: Response) {
       data: response,
     });
   } catch (error) {
-    console.error("Error fetching screen:", error);
+    console.error("Error fetching screen by ID:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch screen",

@@ -8,7 +8,7 @@ import screenRoutes from "./routes/screens";
 import campaignRoutes from "./routes/campaigns";
 import campaignRequestRoutes from "./routes/campaignRequests";
 import authRoutes from "./routes/auth";
-import uploadRoutes from "./routes/upload";
+import imageUploadRoutes from "./routes/imageUpload";
 import analyticsRoutes from "./routes/analytics";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/logger";
@@ -36,7 +36,7 @@ app.use("/api/screens", screenRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/campaigns", campaignRoutes);
 app.use("/api/campaign-requests", campaignRequestRoutes);
-app.use("/api/upload", uploadRoutes);
+app.use("/api", imageUploadRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
 // Health check endpoint
@@ -73,6 +73,6 @@ async function startServer() {
   }
 }
 
-startServer();
+// startServer();
 
 export default app;

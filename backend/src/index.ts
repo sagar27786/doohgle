@@ -7,6 +7,8 @@ import earningsRoutes from "./routes/earnings";
 import bookingRoutes from "./routes/bookings";
 import locationRoutes from "./routes/locations";
 import campaignRequestRoutes from "./routes/campaignRequests";
+import awsBookingRoutes from "./routes/awsBookingRoutes";
+import imageUploadRoutes from "./routes/imageUpload";
 
 // Load env vars
 dotenv.config();
@@ -35,6 +37,8 @@ app.use("/api/earnings", earningsRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/campaign-requests", campaignRequestRoutes);
+app.use("/api/aws-bookings", awsBookingRoutes);
+app.use("/api", imageUploadRoutes); // Add image upload routes
 // app.use('/api/campaigns', campaignRoutes);
 
 // Temporary campaigns endpoints
@@ -115,7 +119,30 @@ app.delete("/api/campaigns/:id", (req, res) => {
 });
 
 // Health check
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
+  let awsStatus = "unknown";
+
+  try {
+    const AWS = require("aws-sdk");
+    const s3 = new AWS.S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION,
+    });
+
+    await new Promise((resolve, reject) => {
+      s3.headBucket({ Bucket: process.env.S3_BUCKET_NAME }, (err: any) => {
+        if (err) reject(err);
+        else resolve(null);
+      });
+    });
+
+    awsStatus = "connected";
+  } catch (error: any) {
+    awsStatus = "disconnected";
+    console.log("AWS Health Check Error:", error?.message || error);
+  }
+
   res.json({
     status: "OK",
     timestamp: new Date().toISOString(),
@@ -124,6 +151,7 @@ app.get("/api/health", (req, res) => {
       screens: "active",
       campaigns: "active",
       venue: "active",
+      aws: awsStatus,
     },
   });
 });
