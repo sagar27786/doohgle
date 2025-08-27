@@ -1,99 +1,129 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Target,
   Plus,
   Search,
   Filter,
-  MoreHorizontal,
-  Play,
-  Pause,
-  Edit3,
+  ChevronDown,
+  RefreshCw,
+  Upload,
+  Download,
   Eye,
+  Edit3,
+  MoreHorizontal,
   Calendar,
-  Clock,
-  Target,
   DollarSign,
   TrendingUp,
-  Users,
-  MapPin,
-  Monitor,
-  BarChart3,
-  RefreshCw,
-  Download,
-  Upload,
-  Share2,
-  Copy,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
   Activity,
   ArrowUp,
   ArrowDown,
-  ChevronDown,
+  Play,
+  Pause,
+  Copy,
+  BarChart3,
+  Users,
+  Monitor,
+  MapPin,
+  XCircle,
+  Share2,
 } from "lucide-react";
+import CampaignCreationWorkflow from "./CampaignCreationWorkflow";
 
-// Sample campaign data
-const campaignData = [
+// Types
+interface Campaign {
+  id: string;
+  name: string;
+  brand: string;
+  status: "Active" | "Paused" | "Completed" | "Draft";
+  budget: number;
+  spent: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  startDate: string;
+  endDate: string;
+  screens: Array<{
+    id: string;
+    name: string;
+    city: string;
+  }>;
+  schedule: {
+    timeSlots: string[];
+    days: string[];
+  };
+}
+
+// Sample data
+const sampleCampaigns: Campaign[] = [
   {
-    id: 1,
-    name: "Summer Electronics Sale 2024",
-    brand: "TechMart",
+    id: "1",
+    name: "Summer Fashion Collection",
+    brand: "Trendy Styles",
     status: "Active",
-    startDate: "2024-06-01",
-    endDate: "2024-06-30",
     budget: 500000,
-    spent: 342000,
-    impressions: 2500000,
-    clicks: 12500,
-    ctr: 0.5,
+    spent: 320000,
+    impressions: 1200000,
+    clicks: 15400,
+    ctr: 1.28,
+    startDate: "2024-06-01",
+    endDate: "2024-08-31",
     screens: [
-      { name: "Bandra Kurla Complex LED Wall", city: "Mumbai" },
-      { name: "Connaught Place LED Screen", city: "Delhi" },
-      { name: "MG Road Digital Billboard", city: "Bangalore" },
+      { id: "s1", name: "Mall Central", city: "Mumbai" },
+      { id: "s2", name: "Airport Plaza", city: "Delhi" },
+      { id: "s3", name: "Metro Station", city: "Bangalore" },
     ],
-    creatives: [
-      { name: "Summer_Sale_Main.mp4", size: "1920x1080" },
-      { name: "Electronics_Promo.jpg", size: "1920x1080" },
-    ],
-    performance: {
-      reach: 1800000,
-      frequency: 1.4,
-      engagement: 0.12,
-    },
     schedule: {
-      timeSlots: ["06:00-12:00", "18:00-24:00"],
+      timeSlots: ["09:00-12:00", "18:00-22:00"],
       days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     },
   },
   {
-    id: 2,
-    name: "Fashion Week Showcase",
-    brand: "StyleHub",
-    status: "Scheduled",
-    startDate: "2024-07-15",
-    endDate: "2024-07-25",
+    id: "2",
+    name: "Tech Product Launch",
+    brand: "InnovateTech",
+    status: "Active",
     budget: 750000,
-    spent: 0,
-    impressions: 0,
-    clicks: 0,
-    ctr: 0,
+    spent: 280000,
+    impressions: 950000,
+    clicks: 12800,
+    ctr: 1.35,
+    startDate: "2024-07-15",
+    endDate: "2024-09-15",
     screens: [
-      { name: "Marina Beach Billboard", city: "Chennai" },
-      { name: "Park Street Digital Display", city: "Kolkata" },
-      { name: "Koregaon Park LED Wall", city: "Pune" },
+      { id: "s4", name: "Business District", city: "Pune" },
+      { id: "s5", name: "Shopping Complex", city: "Chennai" },
     ],
-    creatives: [
-      { name: "Fashion_Week_Hero.mp4", size: "1920x1080" },
-      { name: "Designer_Collection.jpg", size: "1920x1080" },
-      { name: "Runway_Highlights.mp4", size: "1920x1080" },
-    ],
-    performance: {
-      reach: 0,
-      frequency: 0,
-      engagement: 0,
-    },
     schedule: {
-      timeSlots: ["12:00-18:00", "18:00-24:00"],
+      timeSlots: ["10:00-14:00", "16:00-20:00"],
+      days: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ],
+    },
+  },
+  {
+    id: "3",
+    name: "Restaurant Chain Promo",
+    brand: "Foodie Delights",
+    status: "Paused",
+    budget: 300000,
+    spent: 180000,
+    impressions: 780000,
+    clicks: 9600,
+    ctr: 1.23,
+    startDate: "2024-05-01",
+    endDate: "2024-07-31",
+    screens: [
+      { id: "s6", name: "Food Court", city: "Hyderabad" },
+      { id: "s7", name: "University Area", city: "Kolkata" },
+    ],
+    schedule: {
+      timeSlots: ["11:00-15:00", "19:00-23:00"],
       days: [
         "Monday",
         "Tuesday",
@@ -106,65 +136,23 @@ const campaignData = [
     },
   },
   {
-    id: 3,
-    name: "Food Festival Promotion",
-    brand: "FoodieDelight",
+    id: "4",
+    name: "Fitness Equipment Sale",
+    brand: "FitLife",
     status: "Completed",
-    startDate: "2024-05-01",
-    endDate: "2024-05-31",
-    budget: 300000,
-    spent: 295000,
-    impressions: 1800000,
+    budget: 200000,
+    spent: 195000,
+    impressions: 650000,
     clicks: 8900,
-    ctr: 0.49,
+    ctr: 1.37,
+    startDate: "2024-03-01",
+    endDate: "2024-05-31",
     screens: [
-      { name: "HITEC City LED Wall", city: "Hyderabad" },
-      { name: "CG Road Billboard", city: "Ahmedabad" },
+      { id: "s8", name: "Sports Complex", city: "Ahmedabad" },
+      { id: "s9", name: "Gym District", city: "Jaipur" },
     ],
-    creatives: [
-      { name: "Food_Festival_Main.jpg", size: "1920x1080" },
-      { name: "Cuisine_Variety.mp4", size: "1920x1080" },
-    ],
-    performance: {
-      reach: 1200000,
-      frequency: 1.5,
-      engagement: 0.15,
-    },
     schedule: {
-      timeSlots: ["11:00-14:00", "19:00-22:00"],
-      days: ["Friday", "Saturday", "Sunday"],
-    },
-  },
-  {
-    id: 4,
-    name: "Auto Expo Launch",
-    brand: "SpeedMotors",
-    status: "Paused",
-    startDate: "2024-06-10",
-    endDate: "2024-07-10",
-    budget: 1000000,
-    spent: 450000,
-    impressions: 1200000,
-    clicks: 6000,
-    ctr: 0.5,
-    screens: [
-      { name: "Bandra Kurla Complex LED Wall", city: "Mumbai" },
-      { name: "MG Road Digital Billboard", city: "Bangalore" },
-      { name: "Marina Beach Billboard", city: "Chennai" },
-      { name: "HITEC City LED Wall", city: "Hyderabad" },
-    ],
-    creatives: [
-      { name: "Auto_Expo_Hero.mp4", size: "1920x1080" },
-      { name: "New_Models.jpg", size: "1920x1080" },
-      { name: "Test_Drive.mp4", size: "1920x1080" },
-    ],
-    performance: {
-      reach: 900000,
-      frequency: 1.3,
-      engagement: 0.08,
-    },
-    schedule: {
-      timeSlots: ["08:00-12:00", "16:00-20:00"],
+      timeSlots: ["06:00-10:00", "17:00-21:00"],
       days: [
         "Monday",
         "Tuesday",
@@ -176,113 +164,204 @@ const campaignData = [
     },
   },
   {
-    id: 5,
-    name: "Health & Wellness Week",
-    brand: "VitalLife",
+    id: "5",
+    name: "Educational Course Launch",
+    brand: "LearnMore Academy",
     status: "Draft",
-    startDate: "2024-08-01",
-    endDate: "2024-08-07",
     budget: 400000,
     spent: 0,
     impressions: 0,
     clicks: 0,
     ctr: 0,
+    startDate: "2024-09-01",
+    endDate: "2024-11-30",
     screens: [
-      { name: "Park Street Digital Display", city: "Kolkata" },
-      { name: "Koregaon Park LED Wall", city: "Pune" },
+      { id: "s10", name: "Student Area", city: "Lucknow" },
+      { id: "s11", name: "Education Hub", city: "Kanpur" },
     ],
-    creatives: [{ name: "Wellness_Campaign.jpg", size: "1920x1080" }],
-    performance: {
-      reach: 0,
-      frequency: 0,
-      engagement: 0,
-    },
     schedule: {
-      timeSlots: ["07:00-10:00", "17:00-20:00"],
-      days: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ],
+      timeSlots: ["08:00-12:00", "14:00-18:00"],
+      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     },
   },
 ];
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Active":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "Scheduled":
-      return "bg-blue-100 text-blue-800 border-blue-200";
-    case "Completed":
-      return "bg-gray-100 text-gray-800 border-gray-200";
-    case "Paused":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "Draft":
-      return "bg-purple-100 text-purple-800 border-purple-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
+// Professional Loading screen component with particles and animations
+const LoadingScreen: React.FC = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50 flex items-center justify-center z-50"
+    >
+      <div className="text-center">
+        {/* Animated Logo with rotating effect */}
+        <motion.div
+          className="w-20 h-20 mx-auto mb-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl"
+          animate={{
+            rotateY: 360,
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            rotateY: { duration: 2, repeat: Infinity, ease: "linear" },
+            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+          }}
+        >
+          <Target className="text-white" size={32} />
+        </motion.div>
+
+        {/* Moving particle animation in circle */}
+        <div className="relative mb-8">
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"
+              animate={{
+                x: Math.cos((i * 30 * Math.PI) / 180) * 50,
+                y: Math.sin((i * 30 * Math.PI) / 180) * 50,
+                scale: [0, 1, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.1,
+                ease: "easeInOut",
+              }}
+              style={{ left: "50%", top: "50%" }}
+            />
+          ))}
+        </div>
+
+        {/* Pulsing loading text */}
+        <motion.h2
+          className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          Campaign Manager
+        </motion.h2>
+
+        <motion.p
+          className="text-gray-600 text-lg"
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
+        >
+          Preparing your campaigns...
+        </motion.p>
+
+        {/* Animated loading bar */}
+        <div className="w-64 h-1 bg-gray-200 rounded-full mx-auto mt-8 overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "Active":
-      return <CheckCircle size={16} className="text-green-600" />;
-    case "Scheduled":
-      return <Clock size={16} className="text-blue-600" />;
-    case "Completed":
-      return <CheckCircle size={16} className="text-gray-600" />;
-    case "Paused":
-      return <Pause size={16} className="text-yellow-600" />;
-    case "Draft":
-      return <Edit3 size={16} className="text-purple-600" />;
-    default:
-      return <AlertCircle size={16} className="text-gray-600" />;
-  }
+// Animated Counter Component with easeOutExpo animation
+interface AnimatedCounterProps {
+  value: number;
+  duration?: number;
+  suffix?: string;
+  prefix?: string;
+  decimals?: number;
+}
+
+const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
+  value,
+  duration = 2,
+  suffix = "",
+  prefix = "",
+  decimals = 0,
+}) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number;
+    let animationFrame: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
+
+      // easeOutExpo animation curve
+      const easeOutExpo = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const currentValue = easeOutExpo * value;
+
+      setCount(currentValue);
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [value, duration]);
+
+  return (
+    <span>
+      {prefix}
+      {count.toFixed(decimals)}
+      {suffix}
+    </span>
+  );
 };
 
 const CampaignManagement: React.FC = () => {
-  const [selectedTab, setSelectedTab] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [campaignData, setCampaignData] = useState<Campaign[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [selectedTab, setSelectedTab] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
+    null
+  );
+  const [showCreateWorkflow, setShowCreateWorkflow] = useState(false);
 
-  const tabs = ["All", "Active", "Scheduled", "Completed", "Paused", "Draft"];
+  const tabs = ["All", "Active", "Paused", "Completed", "Draft"];
 
-  // Filter campaigns based on tab and search
+  // Simulate loading with professional animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCampaignData(sampleCampaigns);
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Filter and sort campaigns
   const filteredCampaigns = campaignData
     .filter((campaign) => {
-      const matchesTab =
-        selectedTab === "All" || campaign.status === selectedTab;
       const matchesSearch =
         campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         campaign.brand.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesTab && matchesSearch;
+      const matchesTab =
+        selectedTab === "All" || campaign.status === selectedTab;
+      return matchesSearch && matchesTab;
     })
     .sort((a, b) => {
-      let aValue = a[sortBy as keyof typeof a];
-      let bValue = b[sortBy as keyof typeof b];
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
+      const aVal = a[sortBy as keyof Campaign];
+      const bVal = b[sortBy as keyof Campaign];
 
       if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
+        return aVal > bVal ? 1 : -1;
       } else {
-        return aValue < bValue ? 1 : -1;
+        return aVal < bVal ? 1 : -1;
       }
     });
 
+  // Calculate summary metrics for animated counters
   const totalBudget = campaignData.reduce(
     (sum, campaign) => sum + campaign.budget,
     0
@@ -299,36 +378,73 @@ const CampaignManagement: React.FC = () => {
     (c) => c.status === "Active"
   ).length;
 
+  // Status styling helpers
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Active":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "Paused":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "Completed":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "Draft":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "Active":
+        return <div className="w-2 h-2 bg-green-500 rounded-full" />;
+      case "Paused":
+        return <div className="w-2 h-2 bg-yellow-500 rounded-full" />;
+      case "Completed":
+        return <div className="w-2 h-2 bg-blue-500 rounded-full" />;
+      case "Draft":
+        return <div className="w-2 h-2 bg-gray-500 rounded-full" />;
+      default:
+        return <div className="w-2 h-2 bg-gray-500 rounded-full" />;
+    }
+  };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="container mx-auto px-6 py-8">
+        {/* Professional Header Section with gradient text */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
           className="mb-8"
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center">
-                <Target className="mr-3 text-blue-600" size={36} />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 Campaign Management
               </h1>
-              <p className="text-gray-600">
-                Create, monitor, and optimize your digital advertising campaigns
+              <p className="text-gray-600 text-lg">
+                Manage and monitor your advertising campaigns with real-time
+                analytics
               </p>
             </div>
-            <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+            <div className="flex items-center space-x-4 mt-4 lg:mt-0">
               <motion.button
-                className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg"
-                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold shadow-lg"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setShowCreateWorkflow(true)}
               >
                 <Plus size={20} />
                 <span>Create Campaign</span>
               </motion.button>
               <motion.button
-                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex items-center space-x-2 bg-white text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -336,7 +452,7 @@ const CampaignManagement: React.FC = () => {
                 <span>Import</span>
               </motion.button>
               <motion.button
-                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex items-center space-x-2 bg-white text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -346,13 +462,14 @@ const CampaignManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Key Metrics */}
+          {/* Animated Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
+              whileHover={{ y: -5 }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -360,10 +477,15 @@ const CampaignManagement: React.FC = () => {
                     Total Budget
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ₹{(totalBudget / 100000).toFixed(1)}L
+                    ₹
+                    <AnimatedCounter
+                      value={totalBudget / 100000}
+                      decimals={1}
+                      suffix="L"
+                    />
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-lg">
+                <div className="p-3 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg">
                   <DollarSign className="text-blue-600" size={24} />
                 </div>
               </div>
@@ -375,19 +497,25 @@ const CampaignManagement: React.FC = () => {
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+              whileHover={{ y: -5 }}
             >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Spent</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ₹{(totalSpent / 100000).toFixed(1)}L
+                    ₹
+                    <AnimatedCounter
+                      value={totalSpent / 100000}
+                      decimals={1}
+                      suffix="L"
+                    />
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-lg">
+                <div className="p-3 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg">
                   <TrendingUp className="text-green-600" size={24} />
                 </div>
               </div>
@@ -399,10 +527,11 @@ const CampaignManagement: React.FC = () => {
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+              whileHover={{ y: -5 }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -410,10 +539,14 @@ const CampaignManagement: React.FC = () => {
                     Impressions
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {(totalImpressions / 1000000).toFixed(1)}M
+                    <AnimatedCounter
+                      value={totalImpressions / 1000000}
+                      decimals={1}
+                      suffix="M"
+                    />
                   </p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-lg">
+                <div className="p-3 bg-gradient-to-r from-purple-100 to-violet-100 rounded-lg">
                   <Eye className="text-purple-600" size={24} />
                 </div>
               </div>
@@ -425,10 +558,11 @@ const CampaignManagement: React.FC = () => {
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+              whileHover={{ y: -5 }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -436,10 +570,10 @@ const CampaignManagement: React.FC = () => {
                     Active Campaigns
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {activeCampaigns}
+                    <AnimatedCounter value={activeCampaigns} />
                   </p>
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-lg">
+                <div className="p-3 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg">
                   <Activity className="text-yellow-600" size={24} />
                 </div>
               </div>
@@ -452,7 +586,7 @@ const CampaignManagement: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Tabs and Controls */}
+        {/* Professional Tabs and Controls Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -462,23 +596,34 @@ const CampaignManagement: React.FC = () => {
           {/* Tab Navigation */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
             <div className="flex space-x-1 mb-4 lg:mb-0 overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
+              {tabs.map((tab, index) => (
+                <motion.button
                   key={tab}
                   onClick={() => setSelectedTab(tab)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                     selectedTab === tab
-                      ? "bg-blue-100 text-blue-700 border border-blue-200"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + index * 0.1 }}
                 >
                   {tab}
-                  <span className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded-full">
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      selectedTab === tab
+                        ? "bg-blue-200 text-blue-800"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
                     {tab === "All"
                       ? campaignData.length
                       : campaignData.filter((c) => c.status === tab).length}
                   </span>
-                </button>
+                </motion.button>
               ))}
             </div>
 
@@ -493,12 +638,14 @@ const CampaignManagement: React.FC = () => {
                   placeholder="Search campaigns..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
-              <button
+              <motion.button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Filter size={18} />
                 <span>Filters</span>
@@ -508,10 +655,10 @@ const CampaignManagement: React.FC = () => {
                   }`}
                   size={16}
                 />
-              </button>
+              </motion.button>
               <motion.button
                 className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, rotate: 90 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <RefreshCw size={18} />
@@ -519,7 +666,7 @@ const CampaignManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Filter Controls */}
+          {/* Expandable Filter Controls */}
           <AnimatePresence>
             {showFilters && (
               <motion.div
@@ -592,30 +739,34 @@ const CampaignManagement: React.FC = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Campaign Cards/List */}
-        <div
+        {/* Campaign Cards/List with staggered animations */}
+        <motion.div
           className={
             viewMode === "grid"
               ? "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
               : "space-y-4"
           }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
         >
           {filteredCampaigns.map((campaign, index) => (
             <motion.div
               key={campaign.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index }}
-              className="bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer overflow-hidden"
+              transition={{ delay: 0.8 + 0.1 * index }}
+              className="bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer overflow-hidden group"
+              whileHover={{ y: -5, scale: 1.02 }}
               onClick={() => setSelectedCampaign(campaign)}
             >
               {viewMode === "grid" ? (
-                <div>
+                <div className="h-full">
                   {/* Header */}
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className="font-bold text-lg text-gray-900 mb-1">
+                        <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
                           {campaign.name}
                         </h3>
                         <p className="text-gray-600 text-sm">
@@ -633,9 +784,12 @@ const CampaignManagement: React.FC = () => {
                             <span>{campaign.status}</span>
                           </div>
                         </div>
-                        <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                        <motion.button
+                          className="p-1 hover:bg-gray-100 rounded transition-colors"
+                          whileHover={{ rotate: 90 }}
+                        >
                           <MoreHorizontal size={16} />
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
 
@@ -648,7 +802,7 @@ const CampaignManagement: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Budget Progress */}
+                    {/* Budget Progress with animated bar */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-600">
@@ -669,7 +823,10 @@ const CampaignManagement: React.FC = () => {
                               100
                             )}%`,
                           }}
-                          transition={{ duration: 1, delay: 0.5 }}
+                          transition={{
+                            duration: 1.5,
+                            delay: 0.8 + index * 0.1,
+                          }}
                         />
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-500">
@@ -690,42 +847,69 @@ const CampaignManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Metrics */}
+                  {/* Metrics Section */}
                   <div className="p-6">
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">
+                        <motion.p
+                          className="text-2xl font-bold text-blue-600"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            delay: 1 + index * 0.1,
+                            type: "spring",
+                          }}
+                        >
                           {(campaign.impressions / 1000000).toFixed(1)}M
-                        </p>
+                        </motion.p>
                         <p className="text-xs text-gray-600">Impressions</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-green-600">
+                        <motion.p
+                          className="text-2xl font-bold text-green-600"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            delay: 1.1 + index * 0.1,
+                            type: "spring",
+                          }}
+                        >
                           {campaign.clicks.toLocaleString()}
-                        </p>
+                        </motion.p>
                         <p className="text-xs text-gray-600">Clicks</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-purple-600">
+                        <motion.p
+                          className="text-2xl font-bold text-purple-600"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            delay: 1.2 + index * 0.1,
+                            type: "spring",
+                          }}
+                        >
                           {campaign.ctr.toFixed(2)}%
-                        </p>
+                        </motion.p>
                         <p className="text-xs text-gray-600">CTR</p>
                       </div>
                     </div>
 
-                    {/* Screens */}
+                    {/* Active Screens */}
                     <div className="mb-4">
                       <p className="text-sm font-medium text-gray-700 mb-2">
                         Active Screens ({campaign.screens.length})
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {campaign.screens.slice(0, 2).map((screen, idx) => (
-                          <div
+                          <motion.div
                             key={idx}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 1.3 + idx * 0.1 }}
                             className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs"
                           >
                             {screen.city}
-                          </div>
+                          </motion.div>
                         ))}
                         {campaign.screens.length > 2 && (
                           <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
@@ -767,7 +951,7 @@ const CampaignManagement: React.FC = () => {
                       )}
                       <motion.button
                         className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ scale: 1.02, rotate: 5 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <Edit3 size={16} />
@@ -783,11 +967,12 @@ const CampaignManagement: React.FC = () => {
                   </div>
                 </div>
               ) : (
+                // List View Layout
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 flex-1">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg text-gray-900">
+                        <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                           {campaign.name}
                         </h3>
                         <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
@@ -835,18 +1020,21 @@ const CampaignManagement: React.FC = () => {
                           <span>{campaign.status}</span>
                         </div>
                       </div>
-                      <button className="p-2 hover:bg-gray-100 rounded transition-colors">
+                      <motion.button
+                        className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        whileHover={{ rotate: 90 }}
+                      >
                         <MoreHorizontal size={16} />
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 </div>
               )}
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        {/* Campaign Detail Modal */}
+        {/* Professional Campaign Detail Modal */}
         <AnimatePresence>
           {selectedCampaign && (
             <motion.div
@@ -864,10 +1052,10 @@ const CampaignManagement: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-6">
-                  {/* Header */}
+                  {/* Modal Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">
+                      <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                         {selectedCampaign.name}
                       </h2>
                       <p className="text-gray-600">{selectedCampaign.brand}</p>
@@ -883,18 +1071,23 @@ const CampaignManagement: React.FC = () => {
                           <span>{selectedCampaign.status}</span>
                         </div>
                       </div>
-                      <button
+                      <motion.button
                         onClick={() => setSelectedCampaign(null)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
                       >
                         <XCircle size={24} />
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
 
-                  {/* Quick Stats */}
+                  {/* Quick Stats with gradient backgrounds */}
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-                    <div className="bg-blue-50 rounded-lg p-4">
+                    <motion.div
+                      className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4"
+                      whileHover={{ scale: 1.05 }}
+                    >
                       <div className="flex items-center space-x-3">
                         <DollarSign className="text-blue-600" size={24} />
                         <div>
@@ -904,8 +1097,11 @@ const CampaignManagement: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-4">
+                    </motion.div>
+                    <motion.div
+                      className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4"
+                      whileHover={{ scale: 1.05 }}
+                    >
                       <div className="flex items-center space-x-3">
                         <TrendingUp className="text-green-600" size={24} />
                         <div>
@@ -915,8 +1111,11 @@ const CampaignManagement: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="bg-purple-50 rounded-lg p-4">
+                    </motion.div>
+                    <motion.div
+                      className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-4"
+                      whileHover={{ scale: 1.05 }}
+                    >
                       <div className="flex items-center space-x-3">
                         <Eye className="text-purple-600" size={24} />
                         <div>
@@ -929,8 +1128,11 @@ const CampaignManagement: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="bg-yellow-50 rounded-lg p-4">
+                    </motion.div>
+                    <motion.div
+                      className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4"
+                      whileHover={{ scale: 1.05 }}
+                    >
                       <div className="flex items-center space-x-3">
                         <Users className="text-yellow-600" size={24} />
                         <div>
@@ -940,8 +1142,11 @@ const CampaignManagement: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-4">
+                    </motion.div>
+                    <motion.div
+                      className="bg-gradient-to-r from-red-50 to-rose-50 rounded-lg p-4"
+                      whileHover={{ scale: 1.05 }}
+                    >
                       <div className="flex items-center space-x-3">
                         <Target className="text-red-600" size={24} />
                         <div>
@@ -951,21 +1156,28 @@ const CampaignManagement: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
 
                   {/* Screens and Schedule */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">
                         Active Screens
                       </h3>
                       <div className="space-y-3">
                         {selectedCampaign.screens.map(
                           (screen: any, index: number) => (
-                            <div
+                            <motion.div
                               key={index}
-                              className="bg-gray-50 rounded-lg p-3"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.4 + index * 0.1 }}
+                              className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors"
                             >
                               <h4 className="font-medium text-gray-900">
                                 {screen.name}
@@ -974,13 +1186,17 @@ const CampaignManagement: React.FC = () => {
                                 <MapPin size={14} className="mr-1" />
                                 {screen.city}
                               </p>
-                            </div>
+                            </motion.div>
                           )
                         )}
                       </div>
-                    </div>
+                    </motion.div>
 
-                    <div>
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">
                         Schedule
                       </h3>
@@ -992,12 +1208,15 @@ const CampaignManagement: React.FC = () => {
                           <div className="flex flex-wrap gap-2">
                             {selectedCampaign.schedule.timeSlots.map(
                               (slot: string, index: number) => (
-                                <span
+                                <motion.span
                                   key={index}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: 0.5 + index * 0.1 }}
                                   className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
                                 >
                                   {slot}
-                                </span>
+                                </motion.span>
                               )
                             )}
                           </div>
@@ -1007,56 +1226,99 @@ const CampaignManagement: React.FC = () => {
                           <div className="flex flex-wrap gap-2">
                             {selectedCampaign.schedule.days.map(
                               (day: string, index: number) => (
-                                <span
+                                <motion.span
                                   key={index}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: 0.7 + index * 0.1 }}
                                   className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
                                 >
                                   {day.slice(0, 3)}
-                                </span>
+                                </motion.span>
                               )
                             )}
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex space-x-4">
+                  {/* Professional Action Buttons */}
+                  <motion.div
+                    className="flex space-x-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                  >
                     <motion.button
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                      whileHover={{ scale: 1.02 }}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all flex items-center space-x-2"
+                      whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Edit3 size={20} />
                       <span>Edit Campaign</span>
                     </motion.button>
                     <motion.button
-                      className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center space-x-2"
-                      whileHover={{ scale: 1.02 }}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center space-x-2"
+                      whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Copy size={20} />
                       <span>Duplicate</span>
                     </motion.button>
                     <motion.button
-                      className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      whileHover={{ scale: 1.02 }}
+                      className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center space-x-2"
+                      whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Share2 size={20} />
                       <span>Share</span>
                     </motion.button>
                     <motion.button
-                      className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      whileHover={{ scale: 1.02 }}
+                      className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-all flex items-center space-x-2"
+                      whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <BarChart3 size={20} />
                       <span>Analytics</span>
                     </motion.button>
-                  </div>
+                  </motion.div>
                 </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Campaign Creation Workflow Modal */}
+        <AnimatePresence>
+          {showCreateWorkflow && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setShowCreateWorkflow(false);
+                }
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl"
+              >
+                <CampaignCreationWorkflow
+                  onClose={() => setShowCreateWorkflow(false)}
+                  onCampaignCreated={(campaign: any) => {
+                    // Handle successful campaign creation
+                    console.log("Campaign created:", campaign);
+                    setShowCreateWorkflow(false);
+                    // You can add campaign to the local state or refetch data
+                    setCampaignData((prev) => [...prev, campaign]);
+                  }}
+                />
               </motion.div>
             </motion.div>
           )}

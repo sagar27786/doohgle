@@ -56,7 +56,7 @@ interface Creative {
 const CampaignCreationWorkflow: React.FC = () => {
   // Global state
   const [currentStep, setCurrentStep] = useState<number>(1);
-  
+
   // Handle viewing screen details
   // const onViewDetails = (screen: SelectedScreen) => {
   //   // You can customize this function to show a modal or navigate to a details page
@@ -66,7 +66,9 @@ const CampaignCreationWorkflow: React.FC = () => {
   // };
 
   const [selectedScreens, setSelectedScreens] = useState<SelectedScreen[]>([]);
-  const [availableScreens, setAvailableScreens] = useState<SelectedScreen[]>([]);
+  const [availableScreens, setAvailableScreens] = useState<SelectedScreen[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,11 +82,31 @@ const CampaignCreationWorkflow: React.FC = () => {
   // Steps metadata
   const steps = useMemo(
     () => [
-      { number: 1, title: "Select Screens", description: "Choose your advertising screens" },
-      { number: 2, title: "Schedule", description: "Select dates and time slots" },
-      { number: 3, title: "Upload Creatives", description: "Add your advertising content" },
-      { number: 4, title: "Budget & Payment", description: "Review costs and pay" },
-      { number: 5, title: "Confirmation", description: "Campaign setup complete" },
+      {
+        number: 1,
+        title: "Select Screens",
+        description: "Choose your advertising screens",
+      },
+      {
+        number: 2,
+        title: "Schedule",
+        description: "Select dates and time slots",
+      },
+      {
+        number: 3,
+        title: "Upload Creatives",
+        description: "Add your advertising content",
+      },
+      {
+        number: 4,
+        title: "Budget & Payment",
+        description: "Review costs and pay",
+      },
+      {
+        number: 5,
+        title: "Confirmation",
+        description: "Campaign setup complete",
+      },
     ],
     []
   );
@@ -106,7 +128,10 @@ const CampaignCreationWorkflow: React.FC = () => {
       case 2:
         return selectedDates.length > 0;
       case 3:
-        return uploadedCreatives.length > 0 && uploadedCreatives.every((c) => c.isValid);
+        return (
+          uploadedCreatives.length > 0 &&
+          uploadedCreatives.every((c) => c.isValid)
+        );
       case 4:
         return true; // payment form can always proceed in this mock
       case 5:
@@ -146,7 +171,7 @@ const CampaignCreationWorkflow: React.FC = () => {
   const ScreenDetailsModal: React.FC<ScreenDetailsModalProps> = ({
     screen: initialScreen,
     onClose,
-    onSelectScreen
+    onSelectScreen,
   }) => {
     const [screen, setScreen] = useState<SelectedScreen | null>(initialScreen);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -181,13 +206,17 @@ const CampaignCreationWorkflow: React.FC = () => {
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">{screen.name}</h3>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {screen.name}
+                </h3>
                 <div className="flex items-center text-sm text-gray-600 mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span>{[screen.location, screen.city].filter(Boolean).join(', ')}</span>
+                  <span>
+                    {[screen.location, screen.city].filter(Boolean).join(", ")}
+                  </span>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 p-1 -mr-2"
                 disabled={isLoading}
@@ -220,10 +249,16 @@ const CampaignCreationWorkflow: React.FC = () => {
               {/* Left Column - Basic Info */}
               <div className="md:col-span-2 space-y-6">
                 {/* Screen Image */}
-                {fullDetails?.assets?.find((a: any) => a.asset_type === 'photo_day')?.url ? (
+                {fullDetails?.assets?.find(
+                  (a: any) => a.asset_type === "photo_day"
+                )?.url ? (
                   <div className="bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={fullDetails.assets?.find((a: any) => a.asset_type === 'photo_day')?.url}
+                    <img
+                      src={
+                        fullDetails.assets?.find(
+                          (a: any) => a.asset_type === "photo_day"
+                        )?.url
+                      }
                       alt={`${screen.name} - Screen Preview`}
                       className="w-full h-48 object-cover"
                     />
@@ -235,58 +270,80 @@ const CampaignCreationWorkflow: React.FC = () => {
                 )}
                 {/* Detailed Information */}
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Screen Specifications</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">
+                    Screen Specifications
+                  </h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-gray-500">Screen ID</p>
-                      <p className="font-medium">#{screen?.id || 'N/A'}</p>
+                      <p className="font-medium">#{screen?.id || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Screen Size</p>
-                      <p className="font-medium">{screen?.size || 'N/A'}</p>
+                      <p className="font-medium">{screen?.size || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Latitude</p>
-                      <p className="font-medium">{screen?.latitude?.toFixed(4) || 'N/A'}</p>
+                      <p className="font-medium">
+                        {screen?.latitude?.toFixed(4) || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-500">Longitude</p>
-                      <p className="font-medium">{screen?.longitude?.toFixed(4) || 'N/A'}</p>
+                      <p className="font-medium">
+                        {screen?.longitude?.toFixed(4) || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-500">Resolution</p>
-                      <p className="font-medium">{fullDetails?.resolution || 'N/A'}</p>
+                      <p className="font-medium">
+                        {fullDetails?.resolution || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-500">Orientation</p>
-                      <p className="font-medium capitalize">{fullDetails?.orientation || 'N/A'}</p>
+                      <p className="font-medium capitalize">
+                        {fullDetails?.orientation || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-500">Device Type</p>
                       <p className="font-medium">
-                        {fullDetails?.device_type 
-                          ? fullDetails.device_type.split('_').map((word: string) => 
-                              word.charAt(0).toUpperCase() + word.slice(1)
-                            ).join(' ')
-                          : 'N/A'}
+                        {fullDetails?.device_type
+                          ? fullDetails.device_type
+                              .split("_")
+                              .map(
+                                (word: string) =>
+                                  word.charAt(0).toUpperCase() + word.slice(1)
+                              )
+                              .join(" ")
+                          : "N/A"}
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-500">Viewing Distance</p>
-                      <p className="font-medium">{fullDetails?.viewing_distance || 'N/A'}</p>
+                      <p className="font-medium">
+                        {fullDetails?.viewing_distance || "N/A"}
+                      </p>
                     </div>
-                    {fullDetails?.peak_viewing_hours && fullDetails.peak_viewing_hours.length > 0 && (
-                      <div className="col-span-2">
-                        <p className="text-gray-500">Peak Viewing Hours</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {fullDetails.peak_viewing_hours.map((hour: string, i: number) => (
-                            <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                              {hour}
-                            </span>
-                          ))}
+                    {fullDetails?.peak_viewing_hours &&
+                      fullDetails.peak_viewing_hours.length > 0 && (
+                        <div className="col-span-2">
+                          <p className="text-gray-500">Peak Viewing Hours</p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {fullDetails.peak_viewing_hours.map(
+                              (hour: string, i: number) => (
+                                <span
+                                  key={i}
+                                  className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                                >
+                                  {hour}
+                                </span>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
               </div>
@@ -295,10 +352,12 @@ const CampaignCreationWorkflow: React.FC = () => {
             {/* Screen Preview */}
             {screen.imageUrl && (
               <div className="mt-4">
-                <h4 className="font-medium text-gray-900 mb-2">Screen Preview</h4>
-                <img 
-                  src={screen.imageUrl} 
-                  alt={`${screen.name} preview`} 
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Screen Preview
+                </h4>
+                <img
+                  src={screen.imageUrl}
+                  alt={`${screen.name} preview`}
                   className="w-full h-48 object-cover rounded-md"
                 />
               </div>
@@ -323,7 +382,7 @@ const CampaignCreationWorkflow: React.FC = () => {
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 disabled={isLoading}
               >
-                {isLoading ? 'Selecting...' : 'Select This Screen'}
+                {isLoading ? "Selecting..." : "Select This Screen"}
               </button>
             </div>
           </div>
@@ -332,12 +391,15 @@ const CampaignCreationWorkflow: React.FC = () => {
     );
   };
 
-interface ScreenSelectionStepProps {
+  interface ScreenSelectionStepProps {
     // onViewDetails: (screen: SelectedScreen) => void;
   }
 
-  const ScreenSelectionStep: React.FC<ScreenSelectionStepProps> = ({ /* onViewDetails */ }) => {
-    
+  const ScreenSelectionStep: React.FC<ScreenSelectionStepProps> = (
+    {
+      /* onViewDetails */
+    }
+  ) => {
     // Major Indian cities for quick suggestions
     const cities = [
       "Mumbai",
@@ -365,26 +427,43 @@ interface ScreenSelectionStepProps {
       return {
         id: (s as any).id ?? Math.floor(Math.random() * 1_000_000),
         name: (s as any).name || "Unnamed Screen",
-        location: (s as any).location_name || (s as any).address || "Location not specified",
+        location:
+          (s as any).location_name ||
+          (s as any).address ||
+          "Location not specified",
         city: (s as any).city || "Unknown City",
         pricing: { hourly, daily, weekly },
-        size: width && height ? `${width}x${height}` : (s as any).resolution || "N/A",
+        size:
+          width && height
+            ? `${width}x${height}`
+            : (s as any).resolution || "N/A",
         traffic: (s as any).daily_footfall || 0,
         imageUrl: (s as any).image_url || undefined,
         // Map new fields
-        resolution: s.resolution_width && s.resolution_height ? `${s.resolution_width}x${s.resolution_height}` : (s as any).resolution || 'N/A',
-        orientation: (s as any).orientation || 'N/A',
-        device_type: (s as any).device_type || 'N/A',
-        viewing_distance: (s as any).viewing_distance || 'N/A',
+        resolution:
+          s.resolution_width && s.resolution_height
+            ? `${s.resolution_width}x${s.resolution_height}`
+            : (s as any).resolution || "N/A",
+        orientation: (s as any).orientation || "N/A",
+        device_type: (s as any).device_type || "N/A",
+        viewing_distance: (s as any).viewing_distance || "N/A",
         ad_frequency: (s as any).daily_footfall || 0, // Using daily_footfall as a proxy for ad_frequency
-        peak_viewing_hours: Array.isArray((s as any).peak_hours) 
-          ? (s as any).peak_hours 
-          : typeof (s as any).peak_hours === 'string' 
-          ? (s as any).peak_hours.split(', ') 
+        peak_viewing_hours: Array.isArray((s as any).peak_hours)
+          ? (s as any).peak_hours
+          : typeof (s as any).peak_hours === "string"
+          ? (s as any).peak_hours.split(", ")
           : [],
-        assets: s.image_url ? [{ asset_type: 'photo_day', url: s.image_url }] : [],
-        latitude: typeof s.latitude === 'string' ? parseFloat(s.latitude) : s.latitude || null, // Ensure latitude is a number
-        longitude: typeof s.longitude === 'string' ? parseFloat(s.longitude) : s.longitude || null, // Ensure longitude is a number
+        assets: s.image_url
+          ? [{ asset_type: "photo_day", url: s.image_url }]
+          : [],
+        latitude:
+          typeof s.latitude === "string"
+            ? parseFloat(s.latitude)
+            : s.latitude || null, // Ensure latitude is a number
+        longitude:
+          typeof s.longitude === "string"
+            ? parseFloat(s.longitude)
+            : s.longitude || null, // Ensure longitude is a number
       };
     };
 
@@ -423,17 +502,59 @@ interface ScreenSelectionStepProps {
     const toggleScreenSelection = (screen: SelectedScreen) => {
       setSelectedScreens((prev) => {
         const isSelected = prev.some((s) => s.id === screen.id);
-        return isSelected ? prev.filter((s) => s.id !== screen.id) : [...prev, screen];
+        return isSelected
+          ? prev.filter((s) => s.id !== screen.id)
+          : [...prev, screen];
       });
     };
 
-    const isScreenSelected = (screenId: number) => selectedScreens.some((s) => s.id === screenId);
+    const isScreenSelected = (screenId: number) =>
+      selectedScreens.some((s) => s.id === screenId);
+
+    // Load initial screens on component mount
+    useEffect(() => {
+      const loadInitialScreens = async () => {
+        if (availableScreens.length === 0) {
+          setIsLoading(true);
+          try {
+            // Load screens from popular cities
+            const popularCities = ["Mumbai", "Delhi"];
+            const allScreens: SelectedScreen[] = [];
+
+            for (const city of popularCities) {
+              try {
+                const results = await searchScreensByCity(city);
+                const formatted = results.map(mapToSelected);
+                allScreens.push(...formatted);
+              } catch (err) {
+                console.warn(`Failed to load screens for ${city}:`, err);
+              }
+            }
+
+            if (allScreens.length > 0) {
+              setAvailableScreens(allScreens.slice(0, 12)); // Show max 12 screens initially
+            }
+          } catch (err) {
+            console.error("Error loading initial screens:", err);
+            setError("Search for screens by city to get started");
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      loadInitialScreens();
+    }, [availableScreens.length]);
 
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Screens</h2>
-          <p className="text-gray-600">Choose the digital screens for your campaign</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Select Screens
+          </h2>
+          <p className="text-gray-600">
+            Choose the digital screens for your campaign
+          </p>
         </div>
 
         {/* City Search */}
@@ -464,7 +585,9 @@ interface ScreenSelectionStepProps {
           {showCitySuggestions && searchQuery && !isLoading && (
             <div className="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
               {cities
-                .filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase()))
+                .filter((c) =>
+                  c.toLowerCase().includes(searchQuery.toLowerCase())
+                )
                 .map((c) => (
                   <div
                     key={c}
@@ -499,209 +622,550 @@ interface ScreenSelectionStepProps {
         )}
 
         {/* No Results */}
-        {!isLoading && !error && availableScreens.length === 0 && searchQuery && (
-          <div className="text-center py-12 text-gray-500">
-            No screens found in {searchQuery}. Try another city.
-          </div>
-        )}
+        {!isLoading &&
+          !error &&
+          availableScreens.length === 0 &&
+          searchQuery && (
+            <div className="text-center py-12 text-gray-500">
+              No screens found in {searchQuery}. Try another city.
+            </div>
+          )}
 
         {/* Screen Grid */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-  {availableScreens.map((screen) => (
-    <div
-      key={screen.id}
-      className={`border rounded-lg overflow-hidden transition-all flex flex-col ${
-        isScreenSelected(screen.id) ? 'ring-2 ring-blue-500' : 'hover:shadow-md'
-      }`}
-    >
-      <div className="relative">
-        <div className="h-40 bg-gray-100 flex items-center justify-center">
-          {screen.imageUrl ? (
-            <img src={screen.imageUrl} alt={screen.name} className="w-full h-full object-cover" />
-          ) : (
-            <Monitor className="h-12 w-12 text-gray-400" />
-          )}
-        </div>
-        {isScreenSelected(screen.id) && (
-          <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
-            <Check className="h-4 w-4" />
-          </div>
-        )}
-      </div>
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-medium text-lg">{screen.name}</h3>
-        <div className="flex items-center text-sm text-gray-500 mt-1">
-          <MapPin className="h-4 w-4 mr-1" />
-          <span>{screen.location}</span>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm flex-1">
-          <div>
-            <div className="text-gray-500">Size</div>
-            <div>{screen.size}</div>
-          </div>
-          <div>
-            <div className="text-gray-500">Daily Traffic</div>
-            <div>{screen.traffic.toLocaleString()}</div>
-          </div>
-          <div>
-            <div className="text-gray-500">Hourly Rate</div>
-            <div>₹{screen.pricing.hourly.toLocaleString()}</div>
-          </div>
-          <div>
-            <div className="text-gray-500">Daily Rate</div>
-            <div>₹{screen.pricing.daily.toLocaleString()}</div>
-          </div>
-        </div>
-        {/* NEW: View Details button */}
-        <button
-          onClick={() => setScreenInView(screen)}
-          className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium self-start"
-        >
-          View Details
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
+          {availableScreens.map((screen, index) => {
+            const cardColors = [
+              "from-blue-500 to-indigo-600",
+              "from-purple-500 to-pink-600",
+              "from-green-500 to-teal-600",
+              "from-red-500 to-rose-600",
+              "from-yellow-500 to-amber-600",
+              "from-indigo-500 to-purple-600",
+              "from-pink-500 to-rose-600",
+              "from-teal-500 to-cyan-600",
+            ];
+            const colorClass = cardColors[index % cardColors.length];
+            const isSelected = isScreenSelected(screen.id);
 
+            return (
+              <motion.div
+                key={screen.id}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100,
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  y: -10,
+                  transition: { duration: 0.2 },
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => toggleScreenSelection(screen)}
+                className={`
+                  relative cursor-pointer group
+                  w-full aspect-square
+                  bg-white rounded-2xl 
+                  border-2 transition-all duration-300
+                  shadow-lg hover:shadow-2xl
+                  ${
+                    isSelected
+                      ? "border-blue-500 ring-4 ring-blue-200 shadow-blue-200/50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }
+                  overflow-hidden
+                `}
+              >
+                {/* Selection Indicator */}
+                <AnimatePresence>
+                  {isSelected && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-3 right-3 z-10"
+                    >
+                      <div className="bg-blue-500 text-white rounded-full p-2 shadow-lg">
+                        <CheckCircle className="h-5 w-5" />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Screen Image/Gradient */}
+                <div className="relative h-2/3 overflow-hidden">
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${colorClass} opacity-90`}
+                  />
+                  {screen.imageUrl ? (
+                    <img
+                      src={screen.imageUrl}
+                      alt={screen.name}
+                      className="w-full h-full object-cover mix-blend-overlay"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <motion.div
+                          whileHover={{ rotate: 360 }}
+                          transition={{ duration: 0.6 }}
+                        >
+                          <Monitor className="h-12 w-12 mx-auto mb-2 drop-shadow-lg" />
+                        </motion.div>
+                        <p className="text-sm font-semibold drop-shadow">
+                          Premium Display
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Floating Elements */}
+                  <div className="absolute top-3 left-3">
+                    <div className="bg-black/20 backdrop-blur-sm rounded-full px-3 py-1">
+                      <span className="text-white text-xs font-medium">
+                        #{screen.id}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <div className="p-4 h-1/3 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1 group-hover:text-blue-600 transition-colors">
+                      {screen.name}
+                    </h3>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      <span className="truncate">{screen.location}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Size</p>
+                      <p className="font-semibold text-gray-900">
+                        {screen.size}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Traffic</p>
+                      <p className="font-semibold text-gray-900">
+                        {(screen.traffic / 1000).toFixed(0)}K
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                {/* Details Button */}
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  whileHover={{ opacity: 1, y: 0 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setScreenInView(screen);
+                  }}
+                  className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 font-medium py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white"
+                >
+                  View Details
+                </motion.button>
+              </motion.div>
+            );
+          })}
+        </div>
 
         {/* Selected Summary */}
         {selectedScreens.length > 0 && (
           <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-medium text-lg mb-3">Selected Screens ({selectedScreens.length})</h3>
-          <div className="space-y-2">
-            {selectedScreens.map((screen) => (
-              <div key={screen.id} className="flex justify-between items-center p-2 bg-white rounded">
-                <div>
-                  <div className="font-medium">{screen.name}</div>
-                  <div className="text-sm text-gray-500">{screen.location}</div>
+            <h3 className="font-medium text-lg mb-3">
+              Selected Screens ({selectedScreens.length})
+            </h3>
+            <div className="space-y-2">
+              {selectedScreens.map((screen) => (
+                <div
+                  key={screen.id}
+                  className="flex justify-between items-center p-2 bg-white rounded"
+                >
+                  <div>
+                    <div className="font-medium">{screen.name}</div>
+                    <div className="text-sm text-gray-500">
+                      {screen.location}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    {/* NEW: View Details button */}
+                    <button
+                      onClick={() => setScreenInView(screen)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      View Details
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleScreenSelection(screen);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  {/* NEW: View Details button */}
-                  <button
-                    onClick={() => setScreenInView(screen)}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
-                  >
-                    View Details
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleScreenSelection(screen);
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
         )}
       </div>
     );
   };
 
   // ===== Step 2: Schedule Selection =====
-  const ScheduleSelectionStep: React.FC = () => {
-    const today = new Date();
-    const next30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      return date.toISOString().split("T")[0];
-    });
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<{
+    [date: string]: string[];
+  }>({});
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    const toggleDate = (date: string) => {
-      setSelectedDates((prev) => (prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]));
+  const ScheduleSelectionStep: React.FC = () => {
+    // Generate calendar days
+    const generateCalendarDays = (date: Date) => {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const firstDayWeek = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+      
+      const days = [];
+      
+      // Add empty cells for days before month starts
+      for (let i = 0; i < firstDayWeek; i++) {
+        days.push(null);
+      }
+      
+      // Add days of the month
+      for (let day = 1; day <= daysInMonth; day++) {
+        days.push(new Date(year, month, day));
+      }
+      
+      return days;
     };
 
-    const timeSlots = [
-      { label: "Morning (6 AM - 12 PM)", value: "06:00-12:00", price: 1.0 },
-      { label: "Afternoon (12 PM - 6 PM)", value: "12:00-18:00", price: 1.2 },
-      { label: "Evening (6 PM - 10 PM)", value: "18:00-22:00", price: 1.5 },
-      { label: "Night (10 PM - 6 AM)", value: "22:00-06:00", price: 0.8 },
-      { label: "Full Day (6 AM - 10 PM)", value: "06:00-22:00", price: 2.5 },
+    const formatDateKey = (date: Date) => {
+      return date.toISOString().split("T")[0];
+    };
+
+    const isDateSelected = (date: Date) => {
+      return selectedDates.includes(formatDateKey(date));
+    };
+
+    const toggleDate = (date: Date) => {
+      const dateKey = formatDateKey(date);
+      setSelectedDates((prev) =>
+        prev.includes(dateKey) 
+          ? prev.filter((d) => d !== dateKey) 
+          : [...prev, dateKey]
+      );
+      setSelectedDate(date);
+    };
+
+    const navigateMonth = (direction: 'prev' | 'next') => {
+      setCurrentMonth(prev => {
+        const newDate = new Date(prev);
+        if (direction === 'prev') {
+          newDate.setMonth(prev.getMonth() - 1);
+        } else {
+          newDate.setMonth(prev.getMonth() + 1);
+        }
+        return newDate;
+      });
+    };
+
+    const goToToday = () => {
+      setCurrentMonth(new Date());
+    };
+
+    const toggleTimeSlot = (hour: number) => {
+      if (!selectedDate) return;
+      
+      const dateKey = formatDateKey(selectedDate);
+      const slotId = `${hour.toString().padStart(2, '0')}:00`;
+      
+      setSelectedTimeSlots(prev => {
+        const dateSlots = prev[dateKey] || [];
+        const newDateSlots = dateSlots.includes(slotId)
+          ? dateSlots.filter(s => s !== slotId)
+          : [...dateSlots, slotId];
+        
+        return {
+          ...prev,
+          [dateKey]: newDateSlots
+        };
+      });
+    };
+
+    const calendarDays = generateCalendarDays(currentMonth);
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
     ];
+    const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Schedule</h2>
-          <p className="text-gray-600">Choose your campaign dates and time slots</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Choose a new date & time
+          </h2>
+          <p className="text-gray-600">
+            Select your campaign dates and time slots
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Date Selection */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Select Dates</h3>
-            <div className="border rounded-lg p-4 max-h-64 overflow-y-auto">
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden max-w-6xl mx-auto"
+        >
+          {/* Calendar Header */}
+          <div className="bg-gradient-to-r from-purple-500 to-blue-600 p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigateMonth('prev')}
+                className="p-2 rounded-full hover:bg-white/20 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </motion.button>
+              
+              <div className="text-center">
+                <h3 className="text-xl font-semibold">
+                  {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                </h3>
+              </div>
+              
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={goToToday}
+                  className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
+                >
+                  Today
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigateMonth('next')}
+                  className="p-2 rounded-full hover:bg-white/20 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex">
+            {/* Calendar Section */}
+            <div className="flex-1 p-6">
+              {/* Week Header */}
+              <div className="grid grid-cols-7 gap-2 mb-4">
+                {weekDays.map((day) => (
                   <div key={day} className="text-center text-sm font-medium text-gray-500 p-2">
                     {day}
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1">
-                {next30Days.map((date) => {
-                  const dateObj = new Date(date);
-                  const isSelected = selectedDates.includes(date);
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-2">
+                {calendarDays.map((day, index) => {
+                  if (!day) {
+                    return <div key={index} className="p-2"></div>;
+                  }
+
+                  const isSelected = isDateSelected(day);
+                  const isToday = day.toDateString() === new Date().toDateString();
+                  const isPast = day < new Date(new Date().setHours(0, 0, 0, 0));
+
                   return (
-                    <button
-                      key={date}
-                      onClick={() => toggleDate(date)}
-                      className={`p-2 text-sm rounded transition-colors ${
-                        isSelected ? "bg-blue-500 text-white" : "hover:bg-gray-100"
-                      }`}
+                    <motion.button
+                      key={day.getDate()}
+                      whileHover={{ scale: isPast ? 1 : 1.1 }}
+                      whileTap={{ scale: isPast ? 1 : 0.95 }}
+                      onClick={() => !isPast && toggleDate(day)}
+                      disabled={isPast}
+                      className={`
+                        relative p-3 rounded-xl text-sm font-medium transition-all duration-200
+                        ${isPast 
+                          ? 'text-gray-300 cursor-not-allowed' 
+                          : 'cursor-pointer hover:shadow-md'
+                        }
+                        ${isSelected 
+                          ? 'bg-blue-500 text-white shadow-lg ring-2 ring-blue-300' 
+                          : isToday 
+                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                            : 'hover:bg-gray-100 text-gray-700'
+                        }
+                      `}
                     >
-                      {dateObj.getDate()}
-                    </button>
+                      {day.getDate()}
+                      {isToday && (
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"></div>
+                      )}
+                    </motion.button>
                   );
                 })}
               </div>
             </div>
-          </div>
 
-          {/* Time Slot Selection (display only for now) */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Select Time Slots</h3>
-            <div className="space-y-3">
-              {timeSlots.map((slot) => (
-                <div key={slot.value} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{slot.label}</div>
-                      <div className="text-sm text-gray-500">Multiplier: {slot.price}x base rate</div>
-                    </div>
-                    <input type="checkbox" className="w-4 h-4 text-blue-600" disabled />
-                  </div>
+            {/* Time Slots Section */}
+            {selectedDate && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="w-80 border-l border-gray-200 p-6 bg-gray-50"
+              >
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    {selectedDate.toLocaleDateString('en-US', { 
+                      weekday: 'long',
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h4>
+                  <p className="text-sm text-gray-600">Select time slots</p>
                 </div>
-              ))}
+
+                {/* Time Slots Grid */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const hour = i + 9; // 9 AM to 8 PM
+                    const dateKey = formatDateKey(selectedDate);
+                    const slotId = `${hour.toString().padStart(2, '0')}:00`;
+                    const isSelected = selectedTimeSlots[dateKey]?.includes(slotId);
+
+                    return (
+                      <motion.button
+                        key={hour}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => toggleTimeSlot(hour)}
+                        className={`
+                          w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                          ${isSelected
+                            ? 'bg-green-100 border-green-300 shadow-md'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">
+                            {hour}:00 - {hour + 1}:00
+                          </span>
+                          {isSelected && (
+                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening'}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Summary */}
+                {selectedTimeSlots[formatDateKey(selectedDate)]?.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200"
+                  >
+                    <h5 className="font-medium text-blue-900 mb-2">
+                      Selected ({selectedTimeSlots[formatDateKey(selectedDate)]?.length} hours)
+                    </h5>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTimeSlots[formatDateKey(selectedDate)]?.slice(0, 3).map((slot) => (
+                        <span key={slot} className="px-2 py-1 bg-blue-200 text-blue-800 rounded-md text-sm">
+                          {slot}
+                        </span>
+                      ))}
+                      {selectedTimeSlots[formatDateKey(selectedDate)]?.length > 3 && (
+                        <span className="text-blue-600 text-sm">
+                          +{selectedTimeSlots[formatDateKey(selectedDate)]?.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Overall Summary */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6"
+        >
+          <h4 className="font-semibold text-gray-900 mb-3">Campaign Schedule Summary</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span className="text-gray-700">
+                <strong>{selectedDates.length}</strong> days selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-gray-700">
+                <strong>{Object.values(selectedTimeSlots).flat().length}</strong> time slots
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <span className="text-gray-700">
+                <strong>{selectedScreens.length}</strong> screens selected
+              </span>
             </div>
           </div>
-        </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-medium text-green-900 mb-2">Selected Schedule</h4>
-          <div className="text-sm text-green-700">
-            <p>Dates: {selectedDates.length} days selected</p>
-            <p>Estimated duration: {selectedDates.length} days</p>
-          </div>
-        </div>
+        </motion.div>
       </div>
     );
   };
 
   // ===== Step 3: Creative Upload =====
   const CreativeUploadStep: React.FC = () => {
-    const validateCreative = (type: "video" | "image" | "html5", file: File): boolean => {
-      if (type === "video") return file.type.includes("video") && file.size <= 100 * 1024 * 1024; // 100MB
-      if (type === "image") return file.type.includes("image") && file.size <= 10 * 1024 * 1024; // 10MB
+    const validateCreative = (
+      type: "video" | "image" | "html5",
+      file: File
+    ): boolean => {
+      if (type === "video")
+        return file.type.includes("video") && file.size <= 100 * 1024 * 1024; // 100MB
+      if (type === "image")
+        return file.type.includes("image") && file.size <= 10 * 1024 * 1024; // 10MB
       return true;
     };
 
-    const handleFileUpload = (type: "video" | "image" | "html5", file: File) => {
+    const handleFileUpload = (
+      type: "video" | "image" | "html5",
+      file: File
+    ) => {
       const creative: Creative = {
         id: Date.now().toString(),
         type,
@@ -719,7 +1183,9 @@ interface ScreenSelectionStepProps {
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload Creatives</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Upload Creatives
+          </h2>
           <p className="text-gray-600">Add your advertising content</p>
         </div>
 
@@ -729,15 +1195,23 @@ interface ScreenSelectionStepProps {
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
             <Play size={32} className="mx-auto text-gray-400 mb-4" />
             <h3 className="font-medium mb-2">Video Content</h3>
-            <p className="text-sm text-gray-600 mb-4">MP4, up to 30 seconds, max 100MB</p>
+            <p className="text-sm text-gray-600 mb-4">
+              MP4, up to 30 seconds, max 100MB
+            </p>
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload("video", e.target.files[0])}
+              onChange={(e) =>
+                e.target.files?.[0] &&
+                handleFileUpload("video", e.target.files[0])
+              }
               className="hidden"
               id="video-upload"
             />
-            <label htmlFor="video-upload" className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
+            <label
+              htmlFor="video-upload"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+            >
               Upload Video
             </label>
           </div>
@@ -746,15 +1220,23 @@ interface ScreenSelectionStepProps {
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
             <ImageIcon size={32} className="mx-auto text-gray-400 mb-4" />
             <h3 className="font-medium mb-2">Image Content</h3>
-            <p className="text-sm text-gray-600 mb-4">JPG/PNG, 1920x1080px recommended</p>
+            <p className="text-sm text-gray-600 mb-4">
+              JPG/PNG, 1920x1080px recommended
+            </p>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload("image", e.target.files[0])}
+              onChange={(e) =>
+                e.target.files?.[0] &&
+                handleFileUpload("image", e.target.files[0])
+              }
               className="hidden"
               id="image-upload"
             />
-            <label htmlFor="image-upload" className="bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-green-700 transition-colors">
+            <label
+              htmlFor="image-upload"
+              className="bg-green-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-green-700 transition-colors"
+            >
               Upload Image
             </label>
           </div>
@@ -763,15 +1245,23 @@ interface ScreenSelectionStepProps {
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
             <FileText size={32} className="mx-auto text-gray-400 mb-4" />
             <h3 className="font-medium mb-2">Interactive Content</h3>
-            <p className="text-sm text-gray-600 mb-4">HTML5 creative for interactive displays</p>
+            <p className="text-sm text-gray-600 mb-4">
+              HTML5 creative for interactive displays
+            </p>
             <input
               type="file"
               accept=".html,.zip"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload("html5", e.target.files[0])}
+              onChange={(e) =>
+                e.target.files?.[0] &&
+                handleFileUpload("html5", e.target.files[0])
+              }
               className="hidden"
               id="html5-upload"
             />
-            <label htmlFor="html5-upload" className="bg-purple-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-purple-700 transition-colors">
+            <label
+              htmlFor="html5-upload"
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-purple-700 transition-colors"
+            >
               Upload HTML5
             </label>
           </div>
@@ -783,13 +1273,25 @@ interface ScreenSelectionStepProps {
             <h3 className="text-lg font-semibold mb-4">Uploaded Creatives</h3>
             <div className="space-y-3">
               {uploadedCreatives.map((creative) => (
-                <div key={creative.id} className="flex items-center justify-between bg-white border rounded-lg p-4">
+                <div
+                  key={creative.id}
+                  className="flex items-center justify-between bg-white border rounded-lg p-4"
+                >
                   <div className="flex items-center space-x-4">
                     {creative.type === "image" && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={creative.preview} alt="Preview" className="w-16 h-16 object-cover rounded" />
+                      <img
+                        src={creative.preview}
+                        alt="Preview"
+                        className="w-16 h-16 object-cover rounded"
+                      />
                     )}
-                    {creative.type === "video" && <video src={creative.preview} className="w-16 h-16 object-cover rounded" />}
+                    {creative.type === "video" && (
+                      <video
+                        src={creative.preview}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    )}
                     {creative.type === "html5" && (
                       <div className="w-16 h-16 bg-purple-100 rounded flex items-center justify-center">
                         <FileText size={24} className="text-purple-600" />
@@ -798,7 +1300,9 @@ interface ScreenSelectionStepProps {
                     <div>
                       <p className="font-medium">{creative.file?.name}</p>
                       <p className="text-sm text-gray-600 capitalize">
-                        {creative.type} • {(((creative.file?.size ?? 0) / 1024 / 1024).toFixed(1))}MB
+                        {creative.type} •{" "}
+                        {((creative.file?.size ?? 0) / 1024 / 1024).toFixed(1)}
+                        MB
                       </p>
                     </div>
                   </div>
@@ -808,7 +1312,10 @@ interface ScreenSelectionStepProps {
                     ) : (
                       <AlertCircle size={20} className="text-red-500" />
                     )}
-                    <button onClick={() => removeCreative(creative.id)} className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => removeCreative(creative.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
                       <X size={20} />
                     </button>
                   </div>
@@ -828,8 +1335,12 @@ interface ScreenSelectionStepProps {
     return (
       <div className="space-y-6">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Budget Estimator & Payment</h2>
-          <p className="text-gray-600">Review your campaign costs and complete payment</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Budget Estimator & Payment
+          </h2>
+          <p className="text-gray-600">
+            Review your campaign costs and complete payment
+          </p>
         </div>
 
         <div className="bg-white border rounded-lg p-6">
@@ -837,7 +1348,9 @@ interface ScreenSelectionStepProps {
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b">
               <span>Selected Screens:</span>
-              <span className="font-medium">{selectedScreens.length} screens</span>
+              <span className="font-medium">
+                {selectedScreens.length} screens
+              </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span>Campaign Duration:</span>
@@ -845,7 +1358,9 @@ interface ScreenSelectionStepProps {
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span>Uploaded Creatives:</span>
-              <span className="font-medium">{uploadedCreatives.length} files</span>
+              <span className="font-medium">
+                {uploadedCreatives.length} files
+              </span>
             </div>
             <div className="flex justify-between items-center py-3 text-lg font-bold text-blue-600 bg-blue-50 px-4 rounded">
               <span>Total Amount:</span>
@@ -862,7 +1377,9 @@ interface ScreenSelectionStepProps {
               <Smartphone size={24} className="text-blue-600" />
               <div>
                 <div className="font-medium">UPI Payment</div>
-                <div className="text-sm text-gray-600">PhonePe, GPay, Paytm</div>
+                <div className="text-sm text-gray-600">
+                  PhonePe, GPay, Paytm
+                </div>
               </div>
             </div>
             <div className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 flex items-center space-x-3">
@@ -876,7 +1393,9 @@ interface ScreenSelectionStepProps {
               <CreditCard size={24} className="text-purple-600" />
               <div>
                 <div className="font-medium">Credit/Debit Card</div>
-                <div className="text-sm text-gray-600">Visa, Mastercard, RuPay</div>
+                <div className="text-sm text-gray-600">
+                  Visa, Mastercard, RuPay
+                </div>
               </div>
             </div>
           </div>
@@ -901,15 +1420,21 @@ interface ScreenSelectionStepProps {
         <CheckCircle size={32} className="text-green-600" />
       </div>
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Campaign Created Successfully!</h2>
-        <p className="text-gray-600">Your campaign has been submitted and will go live as scheduled.</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Campaign Created Successfully!
+        </h2>
+        <p className="text-gray-600">
+          Your campaign has been submitted and will go live as scheduled.
+        </p>
       </div>
       <div className="bg-gray-50 rounded-lg p-6 text-left max-w-md mx-auto">
         <h3 className="font-semibold mb-4">Campaign Details:</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Campaign ID:</span>
-            <span className="font-medium">#CAM{Date.now().toString().slice(-6)}</span>
+            <span className="font-medium">
+              #CAM{Date.now().toString().slice(-6)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Screens:</span>
@@ -921,13 +1446,20 @@ interface ScreenSelectionStepProps {
           </div>
           <div className="flex justify-between">
             <span>Total Paid:</span>
-            <span className="font-medium text-green-600">₹{calculateBudget().toLocaleString()}</span>
+            <span className="font-medium text-green-600">
+              ₹{calculateBudget().toLocaleString()}
+            </span>
           </div>
         </div>
       </div>
       <div className="space-x-4">
-        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg">View Campaign Dashboard</button>
-        <button className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg" onClick={() => setCurrentStep(1)}>
+        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg">
+          View Campaign Dashboard
+        </button>
+        <button
+          className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg"
+          onClick={() => setCurrentStep(1)}
+        >
           Create Another Campaign
         </button>
       </div>
@@ -945,17 +1477,29 @@ interface ScreenSelectionStepProps {
               <div key={step.number} className="flex items-center">
                 <div
                   className={`flex items-center justify-center w-10 h-10 rounded-full font-medium text-sm ${
-                    step.number <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+                    step.number <= currentStep
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-600"
                   }`}
                 >
-                  {step.number < currentStep ? <Check size={16} /> : step.number}
+                  {step.number < currentStep ? (
+                    <Check size={16} />
+                  ) : (
+                    step.number
+                  )}
                 </div>
                 <div className="ml-3 hidden md:block">
                   <div className="font-medium text-sm">{step.title}</div>
-                  <div className="text-xs text-gray-600">{step.description}</div>
+                  <div className="text-xs text-gray-600">
+                    {step.description}
+                  </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`hidden md:block w-12 h-0.5 ml-4 ${step.number < currentStep ? "bg-blue-600" : "bg-gray-200"}`} />
+                  <div
+                    className={`hidden md:block w-12 h-0.5 ml-4 ${
+                      step.number < currentStep ? "bg-blue-600" : "bg-gray-200"
+                    }`}
+                  />
                 )}
               </div>
             ))}
@@ -964,31 +1508,43 @@ interface ScreenSelectionStepProps {
 
         {/* Step Content */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-8">
-            <AnimatePresence mode="wait">
-              <motion.div key={currentStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                {currentStep === 1 && <ScreenSelectionStep /* onViewDetails={onViewDetails} */ />}
-                {currentStep === 2 && <ScheduleSelectionStep />}
-                {currentStep === 3 && <CreativeUploadStep />}
-                {currentStep === 4 && <BudgetPaymentStep />}
-                {currentStep === 5 && <ConfirmationStep />}
-              </motion.div>
-            </AnimatePresence>
-</div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {currentStep === 1 && (
+                <ScreenSelectionStep /* onViewDetails={onViewDetails} */ />
+              )}
+              {currentStep === 2 && <ScheduleSelectionStep />}
+              {currentStep === 3 && <CreativeUploadStep />}
+              {currentStep === 4 && <BudgetPaymentStep />}
+              {currentStep === 5 && <ConfirmationStep />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-{/* Modal for viewing screen details */}
-<ScreenDetailsModal 
-  screen={screenInView} 
-  onClose={() => setScreenInView(null)}
-  onSelectScreen={(screen) => {
-    setSelectedScreens(prev => [...prev, screen]);
-    setScreenInView(null);
-  }}
-/>
+        {/* Modal for viewing screen details */}
+        <ScreenDetailsModal
+          screen={screenInView}
+          onClose={() => setScreenInView(null)}
+          onSelectScreen={(screen) => {
+            setSelectedScreens((prev) => [...prev, screen]);
+            setScreenInView(null);
+          }}
+        />
 
         {/* Navigation Buttons */}
         {currentStep < 5 && (
           <div className="flex items-center justify-between">
-            <button onClick={handleBack} disabled={currentStep === 1} className="px-4 py-2 rounded-lg border disabled:opacity-50">
+            <button
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className="px-4 py-2 rounded-lg border disabled:opacity-50"
+            >
               Back
             </button>
             <button

@@ -11,6 +11,7 @@ import earningsRoutes from './routes/earnings';
 import bookingRoutes from "./routes/bookings";
 import locationRoutes from "./routes/locations";
 import uploadRoutes from './routes/upload';
+import campaignRequestRoutes from "./routes/campaignRequests";
 
 // Load env vars
 
@@ -31,13 +32,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/screens', screensRoutes);
-app.use('/api/venue', venueRoutes);
-app.use('/api/earnings', earningsRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/screens", screensRoutes);
+app.use("/api/venue", venueRoutes);
+app.use("/api/earnings", earningsRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/locations", locationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use("/api/campaign-requests", campaignRequestRoutes);
 // app.use('/api/campaigns', campaignRoutes);
 
 // Temporary campaigns endpoints

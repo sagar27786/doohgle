@@ -37,12 +37,12 @@ const screenInitialState = {
   longitude: '',
 
   // Technical Specs
-  width_px: '',
-  height_px: '',
-  resolution: '',
-  orientation: 'landscape',
-  device_type: 'smart_tv',
-  device_model: '',
+  width_px: "",
+  height_px: "",
+  resolution: "",
+  orientation: "landscape",
+  device_type: "smart_tv",
+  device_model: "",
   ads_enabled: false,
   ad_frequency: 0,
   viewing_distance: 'close',
@@ -126,10 +126,10 @@ const VenueDashboard: React.FC = () => {
   };
 
   const handlePricingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const value = e.target.value;
     setScreen((prev) => ({
       ...prev,
-      pricing: { ...prev.pricing, [name]: value },
+      pricing: { ...prev.pricing, [e.target.name]: value },
     }));
   };
 
@@ -190,7 +190,7 @@ const VenueDashboard: React.FC = () => {
 
   const handleScreenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setScreenMsg('');
+    setScreenMsg("");
     setScreenLoading(true);
 
     try {
@@ -212,6 +212,9 @@ const VenueDashboard: React.FC = () => {
           hourly_rate: screen.pricing.hourly_rate
             ? Number(screen.pricing.hourly_rate)
             : undefined,
+          
+// Remove duplicate hourly_rate property since it's already defined above
+           
           daily_rate: screen.pricing.daily_rate
             ? Number(screen.pricing.daily_rate)
             : undefined,
@@ -230,7 +233,7 @@ const VenueDashboard: React.FC = () => {
       setShowAddScreen(false);
       setActiveTab('screens');
     } catch (err: any) {
-      setScreenMsg(err?.response?.data?.message || 'Failed to register screen');
+      setScreenMsg(err?.response?.data?.message || "Failed to register screen");
     } finally {
       setScreenLoading(false);
     }

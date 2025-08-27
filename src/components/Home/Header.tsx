@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X, ChevronDown, Monitor, Target, Sun, Moon } from "lucide-react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  Monitor,
+  Target,
+  Sun,
+  Moon,
+  Map,
+  Navigation2,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
 
@@ -159,6 +169,18 @@ const Header = () => {
                       icon={<Monitor className="h-6 w-6 text-green-500" />}
                       title="Campaign Dashboard"
                       subtitle="Manage campaigns & screens"
+                    />
+                    <ProductLink
+                      to="/map"
+                      icon={<Map className="h-6 w-6 text-blue-600" />}
+                      title="Interactive Map"
+                      subtitle="Explore Indian digital billboard locations"
+                    />
+                    <ProductLink
+                      to="/map-dashboard"
+                      icon={<Navigation2 className="h-6 w-6 text-purple-600" />}
+                      title="Maps Dashboard"
+                      subtitle="Real-time analytics with Indian maps"
                     />
                   </div>
                 </div>

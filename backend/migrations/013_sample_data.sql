@@ -1,6 +1,5 @@
 -- Quick Sample Data for Complete Ads Manager
 
--- Update existing screens with enhanced data
 UPDATE screens SET 
     city = CASE 
         WHEN id = 1 THEN 'Delhi'

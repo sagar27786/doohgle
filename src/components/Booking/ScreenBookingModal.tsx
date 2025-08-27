@@ -11,7 +11,22 @@ import {
   AlertCircle,
   Loader2,
   CreditCard,
+  Users,
+  Check,
+  ChevronRight,
 } from "lucide-react";
+
+interface Screen {
+  id: number;
+  name: string;
+  city: string;
+  location_name: string;
+  cost_per_10_seconds: number;
+  daily_footfall: number;
+  is_active: boolean;
+  demographics: string;
+  peak_hours: string;
+}
 
 interface Screen {
   id: number;
@@ -38,17 +53,21 @@ interface BookingData {
 }
 
 interface ScreenBookingModalProps {
-  screen: Screen | null;
+  screen?: Screen | null;
+  screens?: Screen[];
   isOpen: boolean;
   onClose: () => void;
-  onBookingSuccess: (booking: any) => void;
+  onBookingSuccess?: (booking: any) => void;
+  onBookingRequest?: (screenId: number, bookingData: any) => void;
 }
 
 const ScreenBookingModal: React.FC<ScreenBookingModalProps> = ({
   screen,
+  screens,
   isOpen,
   onClose,
   onBookingSuccess,
+  onBookingRequest,
 }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -99,9 +118,9 @@ const ScreenBookingModal: React.FC<ScreenBookingModalProps> = ({
   }, [isOpen, screen]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
     }).format(amount);
   };
 
@@ -148,22 +167,32 @@ const ScreenBookingModal: React.FC<ScreenBookingModalProps> = ({
                 <div className="flex items-center space-x-3">
                   <Monitor className="w-5 h-5 text-blue-600" />
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Screen Type</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Screen Type
+                    </p>
                     <p className="font-medium">{screen.screen_type}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <DollarSign className="w-5 h-5 text-green-600" />
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Rate per Hour</p>
-                    <p className="font-medium">{formatCurrency(screen.cost_per_10_seconds * 360)}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Rate per Hour
+                    </p>
+                    <p className="font-medium">
+                      {formatCurrency(screen.cost_per_10_seconds * 360)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <MapPin className="w-5 h-5 text-red-600" />
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Daily Footfall</p>
-                    <p className="font-medium">{screen.daily_footfall.toLocaleString()}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Daily Footfall
+                    </p>
+                    <p className="font-medium">
+                      {screen.daily_footfall.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -176,11 +205,14 @@ const ScreenBookingModal: React.FC<ScreenBookingModalProps> = ({
                 <div>
                   <h3 className="font-semibold">Booking System Coming Soon!</h3>
                   <p className="text-sm mt-1">
-                    Complete booking functionality with availability checking, payment processing, 
-                    and campaign integration will be available soon. 
+                    Complete booking functionality with availability checking,
+                    payment processing, and campaign integration will be
+                    available soon.
                   </p>
                   <div className="mt-3 text-sm">
-                    <p><strong>Features:</strong></p>
+                    <p>
+                      <strong>Features:</strong>
+                    </p>
                     <ul className="list-disc list-inside mt-1 space-y-1">
                       <li>Real-time availability checking</li>
                       <li>Flexible time slot selection</li>
@@ -195,10 +227,7 @@ const ScreenBookingModal: React.FC<ScreenBookingModalProps> = ({
 
             {/* Actions */}
             <div className="flex justify-end mt-6">
-              <button
-                onClick={onClose}
-                className="btn-secondary"
-              >
+              <button onClick={onClose} className="btn-secondary">
                 Close
               </button>
             </div>
