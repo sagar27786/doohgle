@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+// Remove import since pool is declared in this file
 
 // Database connection pool
 export const pool = new Pool({
