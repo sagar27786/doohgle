@@ -5,6 +5,9 @@ import {
   createBooking,
   getMyBookings,
   cancelBooking,
+  sendBookingRequest,
+  getMyBookingRequests,
+  getAvailableCities,
 } from "../controllers/bookingController";
 
 const router = express.Router();
@@ -20,5 +23,16 @@ router.get("/my-bookings", authMiddleware, getMyBookings);
 
 // Cancel a booking (protected - advertiser only)
 router.patch("/:booking_id/cancel", authMiddleware, cancelBooking);
+
+// ===== New Booking Request System =====
+
+// Send booking request to screen owner
+router.post("/request", sendBookingRequest);
+
+// Get my booking requests
+router.get("/requests", getMyBookingRequests);
+
+// Get available cities with screen counts
+router.get("/cities", getAvailableCities);
 
 export default router;

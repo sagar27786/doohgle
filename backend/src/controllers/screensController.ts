@@ -124,6 +124,7 @@ export async function getAllScreens(req: Request, res: Response) {
     let query = `
       SELECT
         s.id,
+        s.user_id,
         s.screen_name as name,
         'Premium advertising display' as description,
         s.device_type as screen_type,

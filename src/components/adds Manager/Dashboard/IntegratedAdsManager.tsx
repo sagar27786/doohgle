@@ -68,8 +68,9 @@ import ScreenManager from "./ScreenManager";
 // New Enhanced Components
 import CampaignManagement from "../../Campaign/CampaignManagement";
 import ReportsAnalytics from "../../Reports/ReportsAnalytics";
-import ProfessionalVenueDashboard from "../../VenueDashboard/ProfessionalVenueDashboard";
-import MyCampaignRequests from "../../Campaign/MyCampaignRequests";
+import IndiaMapDashboard from "../../Map/IndiaMapDashboard";
+import MyCampaignRequests from "../../Campaign/MyCampaignRequestsFixed";
+import MyBookings from "../../Campaign/MyBookings";
 import NotificationPanel from "../../Campaign/NotificationPanel";
 
 // AWS Enhanced Components removed
@@ -80,44 +81,36 @@ type ViewType =
   | "campaigns"
   | "campaignManagement"
   | "campaignRequests"
+  | "myBookings"
   | "screens"
+  | "maps"
   | "reports"
-  | "settings"
-  | "venueDashboard";
+  | "settings";
 
 const IntegratedAdsManager: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewType>("dashboard");
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  // showLocationManager removed
-  const [selectedFilters, setSelectedFilters] = useState({
-    location: "",
-    campaign_type: "",
-    status: "",
-    date_range: "7d",
-  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "venueDashboard", label: "Venue Dashboard", icon: Calendar },
+    { id: "maps", label: "Maps", icon: MapPin },
     { id: "campaignManagement", label: "Campaign Management", icon: Target },
+    { id: "myBookings", label: "My Bookings", icon: Calendar },
     { id: "campaignRequests", label: "My Campaign Requests", icon: Bell },
     { id: "campaigns", label: "Campaigns", icon: TrendingUp },
     { id: "screens", label: "Screens", icon: Monitor },
     { id: "reports", label: "Reports & Analytics", icon: FileText },
     { id: "settings", label: "Settings", icon: Settings },
-  ];
-
-  const renderCurrentView = () => {
+  ];  const renderCurrentView = () => {
     switch (currentView) {
       case "dashboard":
         return <ProfessionalDashboard />;
-      case "venueDashboard":
-        return <ProfessionalVenueDashboard />;
+      case "maps":
+        return <IndiaMapDashboard />;
       // AWS tabs removed
       case "campaignManagement":
         return <CampaignManagement />;
+      case "myBookings":
+        return <MyBookings />;
       case "campaignRequests":
         return <MyCampaignRequests />;
       case "campaigns":
@@ -186,10 +179,12 @@ const IntegratedAdsManager: React.FC = () => {
               <p className="text-gray-600">
                 {currentView === "dashboard" &&
                   "Overview of your campaigns and screens"}
-                {currentView === "venueDashboard" &&
-                  "Complete venue management dashboard"}
+                {currentView === "maps" &&
+                  "View all registered screens on the map"}
                 {currentView === "campaignManagement" &&
                   "Create and manage advertising campaigns"}
+                {currentView === "myBookings" &&
+                  "Track your campaign booking requests and their status"}
                 {currentView === "campaignRequests" &&
                   "Track your campaign booking requests"}
                 {currentView === "campaigns" &&

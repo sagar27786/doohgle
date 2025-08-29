@@ -14,8 +14,12 @@ import {
   AlertCircle,
   CreditCard,
   Smartphone,
+  DollarSign,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import { searchScreensByCity, ScreenSearchResult } from "../../api/screens";
+import { bookingService } from "../../services/bookingService";
 
 // ===== Types =====
 interface SelectedScreen {
@@ -56,14 +60,8 @@ interface Creative {
 const CampaignCreationWorkflow: React.FC = () => {
   // Global state
   const [currentStep, setCurrentStep] = useState<number>(1);
-
-  // Handle viewing screen details
-  // const onViewDetails = (screen: SelectedScreen) => {
-  //   // You can customize this function to show a modal or navigate to a details page
-  //   console.log('Viewing details for screen:', screen);
-  //   // Example: Show an alert with the screen details
-  //   alert(`Screen Details:\nName: ${screen.name}\nLocation: ${screen.location}\nCity: ${screen.city || 'N/A'}\nSize: ${screen.size}\nTraffic: ${screen.traffic.toLocaleString()}/day`);
-  // };
+  const [availableCities, setAvailableCities] = useState<Array<{ city: string; state: string; screen_count: number }>>([]);
+  const [selectedCity, setSelectedCity] = useState<string>("");
 
   const [selectedScreens, setSelectedScreens] = useState<SelectedScreen[]>([]);
   const [availableScreens, setAvailableScreens] = useState<SelectedScreen[]>(
@@ -76,8 +74,102 @@ const CampaignCreationWorkflow: React.FC = () => {
 
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [uploadedCreatives, setUploadedCreatives] = useState<Creative[]>([]);
+  const [campaignName, setCampaignName] = useState<string>("");
+  const [campaignDescription, setCampaignDescription] = useState<string>("");
 
   const [screenInView, setScreenInView] = useState<SelectedScreen | null>(null);
+
+  // Fetch available cities on component mount
+  useEffect(() => {
+    const fetchAvailableCities = async () => {
+      try {
+        setIsLoading(true);
+        const cities = await bookingService.getAvailableCities();
+        console.log('Fetched available cities:', cities);
+        setAvailableCities(cities);
+        
+        // Auto-select Bangalore if it's available (for demo purposes)
+        if (cities.length > 0 && !selectedCity) {
+          const bangaloreCity = cities.find(city => 
+            city.city.toLowerCase() === 'bangalore'
+          );
+          if (bangaloreCity) {
+            console.log('Auto-selecting Bangalore');
+            setSelectedCity(bangaloreCity.city);
+            setSearchQuery(`${bangaloreCity.city}, ${bangaloreCity.state}`);
+          }
+        }
+        
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching available cities:', error);
+        setError('Failed to load available cities');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAvailableCities();
+  }, []);
+
+  // Fetch screens when city is selected
+  useEffect(() => {
+    const fetchScreensForCity = async () => {
+      if (!selectedCity) {
+        setAvailableScreens([]);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        console.log(`Fetching screens for city: ${selectedCity}`);
+        
+        // Use the booking service which handles the API calls and data transformation
+        const screens = await bookingService.getAvailableScreensByCity(selectedCity);
+        console.log(`Received ${screens.length} screens:`, screens);
+        
+        // Convert ScreenSearchResult to SelectedScreen format
+        const formattedScreens = screens.map((screen: any) => ({
+          id: screen.id,
+          name: screen.name,
+          location: screen.address || screen.location_name || 'Unknown Location',
+          city: screen.city,
+          latitude: screen.latitude ? parseFloat(screen.latitude.toString()) : null,
+          longitude: screen.longitude ? parseFloat(screen.longitude.toString()) : null,
+          pricing: {
+            hourly: screen.pricing?.hourly || 0,
+            daily: screen.pricing?.daily || (parseInt(screen.cost_per_10_seconds || '50') * 360) || 1000,
+            weekly: screen.pricing?.weekly || (parseInt(screen.cost_per_10_seconds || '50') * 360 * 7) || 7000
+          },
+          size: `${screen.resolution_width || 1280}x${screen.resolution_height || 720}`,
+          traffic: screen.daily_footfall || 10000,
+          imageUrl: screen.image_url,
+          resolution: `${screen.resolution_width || 1280}x${screen.resolution_height || 720}`,
+          orientation: (screen.resolution_width || 1280) > (screen.resolution_height || 720) ? 'landscape' : 'portrait',
+          device_type: screen.screen_type || 'smart_tv',
+          viewing_distance: 'Medium',
+          ad_frequency: 6,
+          assets: screen.image_url ? [{ asset_type: 'photo_day' as const, url: screen.image_url }] : []
+        }));
+
+        console.log(`Formatted ${formattedScreens.length} screens:`, formattedScreens);
+        setAvailableScreens(formattedScreens);
+        
+        if (formattedScreens.length === 0) {
+          setError(`No active screens found in ${selectedCity}. Try another city.`);
+        }
+      } catch (error) {
+        console.error('Error fetching screens for city:', error);
+        setError(`Failed to load screens for ${selectedCity}. Please try again.`);
+        setAvailableScreens([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchScreensForCity();
+  }, [selectedCity]);
 
   // Steps metadata
   const steps = useMemo(
@@ -400,19 +492,21 @@ const CampaignCreationWorkflow: React.FC = () => {
       /* onViewDetails */
     }
   ) => {
-    // Major Indian cities for quick suggestions
-    const cities = [
-      "Mumbai",
-      "Delhi",
-      "Bangalore",
-      "Hyderabad",
-      "Ahmedabad",
-      "Chennai",
-      "Kolkata",
-      "Pune",
-      "Jaipur",
-      "Surat",
-    ];
+    // Use available cities from state (with fallback to major Indian cities)
+    const cities = availableCities.length > 0 
+      ? availableCities.map(city => `${city.city}, ${city.state}`)
+      : [
+          "Mumbai",
+          "Delhi",
+          "Bangalore",
+          "Hyderabad",
+          "Ahmedabad",
+          "Chennai",
+          "Kolkata",
+          "Pune",
+          "Jaipur",
+          "Surat",
+        ];
 
     const mapToSelected = (s: ScreenSearchResult): SelectedScreen => {
       // Best-effort mapping from API to UI model (with safe fallbacks)
@@ -467,29 +561,64 @@ const CampaignCreationWorkflow: React.FC = () => {
       };
     };
 
-    const handleSearch = async (city: string) => {
-      if (!city.trim()) return;
+    const handleSearch = async (cityString: string) => {
+      if (!cityString.trim()) return;
+      
+      console.log(`Search triggered for: "${cityString}"`);
+      // Extract city name from "City, State" format  
+      const cityName = cityString.split(',')[0].trim();
+      console.log(`Extracted city name: "${cityName}"`);
+      setSelectedCity(cityName);
       setError(null);
-      setIsLoading(true);
       setShowCitySuggestions(false); // Hide suggestions when search is triggered
+      
+      // The useEffect will handle loading screens when selectedCity changes
+    };
+
+    const handleBookingRequest = async (screen: SelectedScreen) => {
+      if (!campaignName.trim()) {
+        setError('Please enter a campaign name before booking screens');
+        return;
+      }
+
       try {
-        const results = await searchScreensByCity(city);
-        const formatted = results.map(mapToSelected);
-        setAvailableScreens(formatted);
-      } catch (err) {
-        console.error("Error fetching screens:", err);
-        setError("Failed to fetch screens. Please try again.");
-        setAvailableScreens([]);
+        setIsLoading(true);
+        await bookingService.sendBookingRequest({
+          campaign_name: campaignName,
+          advertiser_id: 'ads-manager-001', // TODO: Get from auth context
+          advertiser_name: 'Ads Manager User', // TODO: Get from auth context  
+          screen_id: screen.id,
+          screen_name: screen.name,
+          screen_owner_id: `owner-${screen.id}`, // TODO: Get from screen data
+          start_date: selectedDates[0] || new Date().toISOString().split('T')[0],
+          end_date: selectedDates[selectedDates.length - 1] || new Date().toISOString().split('T')[0],
+          start_time: '09:00',
+          end_time: '18:00',
+          daily_budget: screen.pricing?.daily || 1000,
+          total_budget: (screen.pricing?.daily || 1000) * (selectedDates.length || 1),
+          message: campaignDescription || `Booking request for ${screen.name} in ${screen.location}`,
+        });
+
+        // Show success message
+        alert(`Booking request sent successfully for ${screen.name}!`);
+        
+        // Remove screen from available screens to prevent duplicate requests
+        setAvailableScreens(prev => prev.filter(s => s.id !== screen.id));
+      } catch (error) {
+        console.error('Error sending booking request:', error);
+        setError('Failed to send booking request. Please try again.');
       } finally {
         setIsLoading(false);
       }
     };
 
     // Handle city selection from dropdown
-    const handleCitySelect = (city: string) => {
-      setSearchQuery(city);
+    const handleCitySelect = (cityString: string) => {
+      // Extract city name from "City, State" format
+      const cityName = cityString.split(',')[0].trim();
+      setSelectedCity(cityName);
+      setSearchQuery(cityString);
       setShowCitySuggestions(false);
-      handleSearch(city);
     };
 
     // Handle input focus
@@ -555,6 +684,38 @@ const CampaignCreationWorkflow: React.FC = () => {
           <p className="text-gray-600">
             Choose the digital screens for your campaign
           </p>
+        </div>
+
+        {/* Campaign Information */}
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          <h3 className="font-semibold text-gray-900">Campaign Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Campaign Name *
+              </label>
+              <input
+                type="text"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                placeholder="Enter campaign name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description (Optional)
+              </label>
+              <input
+                type="text"
+                value={campaignDescription}
+                onChange={(e) => setCampaignDescription(e.target.value)}
+                placeholder="Brief campaign description"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
         </div>
 
         {/* City Search */}
@@ -738,9 +899,13 @@ const CampaignCreationWorkflow: React.FC = () => {
                     <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1 group-hover:text-blue-600 transition-colors">
                       {screen.name}
                     </h3>
-                    <div className="flex items-center text-sm text-gray-500">
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
                       <MapPin className="h-3 w-3 mr-1" />
                       <span className="truncate">{screen.location}</span>
+                    </div>
+                    <div className="flex items-center text-sm font-semibold text-green-600">
+                      <DollarSign className="h-3 w-3" />
+                      <span>₹{screen.pricing?.daily || 'N/A'}/day</span>
                     </div>
                   </div>
 
@@ -763,18 +928,32 @@ const CampaignCreationWorkflow: React.FC = () => {
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                {/* Details Button */}
-                <motion.button
-                  initial={{ opacity: 0, y: 20 }}
-                  whileHover={{ opacity: 1, y: 0 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setScreenInView(screen);
-                  }}
-                  className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 font-medium py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white"
-                >
-                  View Details
-                </motion.button>
+                {/* Action Buttons */}
+                <div className="absolute bottom-4 left-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    whileHover={{ opacity: 1, y: 0 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setScreenInView(screen);
+                    }}
+                    className="flex-1 bg-white/90 backdrop-blur-sm text-gray-800 font-medium py-2 px-3 rounded-lg hover:bg-white transition-colors text-sm"
+                  >
+                    View Details
+                  </motion.button>
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    whileHover={{ opacity: 1, y: 0 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleBookingRequest(screen);
+                    }}
+                    disabled={isLoading}
+                    className="flex-1 bg-blue-600 text-white font-medium py-2 px-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
+                  >
+                    {isLoading ? 'Booking...' : 'Book Now'}
+                  </motion.button>
+                </div>
               </motion.div>
             );
           })}

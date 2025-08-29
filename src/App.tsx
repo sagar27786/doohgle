@@ -36,6 +36,8 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
 
 // ThemeProvider for dark mode
+import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
+
 interface ThemeContextType {
   theme: string;
   toggleTheme: () => void;
@@ -157,14 +159,23 @@ function App() {
           <Route path="/auth/login" element={<LoginSignup />} />
 
           {/* Role Selection - Protected but accessible to all authenticated users */}
-          <Route element={<ProtectedRoute allowedRoles={['venue_owner', 'advertiser', '']} />}>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={["venue_owner", "advertiser", ""]}
+              />
+            }
+          >
             <Route path="/auth/select-role" element={<RoleSelect />} />
           </Route>
-          
+
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
+
+          {/* Debug Route */}
+          <Route path="/debug/screens" element={<SimpleScreensTest />} />
 
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>

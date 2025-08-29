@@ -68,6 +68,50 @@ export async function setScreenPricing(req: Request & { user?: AuthUser }, res: 
     }
 }
 
+// Get booking requests for all screens owned by the venue owner
+export async function getVenueBookingRequests(req: Request & { user?: AuthUser }, res: Response) {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                br.id,
+                br.campaign_name,
+                br.advertiser_id,
+                br.advertiser_name,
+                br.screen_id,
+                br.screen_name,
+                br.start_date,
+                br.end_date,
+                br.start_time,
+                br.end_time,
+                br.daily_budget,
+                br.total_budget,
+                br.message,
+                br.status,
+                br.created_at,
+                br.updated_at,
+                s.screen_name as current_screen_name,
+                s.location_in_venue as location,
+                s.city
+            FROM booking_requests br 
+            JOIN screens s ON br.screen_id = s.id 
+            WHERE s.user_id = $1 
+            ORDER BY br.created_at DESC
+        `, [req.user?.id]);
+        
+        res.status(200).json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error fetching venue booking requests:', error);
+        if (error instanceof Error) {
+            res.status(500).json({ message: 'Internal server error', error: error.message });
+        } else {
+            res.status(500).json({ message: 'An unknown error occurred' });
+        }
+    }
+}
+
 // Get bookings for all screens owned by the venue owner
 export async function getVenueBookings(req: Request & { user?: AuthUser }, res: Response) {
     try {
@@ -78,6 +122,43 @@ export async function getVenueBookings(req: Request & { user?: AuthUser }, res: 
         res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
+        if (error instanceof Error) {
+            res.status(500).json({ message: 'Internal server error', error: error.message });
+        } else {
+            res.status(500).json({ message: 'An unknown error occurred' });
+        }
+    }
+}
+
+// Update the status of a booking request (accept/reject)
+export async function updateBookingRequestStatus(req: Request & { user?: AuthUser }, res: Response) {
+    const { request_id, status } = req.body;
+    if (!request_id || !status || !['accepted', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: 'request_id and a valid status (accepted, rejected) are required' });
+    }
+
+    try {
+        // Check if the venue owner owns the screen for this booking request
+        const requestCheck = await pool.query(
+            'SELECT br.*, s.user_id FROM booking_requests br JOIN screens s ON br.screen_id = s.id WHERE br.id = $1',
+            [request_id]
+        );
+
+        if (requestCheck.rowCount === 0 || requestCheck.rows[0].user_id !== req.user?.id) {
+            return res.status(403).json({ message: 'Forbidden: You do not own the screen for this booking request' });
+        }
+
+        const result = await pool.query(
+            'UPDATE booking_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+            [status, request_id]
+        );
+        
+        res.status(200).json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error updating booking request status:', error);
         if (error instanceof Error) {
             res.status(500).json({ message: 'Internal server error', error: error.message });
         } else {

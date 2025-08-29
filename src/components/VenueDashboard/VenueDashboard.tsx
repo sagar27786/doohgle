@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ScreenList from './ScreenList';
 import BookingList from './BookingList';
+import BookingRequestsPanel from './BookingRequestsPanel';
 import EarningsList from './EarningsList';
 import { venueService } from '../../services/venueService';
 import {
@@ -11,6 +12,7 @@ import {
   FaBars,
   FaSun,
   FaMoon,
+  FaBell,
 } from 'react-icons/fa';
 import MapPicker from './MapPicker';
 
@@ -64,7 +66,7 @@ const screenInitialState = {
 };
 
 const VenueDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'screens' | 'bookings' | 'earnings'>('screens');
+  const [activeTab, setActiveTab] = useState<'screens' | 'bookings' | 'booking-requests' | 'earnings'>('screens');
   const [showAddScreen, setShowAddScreen] = useState(false);
 
   // Sidebar UI-only state
@@ -101,7 +103,7 @@ const VenueDashboard: React.FC = () => {
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
 
-  const handleTabChange = (tab: 'screens' | 'bookings' | 'earnings') => {
+  const handleTabChange = (tab: 'screens' | 'bookings' | 'booking-requests' | 'earnings') => {
     setActiveTab(tab);
     setShowAddScreen(false);
   };
@@ -321,6 +323,29 @@ const VenueDashboard: React.FC = () => {
               <li>
                 <button
                   className={`group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-[15px] font-medium ${
+                    activeTab === 'booking-requests' && !showAddScreen
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'text-gray-200 hover:bg-gray-800'
+                  }`}
+                  onClick={() => handleTabChange('booking-requests')}
+                >
+                  <span
+                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg ${
+                      activeTab === 'booking-requests' && !showAddScreen
+                        ? 'bg-white/20 text-white'
+                        : 'bg-gray-800 text-gray-200 group-hover:bg-gray-700'
+                    }`}
+                  >
+                    <FaBell size={18} />
+                  </span>
+                  <span className={`${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'} transition-opacity`}>
+                    Booking Requests
+                  </span>
+                </button>
+              </li>
+              <li>
+                <button
+                  className={`group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-[15px] font-medium ${
                     activeTab === 'earnings' && !showAddScreen
                       ? 'bg-blue-600 text-white shadow-lg'
                       : 'text-gray-200 hover:bg-gray-800'
@@ -415,6 +440,14 @@ const VenueDashboard: React.FC = () => {
                 </div>
                 <div className="p-6">
                   <BookingList />
+                </div>
+              </section>
+            )}
+
+            {!showAddScreen && activeTab === 'booking-requests' && (
+              <section className="rounded-2xl bg-white border border-gray-200 shadow-xl transition-all">
+                <div className="p-6">
+                  <BookingRequestsPanel />
                 </div>
               </section>
             )}

@@ -28,7 +28,7 @@ import {
   XCircle,
   Share2,
 } from "lucide-react";
-import CampaignCreationWorkflow from "./CampaignCreationWorkflow";
+import ImprovedCampaignCreation from "./ImprovedCampaignCreation";
 
 // Types
 interface Campaign {
@@ -1309,16 +1309,7 @@ const CampaignManagement: React.FC = () => {
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl"
               >
-                <CampaignCreationWorkflow
-                  onClose={() => setShowCreateWorkflow(false)}
-                  onCampaignCreated={(campaign: any) => {
-                    // Handle successful campaign creation
-                    console.log("Campaign created:", campaign);
-                    setShowCreateWorkflow(false);
-                    // You can add campaign to the local state or refetch data
-                    setCampaignData((prev) => [...prev, campaign]);
-                  }}
-                />
+                <ImprovedCampaignCreation />
               </motion.div>
             </motion.div>
           )}

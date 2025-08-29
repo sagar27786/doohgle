@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from "react";
-import {
-  campaignRequestService,
-  type CampaignRequest,
-} from "../../services/campaignRequestService";
+import { 
+  RefreshCw, 
+  Calendar, 
+  MapPin, 
+  Clock, 
+  DollarSign,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Search,
+  Filter,
+  Eye
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { bookingService } from "../../services/bookingService";
+import type { CampaignBooking } from "../../services/bookingService";
 
 const MyCampaignRequests: React.FC = () => {
-  const [requests, setRequests] = useState<CampaignRequest[]>([]);
+  const [requests, setRequests] = useState<CampaignBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     loadRequests();
@@ -16,30 +30,46 @@ const MyCampaignRequests: React.FC = () => {
   const loadRequests = async () => {
     try {
       setLoading(true);
-      const response = await campaignRequestService.getMyRequests();
-
-      if (response.success) {
-        setRequests(response.data);
-      } else {
-        setError("Failed to load requests");
-      }
+      setError("");
+      // Use the working booking service
+      const bookings = await bookingService.getMyBookingRequests("ads-manager-001");
+      setRequests(bookings);
     } catch (err: any) {
-      setError(err.message || "Failed to load requests");
+      console.error("Error loading campaign requests:", err);
+      setError("Failed to load campaign requests");
     } finally {
       setLoading(false);
     }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800";
+    switch (status.toLowerCase()) {
+      case "accepted":
+        return "bg-green-100 text-green-800 border-green-200";
       case "rejected":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border-red-200";
       case "cancelled":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "active":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "completed":
+        return "bg-purple-100 text-purple-800 border-purple-200";
       default:
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "accepted":
+      case "active":
+        return <CheckCircle className="h-4 w-4" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4" />;
+      case "completed":
+        return <CheckCircle className="h-4 w-4" />;
+      default:
+        return <AlertCircle className="h-4 w-4" />;
     }
   };
 
@@ -48,6 +78,15 @@ const MyCampaignRequests: React.FC = () => {
       day: "2-digit",
       month: "short",
       year: "numeric",
+    });
+  };
+
+  const filteredRequests = requests.filter((request) => {
+    const matchesSearch = request.campaign_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.screens.some(screen => screen.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === "all" || request.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
     });
   };
 
