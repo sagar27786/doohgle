@@ -12,6 +12,7 @@ import bookingRoutes from "./routes/bookings";
 import locationRoutes from "./routes/locations";
 import uploadRoutes from "./routes/upload";
 import campaignRequestRoutes from "./routes/campaignRequests";
+import adminRoutes from "./routes/admin";
 
 // Load env vars
 
@@ -40,6 +41,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/campaign-requests", campaignRequestRoutes);
+app.use("/api/admin", adminRoutes);
 // app.use('/api/campaigns', campaignRoutes);
 
 // Temporary campaigns endpoints

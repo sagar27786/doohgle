@@ -13,9 +13,11 @@ export const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
   ssl: process.env.DB_HOST === "localhost" ? false : { rejectUnauthorized: false },
-  max: 10, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error if connection takes longer than 2 seconds
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
+  connectionTimeoutMillis: 10000, // Return an error if connection takes longer than 10 seconds
+  statement_timeout: 30000, // 30 second statement timeout
+  query_timeout: 30000, // 30 second query timeout
 });
 
 pool.on("connect", () => {

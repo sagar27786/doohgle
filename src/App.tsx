@@ -35,6 +35,9 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
 
+// Admin Components
+import AdminApp from "./components/Admin/AdminApp";
+
 // ThemeProvider for dark mode
 import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
 
@@ -130,6 +133,7 @@ function App() {
     "/venue-dashboard",
     "/products/ads-manager",
     "/products/ads-manager/dashboard",
+    "/admin",
   ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
   return (
@@ -176,6 +180,9 @@ function App() {
 
           {/* Debug Route */}
           <Route path="/debug/screens" element={<SimpleScreensTest />} />
+
+          {/* Admin Route */}
+          <Route path="/admin" element={<AdminApp />} />
 
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
