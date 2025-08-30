@@ -44,18 +44,9 @@ const ScreenDetailsModal: React.FC<ScreenDetailsModalProps> = ({ screen, onClose
   // Ensure assets is an array, even if it's missing from the screen prop.
   const assets = screen.assets || [];
 
-  const dayPhoto = assets.find(
-    asset => asset.asset_type === 'photo_day'
-  );
-  const nightPhoto = assets.find(
-    asset => asset.asset_type === 'photo_night'
-  );
-  const video = assets.find(asset => asset.asset_type === 'video');
-
-  // FALLBACK TO URLS ON THE SCREEN ROW IF ASSETS ARE NOT PRESENT
-  const dayPhotoUrl = dayPhoto?.url || screen.day_photo_url || '';
-  const nightPhotoUrl = nightPhoto?.url || screen.night_photo_url || '';
-  const videoUrl = video?.url || screen.video_url || '';
+  const dayPhotoUrl = screen.day_photo_url || assets.find(asset => asset.asset_type === 'photo_day')?.url || '';
+  const nightPhotoUrl = screen.night_photo_url || assets.find(asset => asset.asset_type === 'photo_night')?.url || '';
+  const videoUrl = screen.video_url || assets.find(asset => asset.asset_type === 'video')?.url || '';
 
   // Add local UI state for media toggles
   const [showDay, setShowDay] = useState(false);

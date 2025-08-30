@@ -132,7 +132,7 @@ export async function getAllScreens(req: Request, res: Response) {
     } = req.query;
 
     let query = `
-      SELECT s.*
+      SELECT s.id, s.user_id, s.screen_name, s.location_in_venue, s.city, s.latitude, s.longitude, s.width_px, s.height_px, s.peak_viewing_hours, s.day_photo_url, s.night_photo_url, s.video_url, s.is_active, s.hourly_rate, s.daily_rate, s.weekly_rate, s.device_type, s.resolution, s.created_at
       FROM screens s
       WHERE s.is_active = true
     `;
@@ -164,57 +164,59 @@ export async function getAllScreens(req: Request, res: Response) {
     const result = await pool.query(query, params);
     console.log("results before formatting : ", result.rows);
 
-    // Format results to include pricing information
-    const formattedResults = result.rows.map((row) => {
-      const cost_per_10_seconds = row.daily_rate ? row.daily_rate / 8640 : 50;
+    const resultsWithPresignedUrls = await Promise.all(
+      result.rows.map(async (row) => {
+        const dayPhotoUrl = await getRenderableUrl(row.day_photo_url);
+        const nightPhotoUrl = await getRenderableUrl(row.night_photo_url);
+        const videoUrl = await getRenderableUrl(row.video_url);
 
-      let resolution_width = 1280;
-      let resolution_height = 720;
-      if (row.resolution === "1080p") {
-        resolution_width = 1920;
-        resolution_height = 1080;
-      } else if (row.resolution === "4K") {
-        resolution_width = 3840;
-        resolution_height = 2160;
-      }
+        const cost_per_10_seconds = row.daily_rate ? row.daily_rate / 8640 : 50;
 
-      return {
-        id: row.id,
-        user_id: row.user_id,
-        name: row.screen_name,
-        description: "Premium advertising display",
-        screen_type: row.device_type,
-        location_name: row.location_in_venue,
-        address: `${row.location_in_venue}, ${row.city}`,
-        city: row.city,
-        state: "India",
-        // pincode: "000000",
-        latitude: row.latitude,
-        longitude: row.longitude,
-        screen_size_width: row.width_px,
-        screen_size_height: row.height_px,
-        width_px : row.width_px,
-        height_px : row.height_px,
-        // daily_footfall: 5000 + Math.floor(Math.random() * 20000),
-        // vehicle_count: 2000 + Math.floor(Math.random() * 8000),
-        peak_hours: row.peak_viewing_hours,
-        demographics: "Mixed demographics",
-        day_photo_url: row.day_photo_url,
-        night_photo_url : row.night_photo_url,
-        video_url: row.video_url,
-        is_active: row.is_active,
-        hourly_rate: row.hourly_rate,
-        daily_rate: row.daily_rate,
-        weekly_rate: row.weekly_rate,
-        device_type : row.device_type,
-        cost_per_10_seconds: cost_per_10_seconds,
-      };
-    });
+        let resolution_width = 1280;
+        let resolution_height = 720;
+        if (row.resolution === "1080p") {
+          resolution_width = 1920;
+          resolution_height = 1080;
+        } else if (row.resolution === "4K") {
+          resolution_width = 3840;
+          resolution_height = 2160;
+        }
+
+        return {
+          id: row.id,
+          user_id: row.user_id,
+          name: row.screen_name,
+          description: "Premium advertising display",
+          screen_type: row.device_type,
+          location_name: row.location_in_venue,
+          address: `${row.location_in_venue}, ${row.city}`,
+          city: row.city,
+          state: "India",
+          latitude: row.latitude,
+          longitude: row.longitude,
+          screen_size_width: row.width_px,
+          screen_size_height: row.height_px,
+          width_px: row.width_px,
+          height_px: row.height_px,
+          peak_hours: row.peak_viewing_hours,
+          demographics: "Mixed demographics",
+          day_photo_url: dayPhotoUrl,
+          night_photo_url: nightPhotoUrl,
+          video_url: videoUrl,
+          is_active: row.is_active,
+          hourly_rate: row.hourly_rate,
+          daily_rate: row.daily_rate,
+          weekly_rate: row.weekly_rate,
+          device_type: row.device_type,
+          cost_per_10_seconds: cost_per_10_seconds,
+        };
+      })
+    );
 
     res.json({
       success: true,
-      data: formattedResults,
-      total: result.rows.length,
+      data: resultsWithPresignedUrls,
+      total: resultsWithPresignedUrls.length,
       filters: { city, state, screen_type, min_footfall, max_budget },
     });
   } catch (error) {

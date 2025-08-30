@@ -19,6 +19,7 @@ import {
   Film,
   Image as ImageIcon
 } from 'lucide-react';
+import ScreenDetailsModal from '../VenueDashboard/ScreenDetailsModal';
 
 interface Screen {
   id: number;
@@ -124,7 +125,7 @@ const ImprovedCampaignCreation: React.FC = () => {
         weekly_rate: screen.weekly_rate || 0,
         currency: screen.currency || '₹',
         device_type: screen.device_type || 'N/A',
-        day_photo_url: screen.image_url, // API uses image_url for day_photo_url
+        day_photo_url: screen.day_photo_url, // API now uses day_photo_url
         night_photo_url: screen.night_photo_url,
         video_url: screen.video_url,
       }));
@@ -664,6 +665,36 @@ The venue owner will receive your request and respond shortly.`);
           </motion.div>
         )}
       </div>
+
+      
+
+      {selectedScreenForModal && (
+        <ScreenDetailsModal
+          screen={{
+            id: selectedScreenForModal.id,
+            screen_name: selectedScreenForModal.name,
+            location_in_venue: selectedScreenForModal.location_name,
+            screen_size_inches: null, // Not available in the campaign screen data
+            resolution: `${selectedScreenForModal.resolution_width}x${selectedScreenForModal.resolution_height}`,
+            orientation: 'landscape', // Assuming landscape, not available in data
+            device_type: selectedScreenForModal.device_type as 'smart_tv' | 'media_player' | 'custom',
+            device_model: 'N/A', // Not available
+            ads_enabled: selectedScreenForModal.is_active,
+            ad_frequency: 15, // Default value
+            viewing_distance: 'medium', // Default value
+            typical_viewer_duration: '15s', // Default value
+            peak_viewing_hours: [], // Not available
+            assets: [], // Not available
+            created_at: '', // Not available
+            updated_at: '', // Not available
+            user_id: selectedScreenForModal.user_id || 0,
+            day_photo_url: selectedScreenForModal.day_photo_url,
+            night_photo_url: selectedScreenForModal.night_photo_url,
+            video_url: selectedScreenForModal.video_url,
+          }}
+          onClose={() => setSelectedScreenForModal(null)}
+        />
+      )}
     </div>
   );
 };
