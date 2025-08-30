@@ -56,34 +56,20 @@ CREATE TABLE IF NOT EXISTS screens (
   typical_viewer_duration TEXT,
   peak_viewing_hours TEXT[] DEFAULT '{}',
   is_active BOOLEAN DEFAULT TRUE,
+  day_photo_url TEXT,
+  night_photo_url TEXT,
+  video_url TEXT,
+  hourly_rate NUMERIC(10, 2),
+  daily_rate NUMERIC(10, 2),
+  weekly_rate NUMERIC(10, 2),
+  currency VARCHAR(10) DEFAULT 'INR',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_screens_on_user_id ON screens(user_id);
 CREATE INDEX IF NOT EXISTS idx_screens_on_screen_name ON screens(screen_name);
 
--- 4) Screen assets
-CREATE TABLE IF NOT EXISTS screen_assets (
-  id SERIAL PRIMARY KEY,
-  screen_id INTEGER NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
-  asset_type VARCHAR(20) NOT NULL, -- e.g., 'photo_day', 'photo_night', 'video'
-  url TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-CREATE INDEX IF NOT EXISTS idx_screen_assets_on_screen_id ON screen_assets(screen_id);
-
--- 5) Screen pricing
-CREATE TABLE IF NOT EXISTS screen_pricing (
-  id SERIAL PRIMARY KEY,
-  screen_id INTEGER NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
-  hourly_rate NUMERIC(10, 2),
-  daily_rate NUMERIC(10, 2),
-  weekly_rate NUMERIC(10, 2),
-  currency VARCHAR(10) DEFAULT 'INR',
-  UNIQUE(screen_id)
-);
-
--- 6) Screen availability
+-- 4) Screen availability
 CREATE TABLE IF NOT EXISTS screen_availability (
   id SERIAL PRIMARY KEY,
   screen_id INTEGER NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
@@ -92,14 +78,14 @@ CREATE TABLE IF NOT EXISTS screen_availability (
   UNIQUE(screen_id, date)
 );
 
--- 7) Booking status enum type
+-- 5) Booking status enum type
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
     CREATE TYPE booking_status AS ENUM('pending', 'accepted', 'rejected', 'cancelled');
   END IF;
 END $$;
 
--- 8) Bookings table
+-- 6) Bookings table
 CREATE TABLE IF NOT EXISTS bookings (
   id SERIAL PRIMARY KEY,
   screen_id INTEGER NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
@@ -113,14 +99,14 @@ CREATE TABLE IF NOT EXISTS bookings (
 CREATE INDEX IF NOT EXISTS idx_bookings_on_screen_id ON bookings(screen_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_on_advertiser_id ON bookings(advertiser_id);
 
--- 9) Proof type enum type
+-- 7) Proof type enum type
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'proof_type') THEN
     CREATE TYPE proof_type AS ENUM('photo', 'video');
   END IF;
 END $$;
 
--- 10) Proof of play table
+-- 8) Proof of play table
 CREATE TABLE IF NOT EXISTS proof_of_play (
   id SERIAL PRIMARY KEY,
   booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
@@ -131,7 +117,7 @@ CREATE TABLE IF NOT EXISTS proof_of_play (
 );
 CREATE INDEX IF NOT EXISTS idx_proof_of_play_on_booking_id ON proof_of_play(booking_id);
 
--- 11) Optional: add users_phone_unique constraint if not present
+-- 9) Optional: add users_phone_unique constraint if not present
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -146,7 +132,7 @@ BEGIN
   END IF;
 END$$;
 
--- 12) Ensure users has password_hash column (for older schemas that used `password`)
+-- 10) Ensure users has password_hash column (for older schemas that used `password`)
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -164,7 +150,7 @@ BEGIN
   END IF;
 END$$;
 
--- 13) Triggers: generic updated_at setter
+-- 11) Triggers: generic updated_at setter
 CREATE OR REPLACE FUNCTION set_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -187,7 +173,7 @@ BEGIN
   END IF;
 END$$;
 
--- 14) Earnings table
+-- 12) Earnings table
 
 CREATE TABLE IF NOT EXISTS earnings (
   id SERIAL PRIMARY KEY,

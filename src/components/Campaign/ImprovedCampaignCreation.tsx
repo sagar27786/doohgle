@@ -15,7 +15,9 @@ import {
   Zap,
   Play,
   Star,
-  Eye
+  Eye,
+  Film,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface Screen {
@@ -31,11 +33,14 @@ interface Screen {
   resolution_height: number;
   screen_type: string;
   is_active: boolean;
-  pricing?: {
-    daily: number;
-    hourly: number;
-    weekly: number;
-  };
+  hourly_rate: number;
+  daily_rate: number;
+  weekly_rate: number;
+  currency: string;
+  device_type: string;
+  day_photo_url?: string;
+  night_photo_url?: string;
+  video_url?: string;
 }
 
 interface TimeSlot {
@@ -57,6 +62,7 @@ const ImprovedCampaignCreation: React.FC = () => {
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
   const [campaignName, setCampaignName] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [selectedScreenForModal, setSelectedScreenForModal] = useState<Screen | null>(null);
   
   // Time slots
   const timeSlots: TimeSlot[] = [
@@ -82,6 +88,8 @@ const ImprovedCampaignCreation: React.FC = () => {
       }
       
       const result = await response.json();
+      console.log("screens which I got from db are:");
+      console.log(result);
       console.log('Raw API result:', result);
       
       if (!result.success) {
@@ -107,16 +115,21 @@ const ImprovedCampaignCreation: React.FC = () => {
         address: screen.address || `${screen.location_name}, ${screen.city}`,
         daily_footfall: screen.daily_footfall || 10000,
         cost_per_10_seconds: screen.cost_per_10_seconds || '50',
-        resolution_width: screen.resolution_width || 1280,
-        resolution_height: screen.resolution_height || 720,
+        resolution_width: screen.width_px || 1280,
+        resolution_height: screen.height_px || 720,
         screen_type: screen.screen_type || 'smart_tv',
         is_active: screen.is_active,
-        pricing: {
-          daily: parseInt(screen.cost_per_10_seconds || '50') * 360,
-          hourly: parseInt(screen.cost_per_10_seconds || '50') * 36,
-          weekly: parseInt(screen.cost_per_10_seconds || '50') * 360 * 7
-        }
+        hourly_rate: screen.hourly_rate || 0,
+        daily_rate: screen.daily_rate || 0,
+        weekly_rate: screen.weekly_rate || 0,
+        currency: screen.currency || '₹',
+        device_type: screen.device_type || 'N/A',
+        day_photo_url: screen.image_url, // API uses image_url for day_photo_url
+        night_photo_url: screen.night_photo_url,
+        video_url: screen.video_url,
       }));
+      console.log("transformed screens are:");
+      console.log(transformedScreens);
       
       setAllScreens(transformedScreens);
       
@@ -168,6 +181,11 @@ const ImprovedCampaignCreation: React.FC = () => {
   const handleScreenSelect = (screen: Screen) => {
     setSelectedScreen(screen);
     setCurrentStep(2);
+  };
+
+  const handleViewDetails = (e: React.MouseEvent, screen: Screen) => {
+    e.stopPropagation();
+    setSelectedScreenForModal(screen);
   };
 
   const handleTimeSlotSelect = (slot: TimeSlot) => {
@@ -386,78 +404,97 @@ The venue owner will receive your request and respond shortly.`);
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {screens.map((screen) => (
-                  <motion.div
-                    key={screen.id}
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleScreenSelect(screen)}
-                    className="bg-white border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:shadow-lg transition-all duration-300"
-                  >
-                    {/* Screen Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-lg ${getScreenTypeColor(screen.screen_type)} text-white`}>
-                        {getScreenTypeIcon(screen.screen_type)}
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
-                          {screen.city.charAt(0).toUpperCase() + screen.city.slice(1)}
-                        </span>
-                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-                          Active
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Screen Info */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{screen.name}</h3>
-                    <p className="text-gray-600 mb-4 flex items-center">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {screen.address}
-                    </p>
-                    
-                    {/* Screen Stats */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="text-center">
-                        <div className="flex items-center justify-center mb-1">
-                          <Eye className="h-4 w-4 text-blue-600 mr-1" />
+              <div className="max-h-[70vh] overflow-y-auto pr-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {screens.map((screen) => (
+                    <motion.div
+                      key={screen.id}
+                      whileHover={{ scale: 1.02, y: -5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleScreenSelect(screen)}
+                      className="bg-white border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:shadow-lg transition-all duration-300 flex flex-col"
+                    >
+                      {/* Screen Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`p-3 rounded-lg ${getScreenTypeColor(screen.screen_type)} text-white`}>
+                          {getScreenTypeIcon(screen.screen_type)}
                         </div>
-                        <p className="text-sm text-gray-500">Daily Views</p>
-                        <p className="font-semibold text-gray-900">
-                          {(screen.daily_footfall / 1000).toFixed(1)}K
+                        <div className="flex items-center space-x-2">
+                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                            {screen.city.charAt(0).toUpperCase() + screen.city.slice(1)}
+                          </span>
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Screen Info */}
+                      <div className="flex-grow">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{screen.name}</h3>
+                        <p className="text-gray-600 mb-4 flex items-center">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {screen.address}
                         </p>
-                      </div>
-                      <div className="text-center">
-                        <div className="flex items-center justify-center mb-1">
-                          <Monitor className="h-4 w-4 text-green-600 mr-1" />
+                        
+                        {/* Screen Stats */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          {/* <div className="text-center">
+                            <Eye className="h-4 w-4 text-blue-600 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Daily Views</p>
+                            <p className="font-semibold text-gray-900">
+                              {(screen.daily_footfall / 1000).toFixed(1)}K
+                            </p>
+                          </div> */}
+                          <div className="text-center">
+                            <Monitor className="h-4 w-4 text-green-600 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Dimensions</p>
+                            <p className="font-semibold text-gray-900">
+                              {screen.resolution_width}x{screen.resolution_height}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <Zap className="h-4 w-4 text-purple-600 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Device</p>
+                            <p className="font-semibold text-gray-900">{screen.device_type}</p>
+                          </div>
+                          
+                          <div className="text-center">
+                            <DollarSign className="h-4 w-4 text-yellow-600 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Hourly Rate</p>
+                            <p className="font-semibold text-gray-900">
+                              {screen.currency}{screen.hourly_rate}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <DollarSign className="h-4 w-4 text-yellow-600 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Daily Rate</p>
+                            <p className="font-semibold text-gray-900">
+                              {screen.currency}{screen.daily_rate}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <DollarSign className="h-4 w-4 text-yellow-600 mx-auto mb-1" />
+                            <p className="text-sm text-gray-500">Weekly Rate</p>
+                            <p className="font-semibold text-gray-900">
+                              {screen.currency}{screen.weekly_rate}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500">Resolution</p>
-                        <p className="font-semibold text-gray-900">
-                          {screen.resolution_width}x{screen.resolution_height}
-                        </p>
                       </div>
-                    </div>
-                    
-                    {/* Pricing */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Starting from</p>
-                          <p className="text-2xl font-bold text-blue-600">
-                            ₹{screen.pricing?.hourly || 180}<span className="text-sm">/hour</span>
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">Daily Rate</p>
-                          <p className="text-lg font-semibold text-gray-900">
-                            ₹{screen.pricing?.daily || 1800}
-                          </p>
-                        </div>
+                      
+                      {/* Actions */}
+                      <div className="mt-auto">
+                        <button
+                          onClick={(e) => handleViewDetails(e, screen)}
+                          className="w-full bg-blue-100 text-blue-800 py-2 rounded-lg hover:bg-blue-200 transition-colors font-semibold"
+                        >
+                          View Details
+                        </button>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             )}
           </motion.div>
