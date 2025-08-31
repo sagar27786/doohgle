@@ -2,8 +2,8 @@ import { Pool } from "pg";
 import * as dotenv from "dotenv";
 import path from "path";
 
-// Load .env file from the project root
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+// Load .env file from the backend directory
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // Centralized pool configuration
 export const pool = new Pool({
