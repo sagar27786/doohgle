@@ -10,11 +10,7 @@ const createBillboardIcon = (color = "#3b82f6") => {
   const iconHtml = renderToStaticMarkup(
     <div
       style={{
-        backgroundColor: "white",
-        borderRadius: "50%",
-        padding: "6px",
-        border: `2px solid ${color}`,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+        backgroundColor: "transparent",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -24,8 +20,8 @@ const createBillboardIcon = (color = "#3b82f6") => {
         src="/billboard.png"
         alt="Billboard"
         style={{
-          width: "24px",
-          height: "24px",
+          width: "32px",
+          height: "38px",
           objectFit: "contain",
         }}
       />
@@ -35,9 +31,9 @@ const createBillboardIcon = (color = "#3b82f6") => {
   return L.divIcon({
     html: iconHtml,
     className: "custom-billboard-icon",
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
+    iconSize: [48, 64],
+    iconAnchor: [24, 56],
+    popupAnchor: [0, -56],
   });
 };
 

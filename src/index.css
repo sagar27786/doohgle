@@ -7,6 +7,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* your base */
+.btn-damn {
+  @apply relative px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm
+         bg-white text-gray-900
+         dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700;
+}
+
+.btn-outline {
+  @apply relative z-10;
+}
+
+/* Gradient border + glow */
+.btn-outline::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0.375rem; /* rounded-md */
+  padding: 1px;
+  background: linear-gradient(90deg, #a855f7, #ec4899, #f97316);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  z-index: -1;
+
+  /* 👇 persistent glow like Copilot */
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.5);
+  transition: box-shadow 0.3s ease;
+}
+
+.btn-outline:hover::before {
+  /* 👇 brighter glow on hover */
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.8), 0 0 20px rgba(236, 72, 153, 0.6),
+    0 0 28px rgba(249, 115, 22, 0.5);
+}
+
 /* Enhanced modern styling */
 body {
   @apply font-sans antialiased bg-gradient-to-br from-slate-50 to-gray-100 dark:from-gray-900 dark:to-slate-800;
@@ -207,11 +243,23 @@ body {
 }
 
 .dark-gradient-orb {
-  background: radial-gradient(circle at center, rgba(139, 92, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 35%, rgba(16, 185, 129, 0.1) 70%, transparent 100%);
+  background: radial-gradient(
+    circle at center,
+    rgba(139, 92, 246, 0.3) 0%,
+    rgba(59, 130, 246, 0.2) 35%,
+    rgba(16, 185, 129, 0.1) 70%,
+    transparent 100%
+  );
 }
 
 .dark-gradient-intersect {
-  background: conic-gradient(from 0deg at 50% 50%, rgba(139, 92, 246, 0.4) 0deg, rgba(59, 130, 246, 0.3) 120deg, rgba(16, 185, 129, 0.2) 240deg, rgba(139, 92, 246, 0.4) 360deg);
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    rgba(139, 92, 246, 0.4) 0deg,
+    rgba(59, 130, 246, 0.3) 120deg,
+    rgba(16, 185, 129, 0.2) 240deg,
+    rgba(139, 92, 246, 0.4) 360deg
+  );
 }
 
 /* Loader Animation Styles */
@@ -231,7 +279,8 @@ body {
 }
 
 @keyframes pulse-slow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {

@@ -200,14 +200,9 @@ const Header = () => {
               <NavLink to="/contact">Contact</NavLink>
               <button
                 onClick={() => navigate("/auth")}
-                className="
-      relative px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm
-      bg-white text-gray-900
-      dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700
-    "
+                className="btn-damn btn-outline"
               >
                 <span className="relative z-10 flex items-center space-x-2">
-                  <span className="text-lg"></span>
                   <span className="purple-gray-gradient">Login / Sign up</span>
                 </span>
               </button>
