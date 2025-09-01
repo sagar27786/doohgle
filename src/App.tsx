@@ -1,7 +1,13 @@
 import React, { createContext, useEffect, useState, useContext } from "react";
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import LoaderAnimation from "./components/Home/LoaderAnimation";
 import Header from "./components/Home/Header";
-import HeroVideo from "./components/Home/HeroVideo";
 import MainHero from "./components/Home/MainHero";
 import CompanyLogos from "./components/Home/CompanyLogos";
 import Statistics from "./components/Home/Statistics";
@@ -13,7 +19,9 @@ import SuccessStories from "./components/Home/SuccessStories";
 import ContentCreator from "./components/Home/ContentCreator";
 import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
+import DOOHChatbot from "./components/Home/DOOHChatbot";
 import Footer from "./components/Home/Footer";
+import HowItWorks from "./components/Home/HowItWorks";
 
 // Auth components
 import LoginSignup from "./components/Auth/LoginSignup";
@@ -34,6 +42,8 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
+import ContactPage from "./components/Home/ContactPage";
+import AboutUs from "./components/Home/AboutUs";
 
 // ThemeProvider for dark mode
 import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
@@ -43,7 +53,7 @@ interface ThemeContextType {
   toggleTheme: () => void;
 }
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "light",
+  theme: "dark",
   toggleTheme: () => {},
 });
 
@@ -54,7 +64,16 @@ interface ThemeProviderProps {
 }
 
 const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "dark"
+  );
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -82,9 +101,9 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 // Home page component
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-200">
       <MainHero />
-      <HeroVideo />
+      <DOOHChatbot />
       <CompanyLogos />
       <Statistics />
       <DOOHSection />
@@ -120,9 +139,11 @@ const AdsManagerDashboard = () => {
   return <IntegratedAdsManager />;
 };
 
-function App() {
+function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
   const hideHeaderRoutes = [
     "/auth/login",
     "/auth/signup",
@@ -132,21 +153,28 @@ function App() {
     "/products/ads-manager/dashboard",
   ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+
+  const handleLoadingComplete = () => {
+    setIsLoading(false);
+  };
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-white">
+    <>
+      {isLoading && <LoaderAnimation onComplete={handleLoadingComplete} />}
+      <div
+        className={`min-h-screen bg-white transition-opacity duration-500 ${
+          isLoading ? "opacity-0" : "opacity-100"
+        }`}
+      >
         {shouldShowHeader && <Header />}
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-
           {/* Ads Manager Routes */}
-          <Route path="/products/ads-manager" element={<AdsManagerPage />} />
+          {/* <Route path="/products/ads-manager" element={<AdsManagerPage />} /> */}
           <Route
             path="/products/ads-manager/dashboard"
             element={<AdsManagerDashboard />}
           />
-
           {/* Auth Routes */}
           <Route
             path="/auth"
@@ -157,7 +185,6 @@ function App() {
             element={<Signup onSwitch={() => navigate("/auth")} />}
           />
           <Route path="/auth/login" element={<LoginSignup />} />
-
           {/* Role Selection - Protected but accessible to all authenticated users */}
           <Route
             element={
@@ -168,7 +195,6 @@ function App() {
           >
             <Route path="/auth/select-role" element={<RoleSelect />} />
           </Route>
-
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
@@ -187,6 +213,14 @@ function App() {
           </Route>
         </Routes>
       </div>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
     </ThemeProvider>
   );
 }
