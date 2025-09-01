@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, useContext } from "react";
+import React from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Home/Header";
 import HeroVideo from "./components/Home/HeroVideo";
@@ -38,49 +38,14 @@ import IntegratedAdsManager from "./components/adds Manager/Dashboard/Integrated
 // Admin Components
 import AdminApp from "./components/Admin/AdminApp";
 
+// Map Components
+import MapTestPage from "./pages/MapTestPage";
+import ApiTestPage from "./pages/ApiTestPage";
+import SimpleApiTest from "./pages/SimpleApiTest";
+
 // ThemeProvider for dark mode
 import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
-
-interface ThemeContextType {
-  theme: string;
-  toggleTheme: () => void;
-}
-const ThemeContext = createContext<ThemeContextType>({
-  theme: "light",
-  toggleTheme: () => {},
-});
-
-export const useTheme = () => useContext(ThemeContext);
-
-interface ThemeProviderProps {
-  children: React.ReactNode;
-}
-
-const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState("light");
-
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
-  };
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setTheme(savedTheme);
-    document.documentElement.setAttribute("data-theme", savedTheme);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 // Home page component
 const HomePage = () => {
@@ -178,8 +143,13 @@ function App() {
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
 
-          {/* Debug Route */}
+
+
+          {/* Debug Routes */}
           <Route path="/debug/screens" element={<SimpleScreensTest />} />
+          <Route path="/test/map" element={<MapTestPage />} />
+          <Route path="/test/api" element={<ApiTestPage />} />
+            <Route path="/test/simple" element={<SimpleApiTest />} />
 
           {/* Admin Route */}
           <Route path="/admin" element={<AdminApp />} />

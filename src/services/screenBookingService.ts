@@ -1,7 +1,7 @@
 // Screen Booking Service Integration
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'http://localhost:4001/api';
 
 export interface Screen {
   id: number;

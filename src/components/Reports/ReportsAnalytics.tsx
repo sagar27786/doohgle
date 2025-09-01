@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { screensService } from "../../services/screensService";
+import { ScreenSearchResult } from "../../api/screens";
 import {
   BarChart,
   Bar,
@@ -45,13 +47,64 @@ import {
   X,
 } from "lucide-react";
 
-// Sample screen data with comprehensive details
-const screenData = [
+// Screen data interface for analytics
+interface AnalyticsScreenData {
+  id: number;
+  name: string;
+  city: string;
+  location: string;
+  type: string;
+  size: string;
+  resolution: string;
+  price: number;
+  traffic: string;
+  status: string;
+  occupancy: number;
+  revenue: number;
+  impressions: number;
+  rating: number;
+  lastUpdated: string;
+  availability: Array<{
+    time: string;
+    available: boolean;
+    price: number;
+  }>;
+}
+
+// Transform backend screen data to analytics format
+const transformScreenData = (screens: ScreenSearchResult[]): AnalyticsScreenData[] => {
+  return screens.map((screen, index) => ({
+    id: screen.id,
+    name: screen.name,
+    city: screen.city,
+    location: screen.address || 'Location not specified',
+    type: screen.screen_type || 'Digital',
+    size: `${screen.screen_size_width || 30}x${screen.screen_size_height || 15} ft`,
+    resolution: `${screen.resolution_width || 1920}x${screen.resolution_height || 1080}`,
+    price: screen.daily_rate || 25000 + (index * 5000),
+    traffic: `${(screen.daily_footfall || 1000000) / 1000000}M/month`,
+    status: screen.is_active ? 'Active' : 'Inactive',
+    occupancy: Math.floor(Math.random() * 40) + 60, // Random occupancy 60-100%
+    revenue: (screen.daily_rate || 25000) * 10, // Estimated monthly revenue
+    impressions: screen.daily_footfall || 1000000,
+    rating: 4.0 + Math.random() * 1, // Random rating 4.0-5.0
+    lastUpdated: `${Math.floor(Math.random() * 10) + 1} mins ago`,
+    availability: [
+      { time: '06:00-12:00', available: Math.random() > 0.5, price: screen.daily_rate || 25000 },
+      { time: '12:00-18:00', available: Math.random() > 0.5, price: (screen.daily_rate || 25000) * 1.2 },
+      { time: '18:00-24:00', available: Math.random() > 0.5, price: (screen.daily_rate || 25000) * 1.4 },
+      { time: '00:00-06:00', available: Math.random() > 0.5, price: (screen.daily_rate || 25000) * 0.8 },
+    ],
+  }));
+};
+
+// Default screen data for fallback
+const defaultScreenData: AnalyticsScreenData[] = [
   {
     id: 1,
-    name: "Bandra Kurla Complex LED Wall",
+    name: "Sample LED Wall",
     city: "Mumbai",
-    location: "BKC, Plot C-58, G Block",
+    location: "Sample Location",
     type: "LED",
     size: "40x20 ft",
     resolution: "1920x1080",
@@ -234,31 +287,92 @@ const screenData = [
 ];
 
 // Chart data
-const revenueData = [
-  { month: "Jan", revenue: 1200000, impressions: 15000000 },
-  { month: "Feb", revenue: 1350000, impressions: 16500000 },
-  { month: "Mar", revenue: 1420000, impressions: 17200000 },
-  { month: "Apr", revenue: 1580000, impressions: 18800000 },
-  { month: "May", revenue: 1650000, impressions: 19500000 },
-  { month: "Jun", revenue: 1720000, impressions: 20200000 },
-];
+// Calculate revenue data from screen data
+const calculateRevenueData = (screens: AnalyticsScreenData[]) => {
+  const totalRevenue = screens.reduce((sum, screen) => sum + screen.revenue, 0);
+  const totalImpressions = screens.reduce((sum, screen) => sum + screen.impressions, 0);
+  
+  // Generate 6 months of data with some variation
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  return months.map((month, index) => {
+    const variation = 0.8 + (index * 0.1) + (Math.random() * 0.2); // Growth trend with variation
+    return {
+      month,
+      revenue: Math.round(totalRevenue * variation),
+      impressions: Math.round(totalImpressions * variation),
+    };
+  });
+};
 
-const occupancyData = [
-  { name: "High (80%+)", value: 35, color: "#ef4444" },
-  { name: "Moderate (60-80%)", value: 45, color: "#f59e0b" },
-  { name: "Available (40-60%)", value: 15, color: "#10b981" },
-  { name: "Low (<40%)", value: 5, color: "#6b7280" },
-];
+// Calculate occupancy distribution from screen data
+const calculateOccupancyData = (screens: AnalyticsScreenData[]) => {
+  const total = screens.length;
+  if (total === 0) return [];
+  
+  const high = screens.filter(s => s.occupancy >= 80).length;
+  const moderate = screens.filter(s => s.occupancy >= 60 && s.occupancy < 80).length;
+  const available = screens.filter(s => s.occupancy >= 40 && s.occupancy < 60).length;
+  const low = screens.filter(s => s.occupancy < 40).length;
+  
+  return [
+    { name: "High (80%+)", value: Math.round((high / total) * 100), color: "#ef4444" },
+    { name: "Moderate (60-80%)", value: Math.round((moderate / total) * 100), color: "#f59e0b" },
+    { name: "Available (40-60%)", value: Math.round((available / total) * 100), color: "#10b981" },
+    { name: "Low (<40%)", value: Math.round((low / total) * 100), color: "#6b7280" },
+  ];
+};
 
-const cityPerformance = [
-  { city: "Mumbai", screens: 245, revenue: 2850000, occupancy: 85 },
-  { city: "Delhi", screens: 198, revenue: 2340000, occupancy: 92 },
-  { city: "Bangalore", screens: 167, revenue: 1890000, occupancy: 78 },
-  { city: "Hyderabad", screens: 142, revenue: 1420000, occupancy: 65 },
-  { city: "Chennai", screens: 156, revenue: 1680000, occupancy: 71 },
-];
+// Calculate city performance from screen data
+const calculateCityPerformance = (screens: AnalyticsScreenData[]) => {
+  const cityStats = screens.reduce((acc: any, screen) => {
+    if (!acc[screen.city]) {
+      acc[screen.city] = {
+        city: screen.city,
+        screens: 0,
+        revenue: 0,
+        totalOccupancy: 0,
+      };
+    }
+    acc[screen.city].screens += 1;
+    acc[screen.city].revenue += screen.revenue;
+    acc[screen.city].totalOccupancy += screen.occupancy;
+    return acc;
+  }, {});
+
+  return Object.values(cityStats).map((city: any) => ({
+    ...city,
+    occupancy: Math.round(city.totalOccupancy / city.screens),
+  }));
+};
 
 const ReportsAnalytics: React.FC = () => {
+  const [screenData, setScreenData] = useState<AnalyticsScreenData[]>(defaultScreenData);
+  const [loading, setLoading] = useState(false);
+
+  // Load screens from backend
+  const loadScreens = async () => {
+    try {
+      setLoading(true);
+      const screens = await screensService.getAllScreens();
+      const transformedData = transformScreenData(screens);
+      setScreenData(transformedData);
+    } catch (error) {
+      console.error('Failed to load screens for analytics:', error);
+      // Keep using default data on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadScreens();
+  }, []);
+
+  // Calculate derived data from screen data
+  const cityPerformance = calculateCityPerformance(screenData);
+  const occupancyData = calculateOccupancyData(screenData);
+  const revenueData = calculateRevenueData(screenData);
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");

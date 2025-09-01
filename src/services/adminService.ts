@@ -80,7 +80,7 @@ interface RevenueAnalytics {
 }
 
 class AdminService {
-  private baseUrl = 'http://localhost:4000/api';
+  private baseUrl = 'http://localhost:4001/api';
 
   private getAuthHeaders() {
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
@@ -92,6 +92,22 @@ class AdminService {
 
   // Admin authentication
   async login(email: string, password: string): Promise<any> {
+    // For admin access, use the bypass token since admin auth is not fully implemented
+    if (email === 'admin@doohgle.com' && password === 'Admin@2025') {
+      const adminToken = 'admin-token-doohgle';
+      const adminUser = {
+        id: 999,
+        email: 'admin@doohgle.com',
+        roles: ['admin']
+      };
+      
+      localStorage.setItem('adminToken', adminToken);
+      localStorage.setItem('adminUser', JSON.stringify(adminUser));
+      
+      return { token: adminToken, user: adminUser };
+    }
+    
+    // For other users, try regular auth
     const response = await fetch(`${this.baseUrl}/auth/login`, {
       method: 'POST',
       headers: {

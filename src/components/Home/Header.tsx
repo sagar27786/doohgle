@@ -11,7 +11,7 @@ import {
   Navigation2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
+import { useTheme } from "../../contexts/ThemeContext";
 
 const Header = () => {
   const navigate = useNavigate();

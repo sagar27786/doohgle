@@ -59,6 +59,11 @@ export interface ScreenSearchResult {
   cost_per_10_seconds?: number;
   image_url?: string;
   video_url?: string;
+  is_active?: boolean;
+  hourly_rate?: number;
+  daily_rate?: number;
+  weekly_rate?: number;
+  status?: 'active' | 'inactive' | 'maintenance';
 }
 
 export async function createScreen(payload: ScreenPayload) {
@@ -71,7 +76,7 @@ export async function createScreen(payload: ScreenPayload) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const res = await fetch('http://localhost:4000/api/screens', {
+    const res = await fetch('http://localhost:4001/api/screens', {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
@@ -90,7 +95,7 @@ export async function getMyScreens() {
   }
 
   try {
-    const response = await fetch('http://localhost:4000/api/screens/mine', {
+    const response = await fetch('http://localhost:4001/api/screens/mine', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -115,7 +120,7 @@ export async function getScreenById(id: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:4000/api/screens/${id}`, {
+    const response = await fetch(`http://localhost:4001/api/screens/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -133,16 +138,38 @@ export async function getScreenById(id: string) {
   }
 }
 
-export async function searchScreensByCity(city: string): Promise<ScreenSearchResult[]> {
+export async function getAllScreens(): Promise<ScreenSearchResult[]> {
   try {
-    const response = await fetch(`http://localhost:4000/api/screens/search?city=${encodeURIComponent(city)}`);
+    const response = await fetch('http://localhost:4001/api/screens');
     
     if (!response.ok) {
       throw new Error(`Failed to fetch screens: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log(data);
+    console.log('All screens API response:', data);
+    
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch screens');
+    }
+
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching all screens:', error);
+    throw error;
+  }
+}
+
+export async function searchScreensByCity(city: string): Promise<ScreenSearchResult[]> {
+  try {
+    const response = await fetch(`http://localhost:4001/api/screens/search?city=${encodeURIComponent(city)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch screens: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('Search screens API response:', data);
     
     if (!data.success) {
       throw new Error(data.message || 'Failed to fetch screens');

@@ -38,6 +38,8 @@ import {
   awsCloudWatchService,
   ScreenMetrics,
 } from "../../services/awsCloudWatchService";
+import { screensService } from "../../services/screensService";
+import { ScreenSearchResult } from "../../api/screens";
 
 // Declare Google Maps types
 declare global {
@@ -64,76 +66,6 @@ interface ScreenMarker {
   impressions?: number;
   revenue?: number;
 }
-
-// Sample enhanced screen data
-const sampleScreens: ScreenMarker[] = [
-  {
-    id: 1,
-    name: "Delhi Metro Station Display",
-    position: { lat: 28.6139, lng: 77.209 },
-    city: "New Delhi",
-    status: "active",
-    type: "transit",
-    size: "large",
-    impressions: 150000,
-    revenue: 25000,
-  },
-  {
-    id: 2,
-    name: "Mumbai Mall Billboard",
-    position: { lat: 19.076, lng: 72.8777 },
-    city: "Mumbai",
-    status: "active",
-    type: "indoor",
-    size: "medium",
-    impressions: 89000,
-    revenue: 18500,
-  },
-  {
-    id: 3,
-    name: "Bangalore Tech Park Screen",
-    position: { lat: 12.9716, lng: 77.5946 },
-    city: "Bengaluru",
-    status: "inactive",
-    type: "indoor",
-    size: "medium",
-    impressions: 0,
-    revenue: 0,
-  },
-  {
-    id: 4,
-    name: "Chennai Bus Terminal",
-    position: { lat: 13.0827, lng: 80.2707 },
-    city: "Chennai",
-    status: "maintenance",
-    type: "outdoor",
-    size: "large",
-    impressions: 45000,
-    revenue: 8900,
-  },
-  {
-    id: 5,
-    name: "Kolkata Shopping Complex",
-    position: { lat: 22.5726, lng: 88.3639 },
-    city: "Kolkata",
-    status: "active",
-    type: "indoor",
-    size: "small",
-    impressions: 32000,
-    revenue: 6700,
-  },
-  {
-    id: 6,
-    name: "Hyderabad IT Hub Display",
-    position: { lat: 17.385, lng: 78.4867 },
-    city: "Hyderabad",
-    status: "active",
-    type: "indoor",
-    size: "large",
-    impressions: 125000,
-    revenue: 22800,
-  },
-];
 
 // Enhanced Screen Map Component with TV Screen Markers
 const EnhancedScreenMap: React.FC<{
@@ -562,8 +494,73 @@ const LocationManager: React.FC<LocationManagerProps> = ({
   const [dashboardStats, setDashboardStats] = useState<any>(null);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
 
+  // Screens data state
+  const [screens, setScreens] = useState<ScreenMarker[]>([]);
+  const [screensLoading, setScreensLoading] = useState(false);
+
   const mapRef = useRef<HTMLDivElement>(null);
   const metricsInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Load screens from backend API
+  const loadScreens = async () => {
+    try {
+      setScreensLoading(true);
+      setError(null);
+      
+      const allScreens = await screensService.getAllScreens();
+      console.log('Loaded screens from backend:', allScreens);
+      
+      // Transform backend data to ScreenMarker format with geocoding for missing coordinates
+      const screensData: ScreenMarker[] = [];
+      const mapService = GoogleMapService.getInstance();
+      
+      for (const screen of allScreens || []) {
+        let lat = screen.latitude;
+        let lng = screen.longitude;
+        
+        // If coordinates are missing, try to geocode from address
+        if ((!lat || !lng || lat === 0 || lng === 0) && screen.address) {
+          console.log(`Geocoding address for ${screen.name}: ${screen.address}`);
+          try {
+            const coords = await mapService.geocodeAddress(screen.address);
+            if (coords) {
+              lat = coords.lat;
+              lng = coords.lng;
+              console.log(`Geocoded coordinates for ${screen.name}: ${lat}, ${lng}`);
+            }
+          } catch (geocodeError) {
+            console.warn(`Failed to geocode ${screen.name}:`, geocodeError);
+          }
+        }
+        
+        // Only include screens with valid coordinates
+        if (lat && lng && lat !== 0 && lng !== 0) {
+          screensData.push({
+            id: screen.id,
+            name: screen.name,
+            position: { lat, lng },
+            city: screen.city,
+            status: (screen.is_active ? 'active' : 'inactive') as "active" | "inactive" | "maintenance",
+            type: (screen.screen_type === 'outdoor' ? 'outdoor' : 'indoor') as "indoor" | "outdoor" | "transit",
+            size: (screen.screen_size_width && screen.screen_size_width > 100 ? 'large' : 'medium') as "small" | "medium" | "large",
+            impressions: screen.daily_footfall || 0,
+            revenue: screen.cost_per_10_seconds ? screen.cost_per_10_seconds * 100 : 0,
+          });
+        } else {
+          console.warn(`Skipping screen ${screen.name} - no valid coordinates available`);
+        }
+      }
+      
+      console.log(`Successfully loaded ${screensData.length} screens with valid coordinates`);
+      setScreens(screensData);
+    } catch (err) {
+      console.error('Error loading screens:', err);
+      setError('Failed to load screen data');
+      setScreens([]);
+    } finally {
+      setScreensLoading(false);
+    }
+  };
 
   // Check AWS configuration on load
   useEffect(() => {
@@ -585,6 +582,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
 
     if (isOpen) {
       checkAWSConfig();
+      loadScreens();
     }
 
     return () => {
@@ -606,7 +604,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
         setDashboardStats(dashStats);
 
         // Fetch individual screen metrics
-        const screenIds = sampleScreens.map(
+        const screenIds = screens.map(
           (screen: ScreenMarker) => screen.id
         );
         const metrics = await Promise.all(
@@ -885,7 +883,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                         <span>
                           Active:{" "}
                           {
-                            sampleScreens.filter((s) => s.status === "active")
+                            screens.filter((s) => s.status === "active")
                               .length
                           }
                         </span>
@@ -895,7 +893,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                         <span>
                           Inactive:{" "}
                           {
-                            sampleScreens.filter((s) => s.status === "inactive")
+                            screens.filter((s) => s.status === "inactive")
                               .length
                           }
                         </span>
@@ -905,7 +903,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                         <span>
                           Maintenance:{" "}
                           {
-                            sampleScreens.filter(
+                            screens.filter(
                               (s) => s.status === "maintenance"
                             ).length
                           }
@@ -933,7 +931,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                 {/* Interactive Map with Floating Info Panel */}
                 <div className="relative">
                   <EnhancedScreenMap
-                    screens={sampleScreens}
+                    screens={screens}
                     showScreens={showScreens}
                     center={mapCenter}
                     zoom={mapZoom}
@@ -1290,7 +1288,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                             transition={{ duration: 2, repeat: Infinity }}
                           >
                             {
-                              sampleScreens.filter((s) => s.status === "active")
+                              screens.filter((s) => s.status === "active")
                                 .length
                             }
                           </motion.p>
@@ -1334,7 +1332,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
                           >
-                            {sampleScreens
+                            {screens
                               .reduce((sum, s) => sum + (s.impressions || 0), 0)
                               .toLocaleString()}
                           </motion.p>
@@ -1380,7 +1378,7 @@ const LocationManager: React.FC<LocationManagerProps> = ({
                             transition={{ duration: 3, repeat: Infinity }}
                           >
                             ₹
-                            {sampleScreens
+                            {screens
                               .reduce((sum, s) => sum + (s.revenue || 0), 0)
                               .toLocaleString()}
                           </motion.p>

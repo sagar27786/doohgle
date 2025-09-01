@@ -160,7 +160,7 @@ export const subscribeToRealtimeDataCoalesced = async (channel: string) => {
   return coalesceRequest(
     `websocket-${channel}`,
     () => new Promise((resolve, reject) => {
-      const ws = new WebSocket(`ws://localhost:4000/ws/${channel}`);
+      const ws = new WebSocket(`ws://localhost:4001/ws/${channel}`);
       ws.onopen = () => resolve(ws);
       ws.onerror = reject;
     }),
