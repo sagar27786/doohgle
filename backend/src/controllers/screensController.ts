@@ -89,7 +89,7 @@ export async function getMyScreens(
     const result = await pool.query(
       `SELECT s.*
        FROM screens s
-       WHERE s.user_id = $1
+       WHERE s.owner_id = $1
        ORDER BY s.created_at DESC`,
       [userId]
     );
@@ -124,39 +124,33 @@ export async function getAllScreens(req: Request, res: Response) {
     let query = `
       SELECT
         s.id,
-        s.user_id,
-        s.screen_name as name,
+        s.owner_id,
+        s.name,
         'Premium advertising display' as description,
-        s.device_type as screen_type,
-        s.location_in_venue as location_name,
-        CONCAT(s.location_in_venue, ', ', s.city) as address,
+        'LED Billboard' as screen_type,
+        s.location as location_name,
+        CONCAT(s.location, ', ', s.city) as address,
         s.city,
         'India' as state,
         '000000' as pincode,
         s.latitude,
         s.longitude,
-        s.screen_size_inches as screen_size_width,
-        s.screen_size_inches as screen_size_height,
+        s.width_ft as screen_size_width,
+        s.height_ft as screen_size_height,
         CASE WHEN s.resolution = '1080p' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE 1280 END as resolution_width,
         CASE WHEN s.resolution = '1080p' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE 720 END as resolution_height,
-        (5000 + (RANDOM() * 20000))::INT as daily_footfall,
-        (2000 + (RANDOM() * 8000))::INT as vehicle_count,
-        s.peak_viewing_hours as peak_hours,
+        s.daily_footfall,
+        s.vehicle_count,
+        s.peak_hours,
         'Mixed demographics' as demographics,
-        COALESCE(p.daily_rate / 8640, 50) as cost_per_10_seconds,
-        (
-          SELECT sa.url 
-          FROM screen_assets sa 
-          WHERE sa.screen_id = s.id AND sa.asset_type = 'photo_day' 
-          LIMIT 1
-        ) as image_url,
-        null as video_url,
+        s.cost_per_10_seconds,
+        s.image_url,
+        s.video_url,
         s.is_active,
-        p.hourly_rate,
-        p.daily_rate,
-        p.weekly_rate
+        s.price_per_hour as hourly_rate,
+        s.price_per_day as daily_rate,
+        s.price_per_week as weekly_rate
       FROM screens s
-      LEFT JOIN screen_pricing p ON s.id = p.screen_id
       WHERE s.is_active = true
     `;
 
@@ -176,12 +170,12 @@ export async function getAllScreens(req: Request, res: Response) {
     }
 
     if (max_budget) {
-      query += ` AND p.daily_rate <= $${paramIndex}`;
+      query += ` AND s.price_per_day <= $${paramIndex}`;
       params.push(parseFloat(max_budget as string));
       paramIndex++;
     }
 
-    query += ` ORDER BY s.city, p.daily_rate DESC, s.created_at DESC LIMIT $${paramIndex}`;
+    query += ` ORDER BY s.city, s.price_per_day DESC, s.created_at DESC LIMIT $${paramIndex}`;
     params.push(parseInt(limit as string));
 
     const result = await pool.query(query, params);

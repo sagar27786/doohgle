@@ -112,20 +112,20 @@ export async function getAllScreensForAdmin(req: Request & { user?: AuthUser }, 
     const result = await client.query(`
       SELECT 
         s.id,
-        s.screen_name,
+        s.name as screen_name,
         COALESCE(s.city, 'Unknown') as city,
-        COALESCE(s.location_in_venue, 'Not specified') as location_in_venue,
+        COALESCE(s.location, 'Not specified') as location_in_venue,
         s.is_active,
-        COALESCE(s.device_type, 'Unknown') as device_type,
+        COALESCE(s.resolution, 'Unknown') as device_type,
         s.created_at,
-        s.updated_at,
+        s.created_at as updated_at,
         COALESCE(u.email, 'Unknown') as owner_email,
         COALESCE(u.name, u.email, 'Unknown') as owner_name,
         COUNT(br.id)::INTEGER as booking_requests_count
       FROM screens s
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       LEFT JOIN booking_requests br ON s.id = br.screen_id
-      GROUP BY s.id, s.screen_name, s.city, s.location_in_venue, s.is_active, s.device_type, s.created_at, s.updated_at, u.email, u.name
+      GROUP BY s.id, s.name, s.city, s.location, s.is_active, s.resolution, s.created_at, u.email, u.name
       ORDER BY s.created_at DESC
     `);
 
@@ -208,7 +208,7 @@ export async function getAllBookingRequests(req: Request & { user?: AuthUser }, 
         br.id,
         COALESCE(br.campaign_name, 'Unnamed Campaign') as campaign_name,
         COALESCE(br.advertiser_name, 'Unknown Advertiser') as advertiser_name,
-        COALESCE(br.screen_name, s.screen_name, 'Unknown Screen') as screen_name,
+        COALESCE(br.screen_name, s.name, 'Unknown Screen') as screen_name,
         br.start_date,
         br.end_date,
         COALESCE(br.daily_budget, 0) as daily_budget,
@@ -218,11 +218,11 @@ export async function getAllBookingRequests(req: Request & { user?: AuthUser }, 
         br.created_at,
         br.updated_at,
         COALESCE(s.city, 'Unknown') as city,
-        COALESCE(s.location_in_venue, 'Unknown') as location_in_venue,
+        COALESCE(s.location, 'Unknown') as location_in_venue,
         COALESCE(u.email, 'Unknown') as venue_owner_email
       FROM booking_requests br
       LEFT JOIN screens s ON br.screen_id = s.id
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       ORDER BY br.created_at DESC
     `);
 
@@ -422,7 +422,7 @@ export async function getBookingDetails(req: Request & { user?: AuthUser }, res:
         u.phone as venue_owner_phone
       FROM booking_requests br
       LEFT JOIN screens s ON br.screen_id = s.id
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       WHERE br.id = $1
     `, [bookingId]);
 

@@ -58,7 +58,7 @@ export async function createBooking(req: BookingRequest, res: Response) {
     const screenQuery = `
       SELECT s.*, u.email as owner_email, u.phone as owner_phone, u.name as owner_name
       FROM screens s
-      JOIN users u ON s.user_id = u.id
+      JOIN users u ON s.owner_id = u.id
       WHERE s.id = $1
     `;
     const screenResult = await client.query(screenQuery, [screenId]);
@@ -73,7 +73,7 @@ export async function createBooking(req: BookingRequest, res: Response) {
     const locationOwnersQuery = `
       SELECT DISTINCT u.id, u.name, u.email, u.phone, s.city
       FROM screens s
-      JOIN users u ON s.user_id = u.id
+      JOIN users u ON s.owner_id = u.id
       WHERE LOWER(s.city) = LOWER($1) AND s.ads_enabled = true AND s.is_active = true
     `;
     const locationOwnersResult = await client.query(locationOwnersQuery, [
@@ -334,7 +334,7 @@ export async function processBookingApproval(
         $4,
         CURRENT_TIMESTAMP
       FROM users u, screens s
-      WHERE s.user_id = u.id AND LOWER(s.city) = LOWER($5)
+      WHERE s.owner_id = u.id AND LOWER(s.city) = LOWER($5)
       GROUP BY u.id
     `;
 

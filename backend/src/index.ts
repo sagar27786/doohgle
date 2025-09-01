@@ -19,6 +19,16 @@ import adminRoutes from "./routes/admin";
 const app = express();
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', req.body);
+  }
+  next();
+});
+
 // Permissive CORS (allow from anywhere)
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");

@@ -81,7 +81,7 @@ export async function processBookingEarnings(bookingId: number) {
       SELECT 
         b.id as booking_id,
         b.screen_id,
-        s.user_id as screen_owner_id,
+        s.owner_id as screen_owner_id,
         b.start_ts,
         b.end_ts,
         p.hourly_rate,
