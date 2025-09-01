@@ -60,7 +60,7 @@ const ImprovedCampaignCreation: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
+  const [selectedScreens, setSelectedScreens] = useState<Screen[]>([]);
   const [campaignName, setCampaignName] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [selectedScreenForModal, setSelectedScreenForModal] = useState<Screen | null>(null);
@@ -180,8 +180,21 @@ const ImprovedCampaignCreation: React.FC = () => {
   }, [selectedCity, allScreens]);
 
   const handleScreenSelect = (screen: Screen) => {
-    setSelectedScreen(screen);
-    setCurrentStep(2);
+    setSelectedScreens(prevSelected => {
+      if (prevSelected.find(s => s.id === screen.id)) {
+        return prevSelected.filter(s => s.id !== screen.id);
+      } else {
+        return [...prevSelected, screen];
+      }
+    });
+  };
+
+  const handleNextStep = () => {
+    if (selectedScreens.length > 0) {
+      setCurrentStep(2);
+    } else {
+      setError('Please select at least one screen.');
+    }
   };
 
   const handleViewDetails = (e: React.MouseEvent, screen: Screen) => {
@@ -195,36 +208,35 @@ const ImprovedCampaignCreation: React.FC = () => {
     setCurrentStep(3);
   };
 
-  const handleBookingSubmit = async () => {
-    if (!selectedScreen || !selectedSlot || !campaignName.trim()) {
+  const handleBookingSubmit = async () =>  {
+    if (selectedScreens.length === 0 || !selectedSlot || !campaignName.trim()) {
       setError('Please fill in all required fields');
       return;
     }
 
     try {
       setLoading(true);
-      
-      const bookingData = {
-        campaign_name: campaignName,
-        advertiser_id: '1', // This should be the actual advertiser ID from auth
-        advertiser_name: 'Demo User', // This should be the actual advertiser name from auth
-        screen_id: selectedScreen.id,
-        screen_name: selectedScreen.name,
-        screen_owner_id: selectedScreen.user_id || '1', // Use the real screen owner ID
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date().toISOString().split('T')[0],
-        start_time: selectedSlot.start_time,
-        end_time: selectedSlot.end_time,
-        daily_budget: selectedSlot.price,
-        total_budget: selectedSlot.price,
-        message: `Booking for ${campaignName} campaign`
-      };
 
-      console.log('Sending booking request:', bookingData);
-      
-      // Try to send to backend
-      try {
-        const response = await fetch('http://localhost:4000/api/bookings/request', {
+      const bookingPromises = selectedScreens.map(screen => {
+        const bookingData = {
+          campaign_name: campaignName,
+          advertiser_id: '1', // This should be the actual advertiser ID from auth
+          advertiser_name: 'Demo User', // This should be the actual advertiser name from auth
+          screen_id: screen.id,
+          screen_name: screen.name,
+          screen_owner_id: screen.user_id || '1', // Use the real screen owner ID
+          start_date: new Date().toISOString().split('T')[0],
+          end_date: new Date().toISOString().split('T')[0],
+          start_time: selectedSlot.start_time,
+          end_time: selectedSlot.end_time,
+          daily_budget: selectedSlot.price,
+          total_budget: selectedSlot.price,
+          message: `Booking for ${campaignName} campaign`
+        };
+
+        console.log('Sending booking request for screen:', screen.id, bookingData);
+
+        return fetch('http://localhost:4000/api/bookings/request', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -232,37 +244,32 @@ const ImprovedCampaignCreation: React.FC = () => {
           },
           body: JSON.stringify(bookingData),
         });
-        
+      });
+
+      const responses = await Promise.all(bookingPromises);
+
+      responses.forEach(response => {
         console.log('Booking API response:', response.status, response.ok);
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Booking result:', result);
-        }
-        
-      } catch (apiError) {
-        console.log('API call failed, but continuing with success simulation');
-      }
-      
+      });
+
       // Show success message
-      alert(`✅ Booking Request Sent Successfully!
+      alert(`✅ Booking Requests Sent Successfully for ${selectedScreens.length} screens!
 
 Campaign: ${campaignName}
-Screen: ${selectedScreen.name}
 Time: ${selectedSlot.start_time} - ${selectedSlot.end_time}
-Total Cost: ₹${selectedSlot.price}
+Total Cost per screen: ₹${selectedSlot.price}
 
-The venue owner will receive your request and respond shortly.`);
-      
+The venue owners will receive your requests and respond shortly.`);
+
       // Reset form
       setCampaignName('');
-      setSelectedScreen(null);
+      setSelectedScreens([]);
       setSelectedSlot(null);
       setCurrentStep(1);
-      
+
     } catch (error) {
       console.error('Booking error:', error);
-      setError('Failed to send booking request. Please try again.');
+      setError('Failed to send booking requests. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -272,13 +279,12 @@ The venue owner will receive your request and respond shortly.`);
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
       if (currentStep === 2) {
-        setSelectedScreen(null);
+        // Do not clear selected screens when going back from step 2 to 1
       } else if (currentStep === 3) {
         setSelectedSlot(null);
       }
     }
   };
-
   const getScreenTypeIcon = (type: string) => {
     switch (type) {
       case 'smart_tv': return <Monitor className="h-5 w-5" />;
@@ -343,6 +349,8 @@ The venue owner will receive your request and respond shortly.`);
           </div>
         </div>
 
+        
+
         {/* Error Display */}
         {error && (
           <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
@@ -389,6 +397,14 @@ The venue owner will receive your request and respond shortly.`);
                     </option>
                   ))}
                 </select>
+                <button
+                    onClick={handleNextStep}
+                    disabled={selectedScreens.length === 0}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
+                >
+                    Next
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                </button>
               </div>
             </div>
             
@@ -407,18 +423,25 @@ The venue owner will receive your request and respond shortly.`);
             ) : (
               <div className="max-h-[70vh] overflow-y-auto pr-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {screens.map((screen) => (
-                    <motion.div
-                      key={screen.id}
-                      whileHover={{ scale: 1.02, y: -5 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleScreenSelect(screen)}
-                      className="bg-white border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:shadow-lg transition-all duration-300 flex flex-col"
-                    >
-                      {/* Screen Header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={`p-3 rounded-lg ${getScreenTypeColor(screen.screen_type)} text-white`}>
-                          {getScreenTypeIcon(screen.screen_type)}
+                  {screens.map((screen) => {
+                    const isSelected = selectedScreens.find(s => s.id === screen.id);
+                    return (
+                      <motion.div
+                        key={screen.id}
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleScreenSelect(screen)}
+                        className={`relative bg-white border-2 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:shadow-lg transition-all duration-300 flex flex-col ${isSelected ? 'border-blue-600' : 'border-gray-200'}`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-4 right-4 bg-blue-600 text-white rounded-full p-1">
+                            <CheckCircle className="h-5 w-5" />
+                          </div>
+                        )}
+                        {/* Screen Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`p-3 rounded-lg ${getScreenTypeColor(screen.screen_type)} text-white`}>
+                            {getScreenTypeIcon(screen.screen_type)}
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
@@ -494,15 +517,26 @@ The venue owner will receive your request and respond shortly.`);
                         </button>
                       </div>
                     </motion.div>
-                  ))}
+                  );
+                })}
                 </div>
               </div>
             )}
+             <div className="mt-8 flex justify-end">
+                <button
+                    onClick={handleNextStep}
+                    disabled={selectedScreens.length === 0}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
+                >
+                    Next: Choose Time Slot
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                </button>
+            </div>
           </motion.div>
         )}
 
         {/* Step 2: Time Slot Selection */}
-        {currentStep === 2 && selectedScreen && (
+        {currentStep === 2 && selectedScreens.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -522,21 +556,14 @@ The venue owner will receive your request and respond shortly.`);
             {/* Selected Screen Info */}
             <div className="bg-blue-50 rounded-xl p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Selected Screen: {selectedScreen.name}
+                Selected Screens ({selectedScreens.length})
               </h3>
-              <div className="flex items-center space-x-6 text-sm text-gray-600">
-                <span className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {selectedScreen.address}
-                </span>
-                <span className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  {(selectedScreen.daily_footfall / 1000).toFixed(1)}K daily views
-                </span>
-                <span className="flex items-center">
-                  <Monitor className="h-4 w-4 mr-1" />
-                  {selectedScreen.resolution_width}x{selectedScreen.resolution_height}
-                </span>
+              <div className="flex flex-wrap gap-2">
+                {selectedScreens.map(screen => (
+                  <span key={screen.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                    {screen.name}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -583,7 +610,7 @@ The venue owner will receive your request and respond shortly.`);
         )}
 
         {/* Step 3: Campaign Details & Confirmation */}
-        {currentStep === 3 && selectedScreen && selectedSlot && (
+        {currentStep === 3 && selectedScreens.length > 0 && selectedSlot && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -605,12 +632,11 @@ The venue owner will receive your request and respond shortly.`);
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Screen Details</h4>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Screen:</span> {selectedScreen.name}</p>
-                    <p><span className="font-medium">Location:</span> {selectedScreen.address}</p>
-                    <p><span className="font-medium">Type:</span> {selectedScreen.screen_type}</p>
-                    <p><span className="font-medium">Daily Views:</span> {selectedScreen.daily_footfall.toLocaleString()}</p>
+                  <h4 className="font-semibold text-gray-700 mb-2">Selected Screens ({selectedScreens.length})</h4>
+                  <div className="space-y-2 text-sm text-gray-600 max-h-32 overflow-y-auto">
+                    {selectedScreens.map(screen => (
+                      <p key={screen.id}><span className="font-medium">{screen.name}</span> - {screen.address}</p>
+                    ))}
                   </div>
                 </div>
                 <div>
@@ -620,7 +646,10 @@ The venue owner will receive your request and respond shortly.`);
                     <p><span className="font-medium">Time:</span> {selectedSlot.start_time} - {selectedSlot.end_time}</p>
                     <p><span className="font-medium">Duration:</span> 3 hours</p>
                     <p className="text-xl font-bold text-green-600 mt-2">
-                      <span className="font-medium text-gray-700 text-sm">Total: </span>₹{selectedSlot.price}
+                      <span className="font-medium text-gray-700 text-sm">Cost per screen: </span>₹{selectedSlot.price}
+                    </p>
+                     <p className="text-lg font-bold text-gray-800 mt-1">
+                      <span className="font-medium text-gray-700 text-sm">Total for {selectedScreens.length} screens: </span>₹{selectedSlot.price * selectedScreens.length}
                     </p>
                   </div>
                 </div>
