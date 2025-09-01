@@ -59,42 +59,98 @@ const ContactPage: FC = () => {
     const message = formData.get("message") as string;
     const industry = formData.get("industry") as string;
 
-    if (!name.trim() || !email.trim() || !message.trim() || !industry) {
+    // Enhanced validation
+    if (!name.trim()) {
       setStatus("error");
-      setStatusMessage("Please fill out all required fields.");
+      setStatusMessage("Please enter your name.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setStatus("error");
+      setStatusMessage("Please enter your email address.");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setStatus("error");
+      setStatusMessage("Please enter a valid email address.");
+      return;
+    }
+
+    if (!industry) {
+      setStatus("error");
+      setStatusMessage("Please select your industry.");
+      return;
+    }
+
+    if (!message.trim()) {
+      setStatus("error");
+      setStatusMessage("Please enter your message.");
       return;
     }
 
     setStatus("loading");
     setStatusMessage("Sending...");
 
-    // NOTE: Replace with your actual EmailJS credentials from environment variables
-    const serviceID = process.env.REACT_APP_EMAILJS_SERVICE_ID!;
-    const templateID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID!;
-    const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY!;
+    // Access EmailJS credentials from environment variables using Vite's import.meta.env
+    const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     if (!serviceID || !templateID || !publicKey) {
       setStatus("error");
       setStatusMessage(
         "EmailJS is not configured. Please check your environment variables."
       );
-      console.error("EmailJS credentials missing in environment variables.");
+      console.error("EmailJS credentials missing in environment variables.", {
+        serviceID: !!serviceID,
+        templateID: !!templateID,
+        publicKey: !!publicKey,
+      });
       return;
     }
 
     emailjs.sendForm(serviceID, templateID, form.current, publicKey).then(
-      () => {
+      (result) => {
+        console.log("EmailJS Success:", result.text);
         setStatus("success");
         setStatusMessage(
           "Message sent successfully! We will get back to you soon."
         );
         form.current?.reset();
-        setTimeout(() => setStatus("idle"), 5000);
+        setTimeout(() => {
+          setStatus("idle");
+          setStatusMessage("");
+        }, 5000);
       },
       (error) => {
+        console.error("EmailJS Error:", error);
         setStatus("error");
-        setStatusMessage("Failed to send message. Please try again later.");
-        console.error("EMAILJS FAILED...", error.text);
+
+        // Provide more specific error messages
+        if (error.status === 400) {
+          setStatusMessage(
+            "Invalid request. Please check your input and try again."
+          );
+        } else if (error.status === 401) {
+          setStatusMessage("Authentication failed. Please contact support.");
+        } else if (error.status === 403) {
+          setStatusMessage("Service access denied. Please contact support.");
+        } else if (error.status === 404) {
+          setStatusMessage("Service not found. Please contact support.");
+        } else if (error.status >= 500) {
+          setStatusMessage("Server error. Please try again later.");
+        } else {
+          setStatusMessage("Failed to send message. Please try again later.");
+        }
+
+        setTimeout(() => {
+          setStatus("idle");
+          setStatusMessage("");
+        }, 8000);
       }
     );
   };
