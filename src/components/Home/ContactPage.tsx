@@ -100,7 +100,7 @@ const ContactPage: FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-slate-900 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+    <div className="bg-gray-50 dark:bg-slate-900 h-[calc(100vh-81px)] overflow-hidden flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
       <div className="max-w-6xl w-full mx-auto bg-white dark:bg-slate-800/50 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-slate-700 grid md:grid-cols-2">
         {/* Left Column: Information */}
         <div className="p-8 sm:p-12 lg:p-16 text-gray-800 dark:text-gray-200 md:border-r md:border-gray-200 md:dark:border-slate-700">
