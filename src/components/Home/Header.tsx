@@ -1,17 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Menu,
-  X,
-  ChevronDown,
-  Monitor,
-  Target,
-  Sun,
-  Moon,
-  Map,
-  Navigation2,
-} from "lucide-react";
+import { Menu, X, ChevronDown, Monitor, Target, Sun, Moon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
 
 const Header = () => {
   const navigate = useNavigate();
@@ -204,71 +194,20 @@ const Header = () => {
             </nav>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-2">
-            <div className="relative" ref={productsMenuRef}>
-              <button
-                onClick={toggleProductsMenu}
-                className="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-base font-medium transition-colors"
-              >
-                Products
-                <ChevronDown
-                  className={`ml-1 h-5 w-5 transition-transform duration-200 ${
-                    isProductsOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              {isProductsOpen && (
-                <div className="absolute top-full left-0 mt-3 w-96 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-down">
-                  <div className="p-4 space-y-2">
-                    <ProductLink
-                      to="/products/screen-manager"
-                      icon={<Monitor className="h-6 w-6 text-blue-500" />}
-                      title="Screen Manager"
-                      subtitle="Manage and monetize your screens"
-                    />
-                    <ProductLink
-                      to="/products/ads-manager"
-                      icon={<Target className="h-6 w-6 text-purple-500" />}
-                      title="Ads Manager"
-                      subtitle="Create targeted ad campaigns"
-                    />
-                    <ProductLink
-                      to="/products/ads-manager/dashboard"
-                      icon={<Monitor className="h-6 w-6 text-green-500" />}
-                      title="Campaign Dashboard"
-                      subtitle="Manage campaigns & screens"
-                    />
-                    <ProductLink
-                      to="/map"
-                      icon={<Map className="h-6 w-6 text-blue-600" />}
-                      title="Interactive Map"
-                      subtitle="Explore Indian digital billboard locations"
-                    />
-                    <ProductLink
-                      to="/map-dashboard"
-                      icon={<Navigation2 className="h-6 w-6 text-purple-600" />}
-                      title="Maps Dashboard"
-                      subtitle="Real-time analytics with Indian maps"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <NavLink to="/solutions">Solutions</NavLink>
-            <NavLink to="/pricing">Pricing</NavLink>
-            <NavLink to="/resources">Resources</NavLink>
-          </nav>
-
-          {/* Right side buttons & Toggles */}
-          <div className="flex items-center">
+          {/* Right side: Auth, Theme Toggle, Mobile Menu */}
+          <div className="ml-auto flex items-center">
             <div className="hidden md:flex items-center space-x-4">
               <NavLink to="/contact">Contact</NavLink>
               <button
                 onClick={() => navigate("/auth")}
-                className="btn-damn btn-outline"
+                className="
+      relative px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm
+      bg-white text-gray-900
+      dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700
+    "
               >
                 <span className="relative z-10 flex items-center space-x-2">
+                  <span className="text-lg"></span>
                   <span className="purple-gray-gradient">Login / Sign up</span>
                 </span>
               </button>

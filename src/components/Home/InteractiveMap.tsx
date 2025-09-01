@@ -10,7 +10,11 @@ const createBillboardIcon = (color = "#3b82f6") => {
   const iconHtml = renderToStaticMarkup(
     <div
       style={{
-        backgroundColor: "transparent",
+        backgroundColor: "white",
+        borderRadius: "50%",
+        padding: "6px",
+        border: `2px solid ${color}`,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -20,8 +24,8 @@ const createBillboardIcon = (color = "#3b82f6") => {
         src="/billboard.png"
         alt="Billboard"
         style={{
-          width: "32px",
-          height: "38px",
+          width: "24px",
+          height: "24px",
           objectFit: "contain",
         }}
       />
@@ -31,9 +35,9 @@ const createBillboardIcon = (color = "#3b82f6") => {
   return L.divIcon({
     html: iconHtml,
     className: "custom-billboard-icon",
-    iconSize: [48, 64],
-    iconAnchor: [24, 56],
-    popupAnchor: [0, -56],
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
   });
 };
 
@@ -618,17 +622,135 @@ export default function InteractiveMap() {
   );
 
   return (
-    <div className="w-full h-96 bg-gray-100 border rounded-lg flex items-center justify-center">
-      <div className="text-center">
-        <h3 className="text-xl font-semibold text-gray-700 mb-2">
-          Interactive Map
-        </h3>
-        <p className="text-gray-500">
-          Map component temporarily disabled for debugging
-        </p>
+    <div className="flex flex-col lg:flex-row h-auto justify-between align-middle p-4 bg-gray-200 dark:bg-slate-900 lg:pl-[10%]">
+      {/* Sidebar */}
+      <div className="w-full lg:w-64 bg-white dark:bg-slate-800 shadow-md border-b lg:border-r border-gray-200 dark:border-slate-700 flex flex-col rounded-lg overflow-hidden mb-4 lg:mb-0">
+        <div className="p-4 border-b border-gray-200 dark:border-slate-700">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+            DOOH Platform
+          </h1>
+          <p className="text-xs text-gray-600 dark:text-gray-300">
+            Digital Out-of-Home Advertising
+          </p>
+        </div>
+
+        <div className="p-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Target Country
+          </label>
+          <select
+            value={selectedCountry.code}
+            onChange={(e) => {
+              const country = countries.find((c) => c.code === e.target.value);
+              if (country) handleCountryChange(country);
+            }}
+            className="w-full px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-white"
+          >
+            {countries.map((country) => (
+              <option key={country.code} value={country.code}>
+                {country.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="p-4 border-t border-gray-200 dark:border-slate-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Search Location
+          </label>
+          <div className="flex gap-2 mb-2 items-center">
+            <input
+              type="text"
+              placeholder="Enter location"
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              onKeyDown={handleKeyPress}
+              className="flex-1 min-w-0 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+            />
+            <button
+              onClick={handleLocationSearch}
+              disabled={isSearching}
+              className="w-9 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
+            >
+              {isSearching ? "..." : <MapPin className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {searchError && (
+            <p className="text-xs text-red-600 dark:text-red-400 mb-2">
+              {searchError}
+            </p>
+          )}
+
+          {searchLocation && (
+            <div className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-200 dark:border-green-800">
+              <p className="text-green-800 dark:text-green-200 font-medium">
+                Found:
+              </p>
+              <p className="text-green-700 dark:text-green-300">
+                {searchLocation.place}
+              </p>
+              {"state" in searchLocation && searchLocation.state && (
+                <p className="text-green-600 dark:text-green-400">
+                  {searchLocation.state}
+                </p>
+              )}
+              <button
+                onClick={clearSearch}
+                className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 lg:pl-4">
+        <div className="h-[400px] sm:h-[500px] lg:h-[600px] w-full lg:w-[70vw] rounded-lg shadow-md overflow-hidden">
+          <MapContainer
+            center={[selectedCountry.lat, selectedCountry.lng]}
+            zoom={selectedCountry.zoom}
+            className="h-full w-full"
+            zoomControl={true}
+          >
+            <TileLayer
+              url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+              subdomains={["mt0", "mt1", "mt2", "mt3"]}
+              attribution="&copy; Google Maps"
+            />
+            <MapController
+              selectedCountry={selectedCountry}
+              searchLocation={searchLocation}
+            />
+            {/* Screen markers with custom monitor icons */}
+            {filteredScreens.map((screen, idx) => (
+              <Marker
+                key={idx}
+                position={[screen.lat, screen.lng]}
+                icon={getCustomIcon(screen.type)}
+              >
+                <Popup>
+                  <div className="p-1">
+                    <div className="flex items-center gap-1 mb-1">
+                      {getScreenTypeIcon(screen.type)}
+                      <h3 className="font-semibold text-gray-900 text-sm">
+                        {screen.name}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {screen.location}
+                    </p>
+                    <span className="inline-block px-1 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-800">
+                      {screen.type}
+                    </span>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
       </div>
     </div>
   );
 }
-
-export default InteractiveMap;
