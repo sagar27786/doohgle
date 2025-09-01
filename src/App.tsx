@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Home/Header";
 import MainHero from "./components/Home/MainHero";
@@ -25,13 +25,13 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import VenueDashboard from "./components/VenueDashboard/VenueDashboard";
 
 // Ads Manager page components
-// import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
-// import ChartsSection from "./components/adds Manager/ChartsSection";
-// import WorldMapSection from "./components/adds Manager/WorldMapSection";
-// import LottieRowSection from "./components/adds Manager/LottieRowSection";
-// import VisibilitySection from "./components/adds Manager/VisibilitySection";
-// import YouTubeSection from "./components/adds Manager/YouTubeSection";
-// import AdsManagerFooter from "./components/adds Manager/Footer";
+import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
+import ChartsSection from "./components/adds Manager/ChartsSection";
+import WorldMapSection from "./components/adds Manager/WorldMapSection";
+import LottieRowSection from "./components/adds Manager/LottieRowSection";
+import VisibilitySection from "./components/adds Manager/VisibilitySection";
+import YouTubeSection from "./components/adds Manager/YouTubeSection";
+import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
@@ -49,6 +49,7 @@ import SimpleApiTest from "./pages/SimpleApiTest";
 // ThemeProvider for dark mode
 import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import LoaderAnimation from "./components/Home/LoaderAnimation";
 
 // Home page component
 const HomePage = () => {
