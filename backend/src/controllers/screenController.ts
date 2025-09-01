@@ -18,7 +18,7 @@ export const getAllScreens = async (
         u.name as owner_name,
         COUNT(*) OVER() as total_count
       FROM screens s
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       WHERE s.is_active = true
       ORDER BY s.created_at DESC
       LIMIT $1 OFFSET $2
@@ -59,7 +59,7 @@ export const getScreenById = async (
         u.email as owner_email,
         u.phone as owner_phone
       FROM screens s
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       WHERE s.id = $1 AND s.is_active = true
     `;
 
@@ -144,7 +144,7 @@ export const searchScreens = async (
           ELSE NULL
         END as distance_km
       FROM screens s
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       WHERE s.is_active = true
     `;
 
@@ -241,7 +241,7 @@ export const getNearbyScreens = async (
           ST_Point($2, $1)::geography
         ) / 1000 as distance_km
       FROM screens s
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       WHERE s.is_active = true
         AND ST_Distance(
           ST_Point(s.longitude, s.latitude)::geography,

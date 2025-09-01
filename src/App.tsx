@@ -1,12 +1,5 @@
-import React, { createContext, useEffect, useState, useContext } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
-import LoaderAnimation from "./components/Home/LoaderAnimation";
+import React, { useState } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Home/Header";
 import MainHero from "./components/Home/MainHero";
 import CompanyLogos from "./components/Home/CompanyLogos";
@@ -17,15 +10,11 @@ import GlobalFeed from "./components/Home/GlobalFeed";
 import WhyFramen from "./components/Home/WhyFramen";
 import SuccessStories from "./components/Home/SuccessStories";
 import ContentCreator from "./components/Home/ContentCreator";
-import ScreenManager from "./components/Home/ScreenManager";
 import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
 import DOOHChatbot from "./components/Home/DOOHChatbot";
 import Footer from "./components/Home/Footer";
 import HowItWorks from "./components/Home/HowItWorks";
-
-// Screen Manager page components
-import ScreenManagerDashboard from "./components/Screen Manager/ScreenManagerDashboard";
 
 // Auth components
 import LoginSignup from "./components/Auth/LoginSignup";
@@ -36,56 +25,31 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import VenueDashboard from "./components/VenueDashboard/VenueDashboard";
 
 // Ads Manager page components
-// import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
-// import ChartsSection from "./components/adds Manager/ChartsSection";
-// import WorldMapSection from "./components/adds Manager/WorldMapSection";
-// import LottieRowSection from "./components/adds Manager/LottieRowSection";
-// import VisibilitySection from "./components/adds Manager/VisibilitySection";
-// import YouTubeSection from "./components/adds Manager/YouTubeSection";
-// import AdsManagerFooter from "./components/adds Manager/Footer";
+import Page3DStandUp from "./components/adds Manager/Page3DStandUp";
+import ChartsSection from "./components/adds Manager/ChartsSection";
+import WorldMapSection from "./components/adds Manager/WorldMapSection";
+import LottieRowSection from "./components/adds Manager/LottieRowSection";
+import VisibilitySection from "./components/adds Manager/VisibilitySection";
+import YouTubeSection from "./components/adds Manager/YouTubeSection";
+import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
 import ContactPage from "./components/Home/ContactPage";
 import AboutUs from "./components/Home/AboutUs";
 
+// Admin Components
+import AdminApp from "./components/Admin/AdminApp";
+
+// Map Components
+import MapTestPage from "./pages/MapTestPage";
+import ApiTestPage from "./pages/ApiTestPage";
+import SimpleApiTest from "./pages/SimpleApiTest";
+
 // ThemeProvider for dark mode
-interface ThemeContextType {
-  theme: string;
-  toggleTheme: () => void;
-}
-const ThemeContext = createContext<ThemeContextType>({
-  theme: "dark",
-  toggleTheme: () => {},
-});
-export const useTheme = () => useContext(ThemeContext);
-
-interface ThemeProviderProps {
-  children: React.ReactNode;
-}
-
-const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem("theme") || "dark"
-  );
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
-  };
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import LoaderAnimation from "./components/Home/LoaderAnimation";
 
 // Home page component
 const HomePage = () => {
@@ -101,8 +65,6 @@ const HomePage = () => {
       <WhyFramen />
       <SuccessStories />
       <ContentCreator />
-      <ScreenManager />
-      <HowItWorks />
       <FAQ />
       <Contact />
       <Footer />
@@ -110,9 +72,19 @@ const HomePage = () => {
   );
 };
 
-// Screen Manager page component
-const ScreenManagerPage = () => {
-  return <ScreenManagerDashboard />;
+// Ads Manager page component - Marketing Landing
+const AdsManagerPage = () => {
+  return (
+    <div className="min-h-screen bg-white">
+      <Page3DStandUp />
+      <VisibilitySection />
+      <WorldMapSection />
+      <YouTubeSection />
+      <ChartsSection />
+      <LottieRowSection />
+      <AdsManagerFooter />
+    </div>
+  );
 };
 
 // Ads Manager Dashboard - Full Backend Integration
@@ -129,10 +101,10 @@ function AppContent() {
     "/auth/login",
     "/auth/signup",
     "/auth/select-role",
-    "/products/screen-manager",
     "/venue-dashboard",
     "/products/ads-manager",
     "/products/ads-manager/dashboard",
+    "/admin",
   ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
 
@@ -151,16 +123,7 @@ function AppContent() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/about-us" element={<AboutUs />} />
-          <Route path="/contact" element={<ContactPage />} />"
-          <Route
-            path="/products/screen-manager"
-            element={<ScreenManagerPage />}
-          />
-          <Route
-            path="/ScreenManagerDashboard"
-            element={<ScreenManagerDashboard />}
-          />
+
           {/* Ads Manager Routes */}
           {/* <Route path="/products/ads-manager" element={<AdsManagerPage />} /> */}
           <Route
@@ -187,17 +150,26 @@ function AppContent() {
           >
             <Route path="/auth/select-role" element={<RoleSelect />} />
           </Route>
+
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
+
+
+
+          {/* Debug Routes */}
+          <Route path="/debug/screens" element={<SimpleScreensTest />} />
+          <Route path="/test/map" element={<MapTestPage />} />
+          <Route path="/test/api" element={<ApiTestPage />} />
+            <Route path="/test/simple" element={<SimpleApiTest />} />
+
+          {/* Admin Route */}
+          <Route path="/admin" element={<AdminApp />} />
+
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
-            <Route
-              path="/ScreenManagerDashboard"
-              element={<ScreenManagerDashboard />}
-            />
-            {/* <Route path="/products/ads-manager" element={<AdsManagerPage />} /> */}
+            <Route path="/products/ads-manager" element={<AdsManagerPage />} />
             <Route
               path="/products/ads-manager/dashboard"
               element={<AdsManagerDashboard />}

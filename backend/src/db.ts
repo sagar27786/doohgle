@@ -1,67 +1,50 @@
 import { Pool } from "pg";
 import * as dotenv from "dotenv";
-dotenv.config();
+import path from "path";
 
-const connectionString = process.env.DATABASE_URL;
+// Load .env file from the backend directory
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-if (!connectionString) {
-  console.error('❌ DATABASE_URL is not set. Please set DATABASE_URL in your environment or .env file.');
-}
-
-// Helpful parsing to show host/port (avoid logging full connection string)
-let dbHost = '';
-let dbPort = '';
-try {
-  if (connectionString) {
-    const parsed = new URL(connectionString);
-    dbHost = parsed.hostname || '';
-    dbPort = parsed.port || '';
-  }
-} catch (e) {
-  // ignore parse errors
-}
-
+// Centralized pool configuration
 export const pool = new Pool({
-  connectionString,
-  ssl: { rejectUnauthorized: false },
-  // smaller timeouts make network issues surface quickly in dev
-  // but you can increase these values for flaky networks
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
-  max: 10,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+  ssl: process.env.DB_HOST === "localhost" ? false : { rejectUnauthorized: false },
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
+  connectionTimeoutMillis: 10000, // Return an error if connection takes longer than 10 seconds
+  statement_timeout: 30000, // 30 second statement timeout
+  query_timeout: 30000, // 30 second query timeout
 });
 
+pool.on("connect", () => {
+  console.log("pg pool: client connected");
+});
 
-pool.connect()
-  .then(client => {
-    console.log('✅ Connected to PostgreSQL', dbHost ? `(${dbHost}:${dbPort})` : '');
+pool.on("acquire", () => {
+  console.log("pg pool: client acquired");
+});
+
+pool.on("remove", () => {
+  console.log("pg pool: client removed");
+});
+
+pool
+  .connect()
+  .then((client) => {
+    console.log(`✅ Connected to PostgreSQL (${process.env.DB_HOST}:${process.env.DB_PORT})`);
     client.release();
   })
-  .catch(err => {
-    // Provide more actionable guidance for ETIMEDOUT
-    if ((err as any)?.code === 'ETIMEDOUT') {
-      console.error(`❌ PostgreSQL connection timed out when connecting to ${dbHost || 'your host'}:${dbPort || '5432'}`);
-      console.error('  - Check that the database host is reachable from this machine');
-      console.error('  - Ensure the database allows connections from your IP / VPC');
-      console.error('  - Verify the port (usually 5432) is open and not blocked by a firewall');
-    }
-    console.error('❌ PostgreSQL connection error:', err);
+  .catch((err) => {
+    console.error("❌ PostgreSQL connection error:", err);
   });
 
-// Pool level event listeners to aid debugging intermittent connection closures
-pool.on('connect', (client) => {
-  console.log('pg pool: client connected');
+pool.on("error", (err: Error) => {
+  console.error(
+    "pg pool: unexpected error on idle client",
+    err?.message || err
+  );
 });
-
-pool.on('acquire', (client) => {
-  console.log('pg pool: client acquired');
-});
-
-pool.on('remove', (client) => {
-  console.log('pg pool: client removed');
-});
-
-pool.on('error', (err: Error) => {
-  console.error('pg pool: unexpected error on idle client', err?.message || err);
-});
-

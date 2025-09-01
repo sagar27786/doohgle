@@ -321,7 +321,7 @@ export async function getMyBookings(
       FROM bookings b
       JOIN screens s ON b.screen_id = s.id
       LEFT JOIN campaigns c ON b.campaign_id = c.id
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       WHERE b.advertiser_id = $1
     `;
 
@@ -533,10 +533,167 @@ async function getCompleteBookingData(bookingId: number): Promise<any> {
     FROM bookings b
     JOIN screens s ON b.screen_id = s.id
     LEFT JOIN campaigns c ON b.campaign_id = c.id
-    LEFT JOIN users u ON s.user_id = u.id
+    LEFT JOIN users u ON s.owner_id = u.id
     WHERE b.id = $1
   `;
 
   const result = await pool.query(query, [bookingId]);
   return result.rows[0] || null;
+}
+
+// ===== New Booking Request System =====
+
+export async function sendBookingRequest(req: Request, res: Response) {
+  try {
+    const {
+      campaign_name,
+      advertiser_id,
+      advertiser_name,
+      screen_id,
+      screen_name,
+      screen_owner_id,
+      start_date,
+      end_date,
+      start_time,
+      end_time,
+      daily_budget,
+      total_budget,
+      message
+    } = req.body;
+
+    // Validate required fields
+    if (!campaign_name || !screen_id || !start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        message: "campaign_name, screen_id, start_date, and end_date are required"
+      });
+    }
+
+    const client = await pool.connect();
+    
+    try {
+      // Insert booking request
+      const insertQuery = `
+        INSERT INTO booking_requests (
+          campaign_name, advertiser_id, advertiser_name, screen_id, screen_name,
+          screen_owner_id, start_date, end_date, start_time, end_time,
+          daily_budget, total_budget, message, status
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending')
+        RETURNING id, created_at
+      `;
+
+      const result = await client.query(insertQuery, [
+        campaign_name, advertiser_id, advertiser_name, screen_id, screen_name,
+        screen_owner_id, start_date, end_date, start_time, end_time,
+        daily_budget, total_budget, message
+      ]);
+
+      res.json({
+        success: true,
+        data: {
+          id: result.rows[0].id,
+          status: 'pending',
+          created_at: result.rows[0].created_at
+        }
+      });
+
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error sending booking request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+}
+
+export async function getMyBookingRequests(req: Request, res: Response) {
+  try {
+    const { advertiser_id } = req.query;
+
+    if (!advertiser_id) {
+      return res.status(400).json({
+        success: false,
+        message: "advertiser_id is required"
+      });
+    }
+
+    const client = await pool.connect();
+    
+    try {
+      // Simplified query first to test basic functionality
+      const query = `
+        SELECT 
+          br.id,
+          br.campaign_name,
+          br.screen_id,
+          br.screen_name,
+          br.start_date,
+          br.end_date,
+          br.daily_budget,
+          br.total_budget,
+          br.status,
+          br.message,
+          br.created_at,
+          br.updated_at
+        FROM booking_requests br
+        WHERE br.advertiser_id = $1
+        ORDER BY br.created_at DESC
+      `;
+
+      const result = await client.query(query, [advertiser_id]);
+
+      res.json({
+        success: true,
+        data: result.rows
+      });
+
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching booking requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+}
+
+export async function getAvailableCities(req: Request, res: Response) {
+  try {
+    const client = await pool.connect();
+    
+    try {
+      const query = `
+        SELECT 
+          city,
+          'India' as state,
+          COUNT(*) as screen_count
+        FROM screens 
+        WHERE is_active = true AND city IS NOT NULL
+        GROUP BY city
+        HAVING COUNT(*) > 0
+        ORDER BY screen_count DESC, city ASC
+      `;
+
+      const result = await client.query(query);
+
+      res.json({
+        success: true,
+        data: result.rows
+      });
+
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching available cities:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
 }
