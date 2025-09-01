@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:4001/api/venue";
+const API_URL = "http://localhost:4000/api/venue";
 
 async function request(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem("token");

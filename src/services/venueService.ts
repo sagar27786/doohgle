@@ -5,7 +5,7 @@ function getAuthToken(): string | null {
   return localStorage.getItem('token');
 }
 
-let API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
+let API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api';
 
 // Normalize API_URL: ensure it has a protocol. If someone sets VITE_API_URL without protocol
 // (e.g. "localhost:4000/api") the browser will treat it as a relative URL and requests

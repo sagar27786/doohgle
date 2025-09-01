@@ -45,7 +45,7 @@ export interface CampaignBooking {
 }
 
 class BookingService {
-  private baseUrl = 'http://localhost:4001/api';
+  private baseUrl = 'http://localhost:4000/api';
 
   // Get auth token
   private getAuthToken(): string | null {
