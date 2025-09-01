@@ -29,6 +29,11 @@ export async function createScreen(
     day_photo_url,
     night_photo_url,
     video_url,
+    hourly_rate,
+    daily_rate,
+    weekly_rate,
+    width_px,
+    height_px,
   } = req.body || {};
 
   if (!screen_name || !location_in_venue) {
@@ -42,8 +47,8 @@ export async function createScreen(
       `INSERT INTO screens
        (user_id, screen_name, location_in_venue, city, latitude, longitude, screen_size_inches, resolution, 
         orientation, device_type, device_model, ads_enabled, ad_frequency, viewing_distance, 
-        typical_viewer_duration, peak_viewing_hours, day_photo_url, night_photo_url, video_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::text[], $17, $18, $19)
+        typical_viewer_duration, peak_viewing_hours, day_photo_url, night_photo_url, video_url, hourly_rate, daily_rate, weekly_rate, width_px, height_px)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::text[], $17, $18, $19, $20, $21, $22, $23, $24)
        RETURNING *`,
       [
         userId,
@@ -65,6 +70,11 @@ export async function createScreen(
         day_photo_url || null,
         night_photo_url || null,
         video_url || null,
+        hourly_rate ? Number(hourly_rate) : null,
+        daily_rate ? Number(daily_rate) : null,
+        weekly_rate ? Number(weekly_rate) : null,
+        width_px ? Number(width_px) : null,
+        height_px ? Number(height_px) : null,
       ]
     );
 
@@ -113,43 +123,16 @@ export async function getMyScreens(
 export async function getAllScreens(req: Request, res: Response) {
   try {
     const {
-      city,
-      state,
-      screen_type,
-      min_footfall,
-      max_budget,
-      limit = "20",
+      city, // Filter screens by city name
+      state, // Filter screens by state
+      screen_type, // Filter by type of screen (e.g., LED, LCD)
+      min_footfall, // Minimum daily foot traffic requirement
+      max_budget, // Maximum budget constraint for filtering screens
+      limit = "20", // Number of results to return, defaults to 20
     } = req.query;
 
     let query = `
-      SELECT
-        s.id,
-        s.owner_id,
-        s.name,
-        'Premium advertising display' as description,
-        'LED Billboard' as screen_type,
-        s.location as location_name,
-        CONCAT(s.location, ', ', s.city) as address,
-        s.city,
-        'India' as state,
-        '000000' as pincode,
-        s.latitude,
-        s.longitude,
-        s.width_ft as screen_size_width,
-        s.height_ft as screen_size_height,
-        CASE WHEN s.resolution = '1080p' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE 1280 END as resolution_width,
-        CASE WHEN s.resolution = '1080p' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE 720 END as resolution_height,
-        s.daily_footfall,
-        s.vehicle_count,
-        s.peak_hours,
-        'Mixed demographics' as demographics,
-        s.cost_per_10_seconds,
-        s.image_url,
-        s.video_url,
-        s.is_active,
-        s.price_per_hour as hourly_rate,
-        s.price_per_day as daily_rate,
-        s.price_per_week as weekly_rate
+      SELECT s.id, s.user_id, s.screen_name, s.location_in_venue, s.city, s.latitude, s.longitude, s.width_px, s.height_px, s.peak_viewing_hours, s.day_photo_url, s.night_photo_url, s.video_url, s.is_active, s.hourly_rate, s.daily_rate, s.weekly_rate, s.device_type, s.resolution, s.created_at
       FROM screens s
       WHERE s.is_active = true
     `;
@@ -170,31 +153,70 @@ export async function getAllScreens(req: Request, res: Response) {
     }
 
     if (max_budget) {
-      query += ` AND s.price_per_day <= $${paramIndex}`;
+      query += ` AND s.daily_rate <= $${paramIndex}`;
       params.push(parseFloat(max_budget as string));
       paramIndex++;
     }
 
-    query += ` ORDER BY s.city, s.price_per_day DESC, s.created_at DESC LIMIT $${paramIndex}`;
+    query += ` ORDER BY s.city, s.daily_rate DESC, s.created_at DESC LIMIT $${paramIndex}`;
     params.push(parseInt(limit as string));
 
     const result = await pool.query(query, params);
+    console.log("results before formatting : ", result.rows);
 
-    // Format results to include pricing information
-    const formattedResults = result.rows.map((row) => ({
-      ...row,
-      pricing: {
-        hourly: row.hourly_rate || 0,
-        daily: row.daily_rate || 0,
-        weekly: row.weekly_rate || 0,
-        cost_per_10_seconds: row.cost_per_10_seconds || 50,
-      },
-    }));
+    const resultsWithPresignedUrls = await Promise.all(
+      result.rows.map(async (row) => {
+        const dayPhotoUrl = await getRenderableUrl(row.day_photo_url);
+        const nightPhotoUrl = await getRenderableUrl(row.night_photo_url);
+        const videoUrl = await getRenderableUrl(row.video_url);
+
+        const cost_per_10_seconds = row.daily_rate ? row.daily_rate / 8640 : 50;
+
+        let resolution_width = 1280;
+        let resolution_height = 720;
+        if (row.resolution === "1080p") {
+          resolution_width = 1920;
+          resolution_height = 1080;
+        } else if (row.resolution === "4K") {
+          resolution_width = 3840;
+          resolution_height = 2160;
+        }
+
+        return {
+          id: row.id,
+          user_id: row.user_id,
+          name: row.screen_name,
+          description: "Premium advertising display",
+          screen_type: row.device_type,
+          location_name: row.location_in_venue,
+          address: `${row.location_in_venue}, ${row.city}`,
+          city: row.city,
+          state: "India",
+          latitude: row.latitude,
+          longitude: row.longitude,
+          screen_size_width: row.width_px,
+          screen_size_height: row.height_px,
+          width_px: row.width_px,
+          height_px: row.height_px,
+          peak_hours: row.peak_viewing_hours,
+          demographics: "Mixed demographics",
+          day_photo_url: dayPhotoUrl,
+          night_photo_url: nightPhotoUrl,
+          video_url: videoUrl,
+          is_active: row.is_active,
+          hourly_rate: row.hourly_rate,
+          daily_rate: row.daily_rate,
+          weekly_rate: row.weekly_rate,
+          device_type: row.device_type,
+          cost_per_10_seconds: cost_per_10_seconds,
+        };
+      })
+    );
 
     res.json({
       success: true,
-      data: formattedResults,
-      total: result.rows.length,
+      data: resultsWithPresignedUrls,
+      total: resultsWithPresignedUrls.length,
       filters: { city, state, screen_type, min_footfall, max_budget },
     });
   } catch (error) {
@@ -596,7 +618,9 @@ function extractS3KeyFromUrl(url: string): string | null {
 }
 
 // Given a DB field (which can be a key or URL), return a presigned URL if private, or the original if already public
-async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null> {
+async function getRenderableUrl(
+  urlOrKey?: string | null
+): Promise<string | null> {
   if (!urlOrKey) return null;
 
   // If it's a URL
@@ -616,7 +640,10 @@ async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null
 
 // Build assets array from the three columns in the screens table
 async function buildAssetsFromScreenRow(screen: any) {
-  const assets: { asset_type: "photo_day" | "photo_night" | "video"; url: string }[] = [];
+  const assets: {
+    asset_type: "photo_day" | "photo_night" | "video";
+    url: string;
+  }[] = [];
 
   const dayUrl = await getRenderableUrl(screen.day_photo_url);
   if (dayUrl) assets.push({ asset_type: "photo_day", url: dayUrl });

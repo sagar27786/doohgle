@@ -793,7 +793,8 @@ const CampaignCreationWorkflow: React.FC = () => {
           )}
 
         {/* Screen Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
+        <div className="max-h-[70vh] overflow-y-auto pr-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
           {availableScreens.map((screen, index) => {
             const cardColors = [
               "from-blue-500 to-indigo-600",
@@ -958,6 +959,7 @@ const CampaignCreationWorkflow: React.FC = () => {
             );
           })}
         </div>
+      </div>
 
         {/* Selected Summary */}
         {selectedScreens.length > 0 && (

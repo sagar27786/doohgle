@@ -57,12 +57,10 @@ const screenInitialState = {
   video_url: '',
 
   // Pricing
-  pricing: {
-    hourly_rate: '',
-    daily_rate: '',
-    weekly_rate: '',
-    currency: 'INR',
-  },
+  hourly_rate: '',
+  daily_rate: '',
+  weekly_rate: '',
+  currency: 'INR',
 };
 
 const VenueDashboard: React.FC = () => {
@@ -125,14 +123,6 @@ const VenueDashboard: React.FC = () => {
 
     // Numbers stored as strings here; converted before submit
     setScreen((prev) => ({ ...prev, [name]: value as any }));
-  };
-
-  const handlePricingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const value = e.target.value;
-    setScreen((prev) => ({
-      ...prev,
-      pricing: { ...prev.pricing, [e.target.name]: value },
-    }));
   };
 
   const handlePeakViewingHoursChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -209,21 +199,9 @@ const VenueDashboard: React.FC = () => {
           ? String(screen.typical_viewer_duration)
           : '',
         user_id: userData.id,
-        pricing: {
-          ...screen.pricing,
-          hourly_rate: screen.pricing.hourly_rate
-            ? Number(screen.pricing.hourly_rate)
-            : undefined,
-          
-// Remove duplicate hourly_rate property since it's already defined above
-           
-          daily_rate: screen.pricing.daily_rate
-            ? Number(screen.pricing.daily_rate)
-            : undefined,
-          weekly_rate: screen.pricing.weekly_rate
-            ? Number(screen.pricing.weekly_rate)
-            : undefined,
-        },
+        hourly_rate: screen.hourly_rate ? Number(screen.hourly_rate) : undefined,
+        daily_rate: screen.daily_rate ? Number(screen.daily_rate) : undefined,
+        weekly_rate: screen.weekly_rate ? Number(screen.weekly_rate) : undefined,
         day_photo_url: screen.day_photo_url,
         night_photo_url: screen.night_photo_url,
         video_url: screen.video_url,
@@ -903,8 +881,8 @@ const VenueDashboard: React.FC = () => {
                             type="number"
                             id="hourly_rate"
                             name="hourly_rate"
-                            value={screen.pricing.hourly_rate}
-                            onChange={handlePricingChange}
+                            value={screen.hourly_rate}
+                            onChange={handleScreenChange}
                             className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
                           />
                         </div>
@@ -916,8 +894,8 @@ const VenueDashboard: React.FC = () => {
                             type="number"
                             id="daily_rate"
                             name="daily_rate"
-                            value={screen.pricing.daily_rate}
-                            onChange={handlePricingChange}
+                            value={screen.daily_rate}
+                            onChange={handleScreenChange}
                             className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
                           />
                         </div>
@@ -929,8 +907,8 @@ const VenueDashboard: React.FC = () => {
                             type="number"
                             id="weekly_rate"
                             name="weekly_rate"
-                            value={screen.pricing.weekly_rate}
-                            onChange={handlePricingChange}
+                            value={screen.weekly_rate}
+                            onChange={handleScreenChange}
                             className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
                           />
                         </div>
@@ -941,8 +919,8 @@ const VenueDashboard: React.FC = () => {
                           <select
                             id="currency"
                             name="currency"
-                            value={screen.pricing.currency}
-                            onChange={handlePricingChange}
+                            value={screen.currency}
+                            onChange={handleScreenChange}
                             className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
                           >
                             <option value="INR">INR</option>
