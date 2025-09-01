@@ -266,464 +266,725 @@ const InteractiveMap = () => {
     </div>
   );
 
-  const renderStep2 = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Left Column: Venue List */}
-      <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 hover:border-purple-300 transition-all duration-300"
-          />
-        </div>
+  return L.divIcon({
+    html: iconHtml,
+    className: "custom-billboard-icon",
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+  });
+};
 
-        <div className="flex items-center space-x-2 px-1">
-          <input
-            type="checkbox"
-            id="unselect-all"
-            className="rounded accent-purple-600 dark:accent-purple-500 bg-gray-100 dark:bg-slate-600 border-gray-300 dark:border-slate-500"
-          />
-          <label
-            htmlFor="unselect-all"
-            className="text-sm text-gray-700 dark:text-slate-300"
-          >
-            Unselect all
-          </label>
-        </div>
+// Get custom icon based on screen type
+const getCustomIcon = (type: string) => {
+  switch (type) {
+    case "Billboard":
+      return createBillboardIcon("#3b82f6"); // blue
+    case "Transit Display":
+      return createBillboardIcon("#16a34a"); // green
+    case "Mall Screen":
+      return createBillboardIcon("#9333ea"); // purple
+    default:
+      return createBillboardIcon("#6b7280"); // gray
+  }
+};
 
-        <div className="space-y-2">
-          {venueTypesState.map((venue) => (
-            <div
-              key={venue.id}
-              className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors duration-200 ${
-                selectedVenue.id === venue.id
-                  ? "bg-purple-50 dark:bg-slate-700"
-                  : "hover:bg-gray-100 dark:hover:bg-slate-700/50"
-              }`}
-              onClick={() => setSelectedVenue(venue)}
-            >
-              <input
-                type="checkbox"
-                checked={venue.checked}
-                onChange={() => handleVenueToggle(venue.id)}
-                onClick={(e) => e.stopPropagation()} // Prevent row selection when clicking checkbox
-                className="rounded accent-purple-600 dark:accent-purple-500 bg-gray-100 dark:bg-slate-600 border-gray-300 dark:border-slate-500 flex-shrink-0"
-              />
-              <img
-                src={venue.image}
-                alt={venue.name}
-                className="w-12 h-12 rounded object-cover dark:brightness-90"
-              />
-              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">
-                {venue.name}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+// Country data with coordinates
+const countries = [
+  { name: "India", code: "IN", lat: 20.5937, lng: 78.9629, zoom: 5 },
+  { name: "United States", code: "US", lat: 39.8283, lng: -98.5795, zoom: 4 },
+  { name: "United Kingdom", code: "UK", lat: 55.3781, lng: -3.436, zoom: 6 },
+  { name: "Germany", code: "DE", lat: 51.1657, lng: 10.4515, zoom: 6 },
+  { name: "Japan", code: "JP", lat: 36.2048, lng: 138.2529, zoom: 6 },
+  { name: "Australia", code: "AU", lat: -25.2744, lng: 133.7751, zoom: 4 },
+  { name: "France", code: "FR", lat: 46.2276, lng: 2.2137, zoom: 6 },
+  { name: "Canada", code: "CA", lat: 56.1304, lng: -106.3468, zoom: 4 },
+  { name: "Brazil", code: "BR", lat: -14.235, lng: -51.9253, zoom: 4 },
+  { name: "China", code: "CN", lat: 35.8617, lng: 104.1954, zoom: 4 },
+];
 
-      {/* Middle Column: Venue Presets */}
-      <div className="space-y-4">
-        <div className="relative">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
-            Venue preset
-          </label>
-          <button
-            className="w-full mt-2 p-3 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white text-left flex items-center justify-between hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
-            onClick={() => setShowVenuePreset(!showVenuePreset)}
-          >
-            <span>Custom</span>
-            {showVenuePreset ? (
-              <ChevronUp className="h-5 w-5 text-gray-500 dark:text-slate-400" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500 dark:text-slate-400" />
-            )}
-          </button>
+// DOOH screen locations by country
+const doohScreens = {
+  IN: [
+    {
+      name: "Connaught Place Billboard",
+      lat: 28.6315,
+      lng: 77.2167,
+      type: "Billboard",
+      location: "Delhi",
+    },
+    {
+      name: "Electronic City Tech Park LED",
+      lat: 12.8452,
+      lng: 77.6601,
+      type: "Billboard",
+      location: "Bengaluru",
+    },
+    {
+      name: "Whitefield Transit Display",
+      lat: 12.9692,
+      lng: 77.7498,
+      type: "Transit Display",
+      location: "Bengaluru",
+    },
+    {
+      name: "Outer Ring Road Billboard",
+      lat: 12.9295,
+      lng: 77.6428,
+      type: "Billboard",
+      location: "Bengaluru",
+    },
+    {
+      name: "Bellandur Junction Billboard",
+      lat: 12.9358,
+      lng: 77.6916,
+      type: "Billboard",
+      location: "Bengaluru",
+    },
+    {
+      name: "Mumbai Airport Display",
+      lat: 19.0896,
+      lng: 72.8656,
+      type: "Transit Display",
+      location: "Mumbai",
+    },
+    {
+      name: "Phoenix Mall Screen",
+      lat: 12.9279,
+      lng: 77.6271,
+      type: "Mall Screen",
+      location: "Bengaluru",
+    },
+    {
+      name: "Marina Beach Billboard",
+      lat: 13.0472,
+      lng: 80.2824,
+      type: "Billboard",
+      location: "Chennai",
+    },
+    {
+      name: "Bandra Station Display",
+      lat: 19.0544,
+      lng: 72.8406,
+      type: "Transit Display",
+      location: "Mumbai",
+    },
+    {
+      name: "Express Avenue Mall",
+      lat: 13.0594,
+      lng: 80.2597,
+      type: "Mall Screen",
+      location: "Chennai",
+    },
+  ],
+  US: [
+    {
+      name: "Times Square Billboard",
+      lat: 40.758,
+      lng: -73.9855,
+      type: "Billboard",
+      location: "New York",
+    },
+    {
+      name: "LAX Airport Display",
+      lat: 33.9425,
+      lng: -118.4081,
+      type: "Transit Display",
+      location: "Los Angeles",
+    },
+    {
+      name: "Beverly Center Mall",
+      lat: 34.0759,
+      lng: -118.3779,
+      type: "Mall Screen",
+      location: "Los Angeles",
+    },
+    {
+      name: "Union Station Display",
+      lat: 41.8787,
+      lng: -87.6394,
+      type: "Transit Display",
+      location: "Chicago",
+    },
+    {
+      name: "Sunset Boulevard Billboard",
+      lat: 34.0983,
+      lng: -118.3267,
+      type: "Billboard",
+      location: "Los Angeles",
+    },
+  ],
+  UK: [
+    {
+      name: "Piccadilly Circus Billboard",
+      lat: 51.51,
+      lng: -0.1347,
+      type: "Billboard",
+      location: "London",
+    },
+    {
+      name: "Heathrow Airport Display",
+      lat: 51.47,
+      lng: -0.4543,
+      type: "Transit Display",
+      location: "London",
+    },
+    {
+      name: "Westfield Shopping Centre",
+      lat: 51.5074,
+      lng: -0.2208,
+      type: "Mall Screen",
+      location: "London",
+    },
+    {
+      name: "King's Cross Station",
+      lat: 51.5308,
+      lng: -0.1238,
+      type: "Transit Display",
+      location: "London",
+    },
+  ],
+  DE: [
+    {
+      name: "Potsdamer Platz Billboard",
+      lat: 52.5096,
+      lng: 13.3762,
+      type: "Billboard",
+      location: "Berlin",
+    },
+    {
+      name: "Frankfurt Airport Display",
+      lat: 50.0379,
+      lng: 8.5622,
+      type: "Transit Display",
+      location: "Frankfurt",
+    },
+    {
+      name: "Europa Center Mall",
+      lat: 52.5058,
+      lng: 13.3359,
+      type: "Mall Screen",
+      location: "Berlin",
+    },
+  ],
+  JP: [
+    {
+      name: "Shibuya Crossing Billboard",
+      lat: 35.6598,
+      lng: 139.7006,
+      type: "Billboard",
+      location: "Tokyo",
+    },
+    {
+      name: "Narita Airport Display",
+      lat: 35.772,
+      lng: 140.3929,
+      type: "Transit Display",
+      location: "Tokyo",
+    },
+    {
+      name: "Ginza Mall Screen",
+      lat: 35.6762,
+      lng: 139.7603,
+      type: "Mall Screen",
+      location: "Tokyo",
+    },
+    {
+      name: "Osaka Station Display",
+      lat: 34.7024,
+      lng: 135.4959,
+      type: "Transit Display",
+      location: "Osaka",
+    },
+  ],
+  AU: [
+    {
+      name: "Federation Square Billboard",
+      lat: -37.8176,
+      lng: 144.9685,
+      type: "Billboard",
+      location: "Melbourne",
+    },
+    {
+      name: "Sydney Airport Display",
+      lat: -33.9399,
+      lng: 151.1753,
+      type: "Transit Display",
+      location: "Sydney",
+    },
+    {
+      name: "Queen Victoria Building",
+      lat: -33.8717,
+      lng: 151.2062,
+      type: "Mall Screen",
+      location: "Sydney",
+    },
+  ],
+  FR: [
+    {
+      name: "Champs-Élysées Billboard",
+      lat: 48.8698,
+      lng: 2.3081,
+      type: "Billboard",
+      location: "Paris",
+    },
+    {
+      name: "Charles de Gaulle Airport",
+      lat: 49.0097,
+      lng: 2.5479,
+      type: "Transit Display",
+      location: "Paris",
+    },
+    {
+      name: "Galeries Lafayette Mall",
+      lat: 48.8738,
+      lng: 2.332,
+      type: "Mall Screen",
+      location: "Paris",
+    },
+  ],
+  CA: [
+    {
+      name: "CN Tower Billboard",
+      lat: 43.6426,
+      lng: -79.3871,
+      type: "Billboard",
+      location: "Toronto",
+    },
+    {
+      name: "Pearson Airport Display",
+      lat: 43.6777,
+      lng: -79.6248,
+      type: "Transit Display",
+      location: "Toronto",
+    },
+    {
+      name: "Eaton Centre Mall",
+      lat: 43.6544,
+      lng: -79.3807,
+      type: "Mall Screen",
+      location: "Toronto",
+    },
+  ],
+  BR: [
+    {
+      name: "Paulista Avenue Billboard",
+      lat: -23.5618,
+      lng: -46.6565,
+      type: "Billboard",
+      location: "São Paulo",
+    },
+    {
+      name: "GRU Airport Display",
+      lat: -23.4356,
+      lng: -46.4731,
+      type: "Transit Display",
+      location: "São Paulo",
+    },
+    {
+      name: "Shopping Iguatemi",
+      lat: -23.5515,
+      lng: -46.6753,
+      type: "Mall Screen",
+      location: "São Paulo",
+    },
+  ],
+  CN: [
+    {
+      name: "Bund Billboard",
+      lat: 31.2397,
+      lng: 121.499,
+      type: "Billboard",
+      location: "Shanghai",
+    },
+    {
+      name: "Beijing Capital Airport",
+      lat: 40.0801,
+      lng: 116.5846,
+      type: "Transit Display",
+      location: "Beijing",
+    },
+    {
+      name: "IFC Mall Screen",
+      lat: 31.2352,
+      lng: 121.5062,
+      type: "Mall Screen",
+      location: "Shanghai",
+    },
+  ],
+};
 
-          {showVenuePreset && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-md shadow-lg">
-              {[
-                "Custom",
-                "Millennials",
-                "Tech-savvy",
-                "Health & Fitness Enthusiasts",
-                "Gen Z",
-                "Business People",
-              ].map((preset) => (
-                <button
-                  key={preset}
-                  className="w-full px-4 py-2 text-left text-gray-800 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-slate-800 flex items-center space-x-3 transition-colors duration-200"
-                >
-                  <div
-                    className={`w-3.5 h-3.5 rounded-full flex-shrink-0 ${
-                      preset === "Custom"
-                        ? "bg-purple-600"
-                        : "border-2 border-gray-300 dark:border-slate-500"
-                    }`}
-                  ></div>
-                  <span>{preset}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+// Get icon for screen type (for popup display)
+const getScreenTypeIcon = (type: string) => {
+  switch (type) {
+    case "Billboard":
+      return <img src="/billboard.png" alt="Billboard" className="w-4 h-4" />;
+    case "Transit Display":
+      return <MapPin className="w-4 h-4 text-green-600" />;
+    case "Mall Screen":
+      return <Building2 className="w-4 h-4 text-purple-600" />;
+    default:
+      return <Tv className="w-4 h-4 text-gray-600" />;
+  }
+};
 
-      {/* Right Column: Venue Details */}
-      <div className="space-y-4">
-        <div className="relative rounded-lg overflow-hidden h-48 border border-gray-200 dark:border-slate-700">
-          <img
-            src={selectedVenue.image}
-            alt={selectedVenue.name}
-            className="w-full h-full object-cover dark:brightness-90"
-          />
-          <div className="absolute bottom-2 right-2 flex space-x-1">
-            <button className="p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            <button className="p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors">
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+// Component to control map programmatically
+type MapControllerProps = {
+  selectedCountry: {
+    lat: number;
+    lng: number;
+    zoom: number;
+    name: string;
+    code: string;
+  };
+  searchLocation: { lat: number; lng: number } | null;
+};
 
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {selectedVenue.name}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-slate-300 mb-3">
-            {selectedVenue.description}
-          </p>
+function MapController({
+  selectedCountry,
+  searchLocation,
+}: MapControllerProps) {
+  const map = useMap();
 
-          <div className="flex flex-wrap gap-2">
-            {selectedVenue.audiences.map((audience) => (
-              <span
-                key={audience}
-                className="inline-flex items-center space-x-1.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 text-xs font-medium px-2 py-1 rounded"
-              >
-                <Info className="h-3.5 w-3.5" />
-                <span>{audience}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    if (searchLocation) {
+      map.setView([searchLocation.lat, searchLocation.lng], 13);
+    } else {
+      map.setView(
+        [selectedCountry.lat, selectedCountry.lng],
+        selectedCountry.zoom
+      );
+    }
+  }, [map, selectedCountry, searchLocation]);
 
-  const renderStep3 = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      {/* Left Column: Date Selection */}
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
-            Start date
-          </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-slate-500 pointer-events-none" />
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-red-400 dark:border-red-500/80 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 dark:[color-scheme:dark]"
-            />
-          </div>
-          <p className="text-sm text-red-600 dark:text-red-400">
-            Start date must be equal or later than today
-          </p>
-        </div>
+  return null;
+}
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
-            End date
-          </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-slate-500 pointer-events-none" />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 hover:border-purple-300 transition-all duration-300 dark:[color-scheme:dark]"
-            />
-          </div>
-        </div>
-      </div>
+// General location search using OpenStreetMap Nominatim
+interface GeocodeLocationResult {
+  lat: number;
+  lng: number;
+  place: string;
+}
 
-      {/* Right Column: Scheduling */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Scheduling
-          </h3>
-          <Info className="h-4 w-4 text-gray-400 dark:text-slate-500" />
-        </div>
+const geocodeLocation = async (
+  query: string,
+  countryCode: string
+): Promise<GeocodeLocationResult> => {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+      query
+    )}&countrycodes=${countryCode.toLowerCase()}&limit=1`;
 
-        <div className="relative">
-          <Clock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400 dark:text-slate-500 pointer-events-none" />
-          <button
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 text-gray-900 dark:text-white text-left flex items-center justify-between hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-500/50 transition-all duration-300"
-            onClick={() => setShowTimezone(!showTimezone)}
-          >
-            <span>{timezone}</span>
-            {showTimezone ? (
-              <ChevronUp className="h-5 w-5 text-gray-500 dark:text-slate-400" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500 dark:text-slate-400" />
-            )}
-          </button>
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "DOOH-Map-App/1.0", // recommended for Nominatim
+      },
+    });
 
-          {showTimezone && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
-              {[
-                "Use screen's time zone",
-                "+01:00",
-                "Africa, Casablanca",
-                "Africa, El Aaiun",
-                "Africa, Lagos",
-                "Africa, Ndjamena",
-              ].map((tz) => (
-                <button
-                  key={tz}
-                  className="w-full px-4 py-2 text-left text-gray-800 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-slate-800 transition-colors duration-200"
-                  onClick={() => {
-                    setTimezone(tz);
-                    setShowTimezone(false);
-                  }}
-                >
-                  {tz}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+    const data: Array<{ lat: string; lon: string; display_name: string }> =
+      await response.json();
+    if (data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+        place: data[0].display_name,
+      };
+    }
+    throw new Error("Location not found");
+  } catch (error) {
+    throw new Error("Unable to find location for this query");
+  }
+};
 
-  const renderStep4 = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Creatives
-        </h3>
-        <div className="flex space-x-1">
-          <button className="p-2 rounded-md text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700">
-            <div className="w-5 h-5 border-2 border-current"></div>
-          </button>
-          <button className="p-2 rounded-md text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700">
-            <div className="w-5 h-5 grid grid-cols-2 gap-0.5">
-              <div className="bg-current"></div>
-              <div className="bg-current"></div>
-              <div className="bg-current"></div>
-              <div className="bg-current"></div>
-            </div>
-          </button>
-        </div>
-      </div>
+// Geocoding function with fallback support
+interface ZippopotamPlace {
+  "place name": string;
+  longitude: string;
+  latitude: string;
+  state: string;
+}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {creativesState.map((creative) => (
-          <div key={creative.id} className="relative group">
-            <div
-              className={`relative rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                creative.checked
-                  ? "border-purple-500"
-                  : "border-gray-200 dark:border-slate-700 group-hover:border-purple-400"
-              }`}
-            >
-              <img
-                src={creative.image}
-                alt={creative.name}
-                className={`w-full object-cover dark:brightness-90 ${
-                  creative.type === "portrait" ? "h-48" : "h-24"
-                }`}
-              />
-              <input
-                type="checkbox"
-                checked={creative.checked}
-                onChange={() => handleCreativeToggle(creative.id)}
-                className="absolute top-2 right-2 w-5 h-5 accent-purple-600 dark:accent-purple-500 bg-white/50 dark:bg-slate-800/50 rounded"
-              />
-            </div>
-            <div className="mt-2">
-              <p className="text-sm font-medium text-gray-700 dark:text-slate-300 truncate">
-                {creative.name}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-slate-400">Video</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+interface ZippopotamResponse {
+  places: ZippopotamPlace[];
+}
 
-  const renderStep5 = () => (
-    <div className="space-y-6">
-      <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-500/30 rounded-lg p-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-base font-bold">✓</span>
-          </div>
-          <span className="text-green-800 dark:text-green-200 font-medium">
-            All done. Set a budget and launch your campaign!
-          </span>
-        </div>
-      </div>
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <Eye className="h-5 w-5 text-gray-600 dark:text-slate-400" />
-              <span className="text-sm text-gray-600 dark:text-slate-300">
-                Estimated impressions
-              </span>
-            </div>
-            <Info className="h-4 w-4 text-gray-400 dark:text-slate-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-        </div>
+interface GeocodePostalCodeResult {
+  lat: number;
+  lng: number;
+  place: string;
+  state?: string;
+}
 
-        <div className="bg-white dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <BarChart3 className="h-5 w-5 text-gray-600 dark:text-slate-400" />
-              <span className="text-sm text-gray-600 dark:text-slate-300">
-                CPM (Cost Per Mille)
-              </span>
-            </div>
-            <Info className="h-4 w-4 text-gray-400 dark:text-slate-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            EUR 0.00
-          </p>
-        </div>
+const geocodePostalCode = async (
+  postalCode: string,
+  countryCode: string
+): Promise<GeocodePostalCodeResult> => {
+  try {
+    // First try with Zippopotam API
+    const response = await fetch(
+      `https://api.zippopotam.us/${countryCode.toLowerCase()}/${postalCode}`
+    );
 
-        <div className="bg-white dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <RotateCcw className="h-5 w-5 text-gray-600 dark:text-slate-400" />
-              <span className="text-sm text-gray-600 dark:text-slate-300">
-                Spots (up to)
-              </span>
-            </div>
-            <Info className="h-4 w-4 text-gray-400 dark:text-slate-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
-        </div>
-      </div>
+    if (response.ok) {
+      const data: ZippopotamResponse = await response.json();
+      return {
+        lat: parseFloat(data.places[0].latitude),
+        lng: parseFloat(data.places[0].longitude),
+        place: data.places[0]["place name"],
+        state: data.places[0]["state"],
+      };
+    }
 
-      <div className="bg-white dark:bg-slate-900/50 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
-        <div className="relative h-64">
-          <img
-            src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=400&fit=crop"
-            alt="Campaign Preview"
-            className="w-full h-full object-cover dark:brightness-90"
-          />
-          <div className="absolute bottom-4 right-4 flex space-x-1">
-            <button className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            <button className="p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors">
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    // Fallback to OpenStreetMap Nominatim
+    const nominatimResponse = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&postalcode=${postalCode}&countrycodes=${countryCode.toLowerCase()}&limit=1`,
+      {
+        headers: {
+          "User-Agent": "DOOH-Map-App/1.0",
+        },
+      }
+    );
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return renderStep1();
-      case 2:
-        return renderStep2();
-      case 3:
-        return renderStep3();
-      case 4:
-        return renderStep4();
-      case 5:
-        return renderStep5();
-      default:
-        return renderStep1();
+    if (nominatimResponse.ok) {
+      const nominatimData: NominatimResult[] = await nominatimResponse.json();
+      if (nominatimData.length > 0) {
+        return {
+          lat: parseFloat(nominatimData[0].lat),
+          lng: parseFloat(nominatimData[0].lon),
+          place: nominatimData[0].display_name,
+        };
+      }
+    }
+
+    throw new Error("Location not found");
+  } catch (error) {
+    throw new Error("Unable to find location for this postal code");
+  }
+};
+
+export default function InteractiveMap() {
+  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentScreens, setCurrentScreens] = useState(doohScreens.IN);
+  const [postalCode, setPostalCode] = useState("");
+  const [searchLocation, setSearchLocation] = useState<
+    GeocodeLocationResult | GeocodePostalCodeResult | null
+  >(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
+  interface Country {
+    name: string;
+    code: string;
+    lat: number;
+    lng: number;
+    zoom: number;
+  }
+
+  const handleCountryChange = (country: Country) => {
+    setSelectedCountry(country);
+    setCurrentScreens(
+      doohScreens[country.code as keyof typeof doohScreens] || []
+    );
+    setSearchLocation(null);
+    setPostalCode("");
+    setSearchError("");
+  };
+
+  const handleLocationSearch = async () => {
+    if (!postalCode.trim()) {
+      setSearchError("Please enter a location or postal code");
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError("");
+
+    try {
+      const isPostalCode = /\d/.test(postalCode.trim());
+      let location;
+      if (isPostalCode) {
+        location = await geocodePostalCode(
+          postalCode.trim(),
+          selectedCountry.code
+        );
+      } else {
+        location = await geocodeLocation(
+          postalCode.trim(),
+          selectedCountry.code
+        );
+      }
+
+      setSearchLocation(location);
+      setSearchError("");
+    } catch (error) {
+      setSearchError(
+        typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message?: string }).message)
+          : "An error occurred"
+      );
+      setSearchLocation(null);
+    } finally {
+      setIsSearching(false);
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleLocationSearch();
+    }
+  };
+
+  const clearSearch = () => {
+    setPostalCode("");
+    setSearchLocation(null);
+    setSearchError("");
+  };
+
+  const filteredScreens = currentScreens.filter(
+    (screen) =>
+      screen.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      screen.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      screen.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="bg-gray-50 dark:bg-slate-900 py-16 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                {currentStep}/5{" "}
-                {currentStep === 1
-                  ? "Geotargeting"
-                  : currentStep === 2
-                  ? "Venue Types"
-                  : currentStep === 3
-                  ? "Timing"
-                  : currentStep === 4
-                  ? "Creatives"
-                  : "Review your campaign"}
-              </span>
-              <Info className="h-4 w-4 text-gray-400 dark:text-slate-500" />
-            </div>
+    <div className="flex flex-col lg:flex-row h-auto justify-between align-middle p-4 bg-gray-200 dark:bg-slate-900 lg:pl-[10%]">
+      {/* Sidebar */}
+      <div className="w-full lg:w-64 bg-white dark:bg-slate-800 shadow-md border-b lg:border-r border-gray-200 dark:border-slate-700 flex flex-col rounded-lg overflow-hidden mb-4 lg:mb-0">
+        <div className="p-4 border-b border-gray-200 dark:border-slate-700">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+            DOOH Platform
+          </h1>
+          <p className="text-xs text-gray-600 dark:text-gray-300">
+            Digital Out-of-Home Advertising
+          </p>
+        </div>
+
+        <div className="p-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Target Country
+          </label>
+          <select
+            value={selectedCountry.code}
+            onChange={(e) => {
+              const country = countries.find((c) => c.code === e.target.value);
+              if (country) handleCountryChange(country);
+            }}
+            className="w-full px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-white"
+          >
+            {countries.map((country) => (
+              <option key={country.code} value={country.code}>
+                {country.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="p-4 border-t border-gray-200 dark:border-slate-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Search Location
+          </label>
+          <div className="flex gap-2 mb-2 items-center">
+            <input
+              type="text"
+              placeholder="Enter location"
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              onKeyDown={handleKeyPress}
+              className="flex-1 min-w-0 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+            />
+            <button
+              onClick={handleLocationSearch}
+              disabled={isSearching}
+              className="w-9 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
+            >
+              {isSearching ? "..." : <MapPin className="w-4 h-4" />}
+            </button>
           </div>
 
-          <div className="w-full h-1 bg-gray-200 dark:bg-slate-700 rounded-full mb-6">
-            <div
-              className="h-1 bg-purple-600 rounded-full transition-all duration-500"
-              style={{ width: `${currentStep * 20}%` }}
-            ></div>
-          </div>
-
-          {currentStep === 1 && (
-            <div className="w-full h-1 bg-gray-200 rounded-full mb-6">
-              <div
-                className="h-1 bg-green-500 rounded-full"
-                style={{ width: "20%" }}
-              ></div>
-            </div>
+          {searchError && (
+            <p className="text-xs text-red-600 dark:text-red-400 mb-2">
+              {searchError}
+            </p>
           )}
 
-          {renderStepContent()}
-
-          <div className="flex justify-between mt-8">
-            <button
-              className={`px-4 py-2 text-purple-600 hover:text-purple-700 transition-colors duration-300 ${
-                currentStep === 1 ? "invisible" : ""
-              }`}
-              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-            >
-              Back
-            </button>
-
-            <div className="flex space-x-4">
-              {currentStep === 4 && (
-                <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors duration-300">
-                  Preview Campaign
-                </button>
+          {searchLocation && (
+            <div className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-200 dark:border-green-800">
+              <p className="text-green-800 dark:text-green-200 font-medium">
+                Found:
+              </p>
+              <p className="text-green-700 dark:text-green-300">
+                {searchLocation.place}
+              </p>
+              {"state" in searchLocation && searchLocation.state && (
+                <p className="text-green-600 dark:text-green-400">
+                  {searchLocation.state}
+                </p>
               )}
               <button
-                className={`px-6 py-2 rounded-md font-medium transition-all duration-300 ${
-                  currentStep === 5
-                    ? "bg-purple-600 text-white hover:bg-purple-700"
-                    : "bg-purple-600 text-white hover:bg-purple-700"
-                }`}
-                onClick={() => setCurrentStep(Math.min(5, currentStep + 1))}
+                onClick={clearSearch}
+                className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline"
               >
-                {currentStep === 5 ? "Launch Campaign" : "Next"}
+                Clear search
               </button>
             </div>
-          </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 lg:pl-4">
+        <div className="h-[400px] sm:h-[500px] lg:h-[600px] w-full lg:w-[70vw] rounded-lg shadow-md overflow-hidden">
+          <MapContainer
+            center={[selectedCountry.lat, selectedCountry.lng]}
+            zoom={selectedCountry.zoom}
+            className="h-full w-full"
+            zoomControl={true}
+          >
+            <TileLayer
+              url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+              subdomains={["mt0", "mt1", "mt2", "mt3"]}
+              attribution="&copy; Google Maps"
+            />
+            <MapController
+              selectedCountry={selectedCountry}
+              searchLocation={searchLocation}
+            />
+            {/* Screen markers with custom monitor icons */}
+            {filteredScreens.map((screen, idx) => (
+              <Marker
+                key={idx}
+                position={[screen.lat, screen.lng]}
+                icon={getCustomIcon(screen.type)}
+              >
+                <Popup>
+                  <div className="p-1">
+                    <div className="flex items-center gap-1 mb-1">
+                      {getScreenTypeIcon(screen.type)}
+                      <h3 className="font-semibold text-gray-900 text-sm">
+                        {screen.name}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {screen.location}
+                    </p>
+                    <span className="inline-block px-1 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-800">
+                      {screen.type}
+                    </span>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         </div>
       </div>
     </div>
   );
-};
-
-export default InteractiveMap;
+}

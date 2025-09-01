@@ -59,7 +59,7 @@ const Header: React.FC = () => {
           </nav>
 
           <div className="hidden md:block">
-            <button className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
               Login / Sign up
             </button>
           </div>
@@ -113,7 +113,7 @@ const Header: React.FC = () => {
             >
               Contact
             </Link>
-            <button className="w-full bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors mt-2">
+            <button className="bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-300 transform hover:scale-105">
               Login / Sign up
             </button>
           </div>

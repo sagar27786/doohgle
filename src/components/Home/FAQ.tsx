@@ -6,7 +6,7 @@ const FAQ = () => {
 
   const faqs = [
     {
-      question: "Is DOOHGLE's Software for free?",
+      question: "Is DOOHGLE Media's Software for free?",
       answer:
         "Yes! Our software is available without fee. Create your account and login to your dashboard. Once you start an Ad Campaign, enter your payment options for the ad spend. Screen Managers equally can use our software for free with the option to upgrade to our Premium plan for additional features.",
     },
@@ -28,14 +28,14 @@ const FAQ = () => {
     {
       question: "What is different to traditional DOOH?",
       answer:
-        "Unlike traditional DOOH, DOOHGLE offers programmatic booking, real-time optimization, and detailed analytics.",
+        "Unlike traditional DOOH, DOOHGLE Media offers programmatic booking, real-time optimization, and detailed analytics.",
     },
   ];
 
   return (
     <div className="bg-white dark:bg-slate-900 py-16 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-4xl font-bold text-gray-900 dark:text-white text-center mb-12">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-tight md:leading-[1.2] lg:leading-[1.25] mb-4">
           Do you have questions?
         </h2>
 

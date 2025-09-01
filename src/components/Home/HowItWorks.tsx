@@ -1,72 +1,72 @@
 import { useState, forwardRef } from "react";
 import {
+  Search,
+  Calendar,
   Monitor,
-  Users,
-  Settings,
   ChevronRight,
   MapPin,
   Clock,
   Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion } from "framer-motion"; // Import framer-motion
 
-const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
+const HowItWorks = forwardRef<HTMLDivElement>((props, ref) => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
+  // The hoveredStep state is no longer needed with framer-motion
+  // const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
   const steps = [
     {
-      icon: Monitor,
-      title: "Manage Your Content",
-      description: "Upload, schedule, and control your digital content",
+      icon: Search,
+      title: "Search",
+      description: "Locate digital screens for your ads",
       detailedDescription:
-        "Upload, schedule, and control your digital content across all screens in real-time. Manage multiple campaigns simultaneously with our intuitive dashboard and scheduling system.",
+        "Browse through thousands of premium digital advertising locations. Filter by demographics, foot traffic, and location type to find the perfect screens for your campaign.",
       features: [
-        "Real-time content updates",
-        "Advanced scheduling",
-        "Multi-screen control",
+        "Real-time availability",
+        "Advanced filtering",
+        "Location analytics",
       ],
       color: "from-blue-500 to-cyan-500",
-      image: "/assets/screen1.png",
     },
     {
-      icon: Users,
-      title: "Track Performance",
-      description: "Monitor engagement metrics and audience analytics",
+      icon: Calendar,
+      title: "Book",
+      description: "Choose dates and make booking",
       detailedDescription:
-        "Monitor engagement metrics and audience analytics to optimize your campaigns. Get detailed insights into viewer behavior, peak engagement times, and content performance across all your displays.",
+        "Select your preferred time slots and duration. Our smart booking system ensures optimal pricing and availability for your advertising campaign.",
       features: [
-        "Engagement analytics",
-        "Audience insights",
-        "Performance reports",
+        "Flexible scheduling",
+        "Instant confirmation",
+        "Competitive pricing",
       ],
       color: "from-purple-500 to-pink-500",
-      image: "/assets/screen2.png",
     },
     {
-      icon: Settings,
-      title: "Customize Layouts",
-      description: "Design and implement custom layouts",
+      icon: Monitor,
+      title: "Display",
+      description: "Your ad is shown on the screens",
       detailedDescription:
-        "Design and implement custom layouts that match your brand and messaging. Create stunning visual experiences with our drag-and-drop layout editor and extensive template library.",
+        "Watch your advertisement come to life on high-quality digital displays. Track performance with real-time analytics and engagement metrics.",
       features: [
-        "Drag-and-drop editor",
-        "Brand customization",
-        "Template library",
+        "HD quality display",
+        "Real-time monitoring",
+        "Performance analytics",
       ],
       color: "from-emerald-500 to-teal-500",
-      image: "/assets/screen3.png",
     },
   ];
 
   const stepIcons = [MapPin, Clock, Zap];
 
+  // Animation variants for the container and cards
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.3,
+        staggerChildren: 0.3, // Creates the sequential pop-up effect
       },
     },
   };
@@ -89,16 +89,16 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
     <div
       ref={ref}
       className="py-24 bg-white dark:bg-slate-900"
-      id="screen-manager"
+      id="ads-manager"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-slate-900 via-purple-800 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent leading-tight">
-            Screen Manager
+            Ads Manager
           </h2>
           <p className="mt-4 text-xl text-gray-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Control your digital screens with ease and precision. Click on any
-            feature to learn more.
+            Get your ads on digital screens in three simple steps. Click on any
+            step to learn more.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ amount: 0.2 }} // ✨ REMOVED 'once: true'
+          viewport={{ amount: 0.2 }} // Animate each time it enters view
         >
           {steps.map((step, idx) => {
             const StepIcon = step.icon;
@@ -123,6 +123,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                 className="relative cursor-pointer"
                 onClick={() => setActiveStep(activeStep === idx ? null : idx)}
               >
+                {/* Connection line for desktop */}
                 {idx < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-px bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 z-10">
                     <ChevronRight className="absolute -top-2 -right-1 h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -136,6 +137,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       : "border-gray-200 dark:border-slate-700 shadow-md hover:shadow-lg"
                   } bg-white dark:bg-slate-800`}
                 >
+                  {/* Animated background gradient */}
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${
                       step.color
@@ -145,6 +147,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                   />
 
                   <div className="relative p-8">
+                    {/* Step number */}
                     <div className="absolute top-4 right-4">
                       <span
                         className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-300 ${
@@ -157,7 +160,9 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       </span>
                     </div>
 
+                    {/* Icon with animation */}
                     <motion.div
+                      className="mb-6"
                       animate={{ scale: isActive ? 1.1 : 1 }}
                       transition={{ type: "spring", stiffness: 200 }}
                     >
@@ -172,7 +177,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       </div>
                     </motion.div>
 
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white my-3">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                       {step.title}
                     </h3>
 
@@ -180,11 +185,10 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                       {step.description}
                     </p>
 
+                    {/* Expandable content */}
                     <div
                       className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                        isActive
-                          ? "max-h-[600px] opacity-100"
-                          : "max-h-0 opacity-0"
+                        isActive ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                       }`}
                     >
                       <div className="pt-4 border-t border-gray-100 dark:border-slate-700">
@@ -192,7 +196,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                           {step.detailedDescription}
                         </p>
 
-                        <div className="space-y-2 mb-4">
+                        <div className="space-y-2">
                           {step.features.map((feature, featureIdx) => {
                             const FeatureIcon = stepIcons[featureIdx];
                             return (
@@ -206,15 +210,10 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
                             );
                           })}
                         </div>
-
-                        <img
-                          src={step.image}
-                          alt={step.title}
-                          className="w-full rounded-xl border border-gray-100 dark:border-slate-600 transition-all duration-300"
-                        />
                       </div>
                     </div>
 
+                    {/* Click indicator */}
                     <div
                       className={`mt-4 text-xs text-center transition-all duration-300 ${
                         isActive
@@ -231,6 +230,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
           })}
         </motion.div>
 
+        {/* Progress indicator */}
         <div className="flex justify-center space-x-2">
           {steps.map((_, idx) => (
             <button
@@ -245,6 +245,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
           ))}
         </div>
 
+        {/* Call to action */}
         <div className="text-center mt-16">
           <Link to="/auth">
             <motion.button
@@ -262,4 +263,4 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
   );
 });
 
-export default ScreenManager;
+export default HowItWorks;
