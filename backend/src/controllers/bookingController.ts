@@ -8,9 +8,21 @@ interface BookingRequest {
   end_date: string;
   campaign_id?: number;
   total_amount: number;
-  booking_hours: number[];
+  booking_hours?: number[];
   content_url?: string;
   notes?: string;
+  campaign_name?: string;
+  advertiser_id?: string;
+  advertiser_name?: string;
+  screen_name?: string;
+  screen_owner_id?: string;
+  start_time?: string;
+  end_time?: string;
+  daily_budget?: number;
+  total_budget?: number;
+  message?: string;
+  creative_url?: string;
+  creative_type?: string;
 }
 
 interface ScreenAvailability {
@@ -128,9 +140,21 @@ export async function createBooking(
     }
 
     const {
+      campaign_name,
+      advertiser_id: requestAdvertiserId,
+      advertiser_name,
       screen_id,
+      screen_name,
+      screen_owner_id,
       start_date,
       end_date,
+      start_time,
+      end_time,
+      daily_budget,
+      total_budget,
+      message,
+      creative_url,
+      creative_type,
       campaign_id,
       total_amount,
       booking_hours,
@@ -558,8 +582,10 @@ export async function sendBookingRequest(req: Request, res: Response) {
       end_time,
       daily_budget,
       total_budget,
-      message
-    } = req.body;
+      message,
+      creative_url,
+      creative_type,
+    }: BookingRequest = req.body;
 
     // Validate required fields
     if (!campaign_name || !screen_id || !start_date || !end_date) {
@@ -577,15 +603,15 @@ export async function sendBookingRequest(req: Request, res: Response) {
         INSERT INTO booking_requests (
           campaign_name, advertiser_id, advertiser_name, screen_id, screen_name,
           screen_owner_id, start_date, end_date, start_time, end_time,
-          daily_budget, total_budget, message, status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending')
+          daily_budget, total_budget, message, status, creative_url, creative_type
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING id, created_at
       `;
 
       const result = await client.query(insertQuery, [
-        campaign_name, advertiser_id, advertiser_name, screen_id, screen_name,
+        campaign_name, advertiser_id, advertiser_name || "dumy_user", screen_id, screen_name || "dummy_screen",
         screen_owner_id, start_date, end_date, start_time, end_time,
-        daily_budget, total_budget, message
+        daily_budget, total_budget, message, 'pending', creative_url, creative_type
       ]);
 
       res.json({

@@ -52,6 +52,13 @@ interface TimeSlot {
   available: boolean;
 }
 
+const steps = [
+    { id: 1, name: 'Choose Screens' },
+    { id: 2, name: 'Choose Time' },
+    { id: 3, name: 'Upload Creative' },
+    { id: 4, name: 'Confirm & Book' },
+  ];
+
 const ImprovedCampaignCreation: React.FC = () => {
   const [screens, setScreens] = useState<Screen[]>([]);
   const [allScreens, setAllScreens] = useState<Screen[]>([]);
@@ -64,6 +71,9 @@ const ImprovedCampaignCreation: React.FC = () => {
   const [campaignName, setCampaignName] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [selectedScreenForModal, setSelectedScreenForModal] = useState<Screen | null>(null);
+  const [creativeFiles, setCreativeFiles] = useState<File[]>([]);
+  const [creativeUrls, setCreativeUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   
   // Time slots
   const timeSlots: TimeSlot[] = [
@@ -110,6 +120,7 @@ const ImprovedCampaignCreation: React.FC = () => {
       // Transform data for UI
       const transformedScreens: Screen[] = activeScreens.map((screen: any) => ({
         id: screen.id,
+        user_id: screen.user_id,
         name: screen.name,
         city: screen.city,
         location_name: screen.location_name || 'Indoor',
@@ -179,6 +190,12 @@ const ImprovedCampaignCreation: React.FC = () => {
     }
   }, [selectedCity, allScreens]);
 
+  useEffect(() => {
+    if (creativeUrls.length > 0 && creativeUrls.length === creativeFiles.length) {
+      handleNextStep();
+    }
+  }, [creativeUrls, creativeFiles]);
+
   const handleScreenSelect = (screen: Screen) => {
     setSelectedScreens(prevSelected => {
       if (prevSelected.find(s => s.id === screen.id)) {
@@ -190,10 +207,21 @@ const ImprovedCampaignCreation: React.FC = () => {
   };
 
   const handleNextStep = () => {
-    if (selectedScreens.length > 0) {
+    if (currentStep === 1 && selectedScreens.length > 0) {
       setCurrentStep(2);
+      setError(null);
+    } else if (currentStep === 2 && selectedSlot) {
+      setCurrentStep(3);
+      setError(null);
+    } else if (currentStep === 3 && creativeUrls.length > 0) { // Check for creativeUrl instead of creativeFile
+      setCurrentStep(4);
+      setError(null);
     } else {
-      setError('Please select at least one screen.');
+      let errorMessage = 'Please make a selection to proceed.';
+      if (currentStep === 3 && creativeUrls.length === 0) {
+        errorMessage = 'Please upload your creative to proceed.';
+      }
+      setError(errorMessage);
     }
   };
 
@@ -208,8 +236,59 @@ const ImprovedCampaignCreation: React.FC = () => {
     setCurrentStep(3);
   };
 
-  const handleBookingSubmit = async () =>  {
-    if (selectedScreens.length === 0 || !selectedSlot || !campaignName.trim()) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setCreativeFiles(Array.from(e.target.files));
+    }
+  };
+
+  const renderCreativePreviews = () => {
+    return creativeFiles.map((file, index) => {
+      const url = URL.createObjectURL(file);
+      return (
+        <div key={index} className="relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+          {file.type.startsWith('image/') ? (
+            <img src={url} alt={`preview ${index}`} className="h-full w-full object-contain" />
+          ) : (
+            <video src={url} className="h-full w-full object-contain" controls />
+          )}
+        </div>
+      );
+    });
+  };
+
+  const handleFileUpload = async () => {
+    if (creativeFiles.length === 0) return;
+
+    setUploading(true);
+    const uploadPromises = creativeFiles.map(file => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      return fetch('http://localhost:4000/api/upload/single', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
+        },
+        body: formData,
+      });
+    });
+
+    try {
+      const responses = await Promise.all(uploadPromises);
+      const results = await Promise.all(responses.map(res => res.json()));
+      setCreativeUrls(results.map(res => res.url));
+    } catch (error) {
+      setError('Failed to upload files.');
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
+  const handleBookingSubmit = async () => {
+    if (selectedScreens.length === 0 || !selectedSlot || !campaignName) {
       setError('Please fill in all required fields');
       return;
     }
@@ -220,21 +299,20 @@ const ImprovedCampaignCreation: React.FC = () => {
       const bookingPromises = selectedScreens.map(screen => {
         const bookingData = {
           campaign_name: campaignName,
-          advertiser_id: '1', // This should be the actual advertiser ID from auth
-          advertiser_name: 'Demo User', // This should be the actual advertiser name from auth
+          advertiser_id: 'ads-manager-001', // Hardcoded for now
           screen_id: screen.id,
           screen_name: screen.name,
-          screen_owner_id: screen.user_id || '1', // Use the real screen owner ID
-          start_date: new Date().toISOString().split('T')[0],
-          end_date: new Date().toISOString().split('T')[0],
+          screen_owner_id: screen.user_id, // Using user_id from Screen interface as owner_id
+          start_date: '2024-08-01', // Hardcoded for now
+          end_date: '2024-08-07', // Hardcoded for now
           start_time: selectedSlot.start_time,
           end_time: selectedSlot.end_time,
-          daily_budget: selectedSlot.price,
-          total_budget: selectedSlot.price,
-          message: `Booking for ${campaignName} campaign`
+          daily_budget: screen.daily_rate,
+          total_budget: screen.daily_rate * 7, // Example calculation
+          message: 'New campaign booking request',
+          creative_url: creativeUrls.join(','),
+          creative_type: creativeFiles.map(f => f.type).join(','),
         };
-
-        console.log('Sending booking request for screen:', screen.id, bookingData);
 
         return fetch('http://localhost:4000/api/bookings/request', {
           method: 'POST',
@@ -278,13 +356,9 @@ The venue owners will receive your requests and respond shortly.`);
   const goBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-      if (currentStep === 2) {
-        // Do not clear selected screens when going back from step 2 to 1
-      } else if (currentStep === 3) {
-        setSelectedSlot(null);
-      }
     }
   };
+
   const getScreenTypeIcon = (type: string) => {
     switch (type) {
       case 'smart_tv': return <Monitor className="h-5 w-5" />;
@@ -329,28 +403,26 @@ The venue owners will receive your requests and respond shortly.`);
           
           {/* Progress Steps */}
           <div className="flex justify-center mt-6 mb-8">
-            {[1, 2, 3].map((step) => (
-              <div key={step} className="flex items-center">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                  currentStep >= step 
+                  currentStep >= step.id 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-300 text-gray-600'
                 }`}>
-                  {step}
+                  {step.id}
                 </div>
                 <span className={`ml-2 font-medium ${
-                  currentStep >= step ? 'text-blue-600' : 'text-gray-500'
+                  currentStep >= step.id ? 'text-blue-600' : 'text-gray-500'
                 }`}>
-                  {step === 1 ? 'Select Screen' : step === 2 ? 'Choose Time' : 'Confirm'}
+                  {step.name}
                 </span>
-                {step < 3 && <ArrowRight className="ml-4 h-5 w-5 text-gray-400" />}
+                {index < steps.length - 1 && <ArrowRight className="ml-4 h-5 w-5 text-gray-400" />}
               </div>
             ))}
           </div>
         </div>
-
         
-
         {/* Error Display */}
         {error && (
           <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
@@ -609,93 +681,114 @@ The venue owners will receive your requests and respond shortly.`);
           </motion.div>
         )}
 
-        {/* Step 3: Campaign Details & Confirmation */}
-        {currentStep === 3 && selectedScreens.length > 0 && selectedSlot && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-xl p-8"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Campaign Details</h2>
-              <button
-                onClick={goBack}
-                className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5 mr-1" />
-                Back
-              </button>
-            </div>
-
-            {/* Booking Summary */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Selected Screens ({selectedScreens.length})</h4>
-                  <div className="space-y-2 text-sm text-gray-600 max-h-32 overflow-y-auto">
-                    {selectedScreens.map(screen => (
-                      <p key={screen.id}><span className="font-medium">{screen.name}</span> - {screen.address}</p>
-                    ))}
+        {/* Step 3: Upload Creative */}
+        {currentStep === 3 && (
+          <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Step 3: Upload Your Creative</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div className="space-y-4">
+                  <p className="text-gray-600">
+                    Upload the image or video you want to display on the screens. 
+                    Please ensure it meets the resolution requirements of your selected screens.
+                  </p>
+                  <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                    <input type="file" id="creative-upload" className="hidden" onChange={handleFileChange} accept="image/*,video/*" />
+                    <label htmlFor="creative-upload" className="cursor-pointer text-blue-600 font-semibold">
+                      {creativeFile ? creativeFile.name : 'Select a file'}
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF, MP4 up to 10MB</p>
                   </div>
+                  <button 
+                    onClick={handleFileUpload} 
+                    disabled={!creativeFile || uploading}
+                    className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center"
+                  >
+                    {uploading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <ImageIcon className="h-5 w-5 mr-2" />} 
+                    {uploading ? 'Uploading...' : 'Upload Creative'}
+                  </button>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Campaign Schedule</h4>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Date:</span> Today</p>
-                    <p><span className="font-medium">Time:</span> {selectedSlot.start_time} - {selectedSlot.end_time}</p>
-                    <p><span className="font-medium">Duration:</span> 3 hours</p>
-                    <p className="text-xl font-bold text-green-600 mt-2">
-                      <span className="font-medium text-gray-700 text-sm">Cost per screen: </span>₹{selectedSlot.price}
-                    </p>
-                     <p className="text-lg font-bold text-gray-800 mt-1">
-                      <span className="font-medium text-gray-700 text-sm">Total for {selectedScreens.length} screens: </span>₹{selectedSlot.price * selectedScreens.length}
-                    </p>
-                  </div>
+                <div className="p-4 bg-gray-100 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-2">Preview</h3>
+                  {creativeUrl ? (
+                    creativeFile?.type.startsWith('video') ? (
+                      <video src={creativeUrl} controls className="w-full rounded-md" />
+                    ) : (
+                      <img src={creativeUrl} alt="Creative Preview" className="w-full rounded-md" />
+                    )
+                  ) : (
+                    <div className="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center">
+                      <p className="text-gray-500">Your creative will be shown here</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
 
-            {/* Campaign Name Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Campaign Name *
-              </label>
-              <input
-                type="text"
-                value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
-                placeholder="Enter your campaign name (e.g., Summer Sale 2025)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                required
-              />
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end">
-              <button
-                onClick={handleBookingSubmit}
-                disabled={!campaignName.trim() || loading}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Sending Request...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    Send Booking Request
-                  </>
-                )}
-              </button>
+        {/* Step 4: Confirmation */}
+        {currentStep === 4 && (
+          <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Step 4: Confirm & Book</h2>
+              <div className="space-y-6">
+                <div>
+                  <label htmlFor="campaignName" className="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
+                  <input
+                    type="text"
+                    id="campaignName"
+                    value={campaignName}
+                    onChange={(e) => setCampaignName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                    placeholder="e.g., Summer Sale Campaign"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-2">Selected Screens ({selectedScreens.length})</h3>
+                    <ul className="space-y-2">
+                      {selectedScreens.map(s => <li key={s.id} className="text-sm">- {s.name}</li>)}
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-2">Time Slot</h3>
+                    <p>{selectedSlot?.start_time} - {selectedSlot?.end_time}</p>
+                    <p className="font-bold">Price: ₹{selectedSlot?.price}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-2">Your Creative</h3>
+                    {creativeUrl && (
+                      creativeFile?.type.startsWith('video') ? (
+                        <video src={creativeUrl} controls className="w-full rounded-md" />
+                      ) : (
+                        <img src={creativeUrl} alt="Creative" className="w-full rounded-md" />
+                      )
+                    )}
+                  </div>
+                </div>
+                <div className="mt-8 flex justify-between items-center">
+                    <button
+                        onClick={goBack}
+                        className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                        <ArrowLeft className="h-5 w-5 mr-1" />
+                        Back
+                    </button>
+                    <button
+                        onClick={handleBookingSubmit}
+                        disabled={loading || !campaignName}
+                        className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-green-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
+                    >
+                        {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <CheckCircle className="h-5 w-5 mr-2" />}
+                        Confirm & Book
+                    </button>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
       </div>
-
-      
 
       {selectedScreenForModal && (
         <ScreenDetailsModal
