@@ -71,8 +71,8 @@ const ImprovedCampaignCreation: React.FC = () => {
   const [campaignName, setCampaignName] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [selectedScreenForModal, setSelectedScreenForModal] = useState<Screen | null>(null);
-  const [creativeFile, setCreativeFile] = useState<File | null>(null);
-  const [creativeUrl, setCreativeUrl] = useState<string>('');
+  const [creativeFiles, setCreativeFiles] = useState<File[]>([]);
+  const [creativeUrls, setCreativeUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   
   // Time slots
@@ -190,12 +190,6 @@ const ImprovedCampaignCreation: React.FC = () => {
     }
   }, [selectedCity, allScreens]);
 
-  useEffect(() => {
-    if (creativeUrl) {
-      handleNextStep();
-    }
-  }, [creativeUrl]);
-
   const handleScreenSelect = (screen: Screen) => {
     setSelectedScreens(prevSelected => {
       if (prevSelected.find(s => s.id === screen.id)) {
@@ -213,12 +207,12 @@ const ImprovedCampaignCreation: React.FC = () => {
     } else if (currentStep === 2 && selectedSlot) {
       setCurrentStep(3);
       setError(null);
-    } else if (currentStep === 3 && creativeUrl) { // Check for creativeUrl instead of creativeFile
+    } else if (currentStep === 3 && creativeUrls.length > 0) { // Check for creativeUrl instead of creativeFile
       setCurrentStep(4);
       setError(null);
     } else {
       let errorMessage = 'Please make a selection to proceed.';
-      if (currentStep === 3 && !creativeUrl) {
+      if (currentStep === 3 && creativeUrls.length === 0) {
         errorMessage = 'Please upload your creative to proceed.';
       }
       setError(errorMessage);
@@ -237,35 +231,49 @@ const ImprovedCampaignCreation: React.FC = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setCreativeFile(e.target.files[0]);
+    if (e.target.files) {
+      setCreativeFiles(Array.from(e.target.files));
     }
   };
 
+  const renderCreativePreviews = () => {
+    return creativeFiles.map((file, index) => {
+      const url = URL.createObjectURL(file);
+      return (
+        <div key={index} className="relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+          {file.type.startsWith('image/') ? (
+            <img src={url} alt={`preview ${index}`} className="h-full w-full object-contain" />
+          ) : (
+            <video src={url} className="h-full w-full object-contain" controls />
+          )}
+        </div>
+      );
+    });
+  };
+
   const handleFileUpload = async () => {
-    if (!creativeFile) return;
+    if (creativeFiles.length === 0) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', creativeFile);
+    const uploadPromises = creativeFiles.map(file => {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    try {
-      const response = await fetch('http://localhost:4000/api/upload/single', {
+      return fetch('http://localhost:4000/api/upload/single', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
         },
         body: formData,
       });
+    });
 
-      if (!response.ok) {
-        throw new Error('File upload failed');
-      }
-
-      const result = await response.json();
-      setCreativeUrl(result.url);
+    try {
+      const responses = await Promise.all(uploadPromises);
+      const results = await Promise.all(responses.map(res => res.json()));
+      setCreativeUrls(results.map(res => res.url));
     } catch (error) {
-      setError('Failed to upload file.');
+      setError('Failed to upload files.');
       console.error(error);
     } finally {
       setUploading(false);
@@ -296,8 +304,8 @@ const ImprovedCampaignCreation: React.FC = () => {
           daily_budget: screen.daily_rate,
           total_budget: screen.daily_rate * 7, // Example calculation
           message: 'New campaign booking request',
-          creative_url: creativeUrl,
-          creative_type: creativeFile?.type,
+          creative_url: creativeUrls.join(','),
+          creative_type: creativeFiles.map(f => f.type).join(','),
         };
 
         return fetch('http://localhost:4000/api/bookings/request', {
@@ -627,6 +635,12 @@ The venue owners will receive your requests and respond shortly.`);
 
             {/* Time Slots */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {renderCreativePreviews()}
+            </div>
+         
+
+            {/* Time Slots */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {timeSlots.map((slot) => (
                 <motion.div
                   key={slot.id}
@@ -635,7 +649,7 @@ The venue owners will receive your requests and respond shortly.`);
                   onClick={() => slot.available && handleTimeSlotSelect(slot)}
                   className={`border-2 rounded-xl p-6 transition-all duration-300 ${
                     slot.available 
-                      ? 'border-gray-200 hover:border-green-500 cursor-pointer bg-white' 
+                      ? 'border-gray-200 hover-border-green-500 cursor-pointer bg-white' 
                       : 'border-red-200 bg-red-50 cursor-not-allowed opacity-60'
                   }`}
                 >
@@ -679,15 +693,15 @@ The venue owners will receive your requests and respond shortly.`);
                     Please ensure it meets the resolution requirements of your selected screens.
                   </p>
                   <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                    <input type="file" id="creative-upload" className="hidden" onChange={handleFileChange} accept="image/*,video/*" />
+                    <input type="file" id="creative-upload" className="hidden" onChange={handleFileChange} accept="image/*,video/*" multiple />
                     <label htmlFor="creative-upload" className="cursor-pointer text-blue-600 font-semibold">
-                      {creativeFile ? creativeFile.name : 'Select a file'}
+                      {creativeFiles.length > 0 ? `${creativeFiles.length} files selected` : 'Select files'}
                     </label>
                     <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF, MP4 up to 10MB</p>
                   </div>
                   <button 
                     onClick={handleFileUpload} 
-                    disabled={!creativeFile || uploading}
+                    disabled={creativeFiles.length === 0 || uploading}
                     className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center"
                   >
                     {uploading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <ImageIcon className="h-5 w-5 mr-2" />} 
@@ -696,18 +710,33 @@ The venue owners will receive your requests and respond shortly.`);
                 </div>
                 <div className="p-4 bg-gray-100 rounded-lg">
                   <h3 className="font-semibold text-lg mb-2">Preview</h3>
-                  {creativeUrl ? (
-                    creativeFile?.type.startsWith('video') ? (
-                      <video src={creativeUrl} controls className="w-full rounded-md" />
-                    ) : (
-                      <img src={creativeUrl} alt="Creative Preview" className="w-full rounded-md" />
-                    )
+                  {creativeFiles.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {renderCreativePreviews()}
+                    </div>
                   ) : (
                     <div className="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center">
                       <p className="text-gray-500">Your creative will be shown here</p>
                     </div>
                   )}
                 </div>
+              </div>
+              <div className="mt-8 flex justify-between items-center">
+                <button
+                    onClick={goBack}
+                    className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                    <ArrowLeft className="h-5 w-5 mr-1" />
+                    Back
+                </button>
+                <button
+                    onClick={handleNextStep}
+                    disabled={creativeUrls.length === 0}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
+                >
+                    Next: Confirm & Book
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                </button>
               </div>
             </div>
           </motion.div>
@@ -744,16 +773,16 @@ The venue owners will receive your requests and respond shortly.`);
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-semibold text-lg mb-2">Your Creative</h3>
-                    {creativeUrl && (
-                      creativeFile?.type.startsWith('video') ? (
-                        <video src={creativeUrl} controls className="w-full rounded-md" />
+                    {creativeUrls.length > 0 && (
+                      creativeFiles[0]?.type.startsWith('video') ? (
+                        <video src={creativeUrls[0]} controls className="w-full rounded-md" />
                       ) : (
-                        <img src={creativeUrl} alt="Creative" className="w-full rounded-md" />
+                        <img src={creativeUrls[0]} alt="Creative" className="w-full rounded-md" />
                       )
                     )}
                   </div>
                 </div>
-                <div className="mt-8 flex justify-between items-center">
+                <div className="mt-8 flex justify-end items-center">
                     <button
                         onClick={goBack}
                         className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
