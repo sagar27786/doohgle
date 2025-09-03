@@ -21,8 +21,8 @@ interface BookingRequest {
   daily_budget?: number;
   total_budget?: number;
   message?: string;
-  creative_url?: string;
-  creative_type?: string;
+  creative_url?: string[];
+  creative_type?: string[];
 }
 
 interface ScreenAvailability {
@@ -591,12 +591,12 @@ export async function sendBookingRequest(req: Request, res: Response) {
     if (!campaign_name || !screen_id || !start_date || !end_date) {
       return res.status(400).json({
         success: false,
-        message: "campaign_name, screen_id, start_date, and end_date are required"
+        message: "campaign_name, screen_id, start_date, and end_date are required",
       });
     }
 
     const client = await pool.connect();
-    
+
     try {
       // Insert booking request
       const insertQuery = `
@@ -609,9 +609,22 @@ export async function sendBookingRequest(req: Request, res: Response) {
       `;
 
       const result = await client.query(insertQuery, [
-        campaign_name, advertiser_id, advertiser_name || "dumy_user", screen_id, screen_name || "dummy_screen",
-        screen_owner_id, start_date, end_date, start_time, end_time,
-        daily_budget, total_budget, message, 'pending', creative_url, creative_type
+        campaign_name,
+        advertiser_id,
+        advertiser_name || "dumy_user",
+        screen_id,
+        screen_name || "dummy_screen",
+        screen_owner_id,
+        start_date,
+        end_date,
+        start_time,
+        end_time,
+        daily_budget,
+        total_budget,
+        message,
+        "pending",
+        creative_url,
+        creative_type
       ]);
 
       res.json({
@@ -720,6 +733,63 @@ export async function getAvailableCities(req: Request, res: Response) {
     res.status(500).json({
       success: false,
       message: 'Internal server error'
+    });
+  }
+}
+
+export async function getBookingRequestsForOwner(req: Request, res: Response) {
+  try {
+    const { owner_id } = req.query;
+
+    if (!owner_id) {
+      return res.status(400).json({
+        success: false,
+        message: "owner_id is required",
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      const query = `
+        SELECT 
+          br.id,
+          br.campaign_name,
+          br.advertiser_name,
+          br.screen_id,
+          br.screen_name,
+          br.start_date,
+          br.end_date,
+          br.daily_budget,
+          br.total_budget,
+          br.status,
+          br.message,
+          br.creative_url,
+          br.creative_type,
+          br.created_at,
+          br.updated_at,
+          s.city,
+          s.location_name as location
+        FROM booking_requests br
+        LEFT JOIN screens s ON br.screen_id = s.id
+        WHERE br.screen_owner_id = $1
+        ORDER BY br.created_at DESC
+      `;
+
+      const result = await client.query(query, [owner_id]);
+
+      res.json({
+        success: true,
+        data: result.rows,
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("Error fetching booking requests for owner:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 }

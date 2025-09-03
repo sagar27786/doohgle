@@ -8,6 +8,7 @@ import {
   sendBookingRequest,
   getMyBookingRequests,
   getAvailableCities,
+  getBookingRequestsForOwner,
 } from "../controllers/bookingController";
 
 const router = express.Router();
@@ -31,6 +32,9 @@ router.post("/request", sendBookingRequest);
 
 // Get my booking requests
 router.get("/requests", getMyBookingRequests);
+
+// Get booking requests for a screen owner
+router.get("/requests/owner", getBookingRequestsForOwner);
 
 // Get available cities with screen counts
 router.get("/cities", getAvailableCities);

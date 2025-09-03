@@ -304,8 +304,8 @@ const ImprovedCampaignCreation: React.FC = () => {
           daily_budget: screen.daily_rate,
           total_budget: screen.daily_rate * 7, // Example calculation
           message: 'New campaign booking request',
-          creative_url: creativeUrls.join(','),
-          creative_type: creativeFiles.map(f => f.type).join(','),
+          creative_url: creativeUrls,
+          creative_type: creativeFiles.map(f => f.type),
         };
 
         return fetch('http://localhost:4000/api/bookings/request', {

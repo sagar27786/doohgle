@@ -68,6 +68,20 @@ export async function setScreenPricing(req: Request & { user?: AuthUser }, res: 
     }
 }
 
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client } from '@aws-sdk/client-s3';
+
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
+  }
+});
+
+export { s3Client };
+
 // Get booking requests for all screens owned by the venue owner
 export async function getVenueBookingRequests(req: Request & { user?: AuthUser }, res: Response) {
     try {
@@ -90,17 +104,86 @@ export async function getVenueBookingRequests(req: Request & { user?: AuthUser }
                 br.created_at,
                 br.updated_at,
                 s.screen_name as current_screen_name,
-                s.location_in_venue as location,
-                s.city
+                s.location_in_venue as location, 
+                s.city,
+                br.creative_url,
+                br.creative_type
             FROM booking_requests br 
             JOIN screens s ON br.screen_id = s.id 
             WHERE s.user_id = $1 
             ORDER BY br.created_at DESC
         `, [req.user?.id]);
+
+        const bookingRequests = await Promise.all(
+            result.rows.map(async (request) => {
+                let creativeUrls: string[] = [];
+                if (Array.isArray(request.creative_url)) {
+                    creativeUrls = request.creative_url;
+                } else if (typeof request.creative_url === 'string' && request.creative_url) {
+                    creativeUrls = request.creative_url
+                        .replace(/[{\"`}]/g, "") 
+                        .split(",")
+                        .map((url: string) => url.trim())
+                        .filter(Boolean);
+                }
+
+                if (creativeUrls.length > 0) {
+                    const signedUrls = await Promise.all(
+                        creativeUrls.map(async (keyOrUrl: string) => {
+                            if (!keyOrUrl) return null;
+
+                            let key = keyOrUrl;
+                            
+                            if (key.startsWith('http')) {
+                                try {
+                                    const url = new URL(key);
+                                    // ✅ Extract only the object key (strip leading '/')
+                                    key = decodeURIComponent(url.pathname.replace(/^\/+/, ''));
+                                } catch (e) {
+                                    console.error(`Invalid URL encountered: ${key}`, e);
+                                    return null;
+                                }
+                            }
+
+                            const finalKey = key.trim();
+                            if (!finalKey) return null;
+
+                            try {
+                                const command = new GetObjectCommand({
+                                    Bucket: process.env.S3_BUCKET_NAME!,
+                                    Key: finalKey
+                                });
+                                return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+                            } catch (e) {
+                                console.error(`Error generating signed URL for key: '${finalKey}'`, e);
+                                return null;
+                            }
+                        })
+                    );
+                    request.creative_url = signedUrls.filter((url): url is string => !!url);
+                } else {
+                    request.creative_url = [];
+                }
+
+                let creativeTypes: string[] = [];
+                if (Array.isArray(request.creative_type)) {
+                    creativeTypes = request.creative_type;
+                } else if (typeof request.creative_type === 'string' && request.creative_type) {
+                    creativeTypes = request.creative_type
+                        .replace(/[{\"`}]/g, "")
+                        .split(",")
+                        .map((type: string) => type.trim())
+                        .filter(Boolean);
+                }
+                request.creative_type = creativeTypes;
+
+                return request;
+            })
+        );
         
         res.status(200).json({
             success: true,
-            data: result.rows
+            data: bookingRequests
         });
     } catch (error) {
         console.error('Error fetching venue booking requests:', error);
@@ -111,6 +194,7 @@ export async function getVenueBookingRequests(req: Request & { user?: AuthUser }
         }
     }
 }
+
 
 // Get bookings for all screens owned by the venue owner
 export async function getVenueBookings(req: Request & { user?: AuthUser }, res: Response) {
