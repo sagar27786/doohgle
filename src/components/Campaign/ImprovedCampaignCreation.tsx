@@ -20,6 +20,8 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import ScreenDetailsModal from '../VenueDashboard/ScreenDetailsModal';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface Screen {
   id: number;
@@ -44,13 +46,7 @@ interface Screen {
   video_url?: string;
 }
 
-interface TimeSlot {
-  id: string;
-  start_time: string;
-  end_time: string;
-  price: number;
-  available: boolean;
-}
+
 
 const steps = [
     { id: 1, name: 'Choose Screens' },
@@ -69,20 +65,35 @@ const ImprovedCampaignCreation: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedScreens, setSelectedScreens] = useState<Screen[]>([]);
   const [campaignName, setCampaignName] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [selectedScreenForModal, setSelectedScreenForModal] = useState<Screen | null>(null);
   const [creativeFiles, setCreativeFiles] = useState<File[]>([]);
   const [creativeUrls, setCreativeUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
-  
-  // Time slots
-  const timeSlots: TimeSlot[] = [
-    { id: '1', start_time: '08:00', end_time: '11:00', price: 800, available: true },
-    { id: '2', start_time: '11:00', end_time: '14:00', price: 1200, available: true },
-    { id: '3', start_time: '14:00', end_time: '17:00', price: 1500, available: true },
-    { id: '4', start_time: '17:00', end_time: '20:00', price: 2000, available: false },
-    { id: '5', start_time: '20:00', end_time: '23:00', price: 1800, available: true },
-  ];
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [bookedSlots, setBookedSlots] = useState<any[]>([]);
+  const [timeConflictError, setTimeConflictError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (startTime && endTime) {
+      const isConflict = bookedSlots.some(slot => {
+        const selectedStart = new Date(`1970-01-01T${startTime}:00`);
+        const selectedEnd = new Date(`1970-01-01T${endTime}:00`);
+        const slotStart = new Date(`1970-01-01T${slot.start_time}:00`);
+        const slotEnd = new Date(`1970-01-01T${slot.end_time}:00`);
+
+        return selectedStart < slotEnd && selectedEnd > slotStart;
+      });
+
+      if (isConflict) {
+        setTimeConflictError("The chosen time is overlapping with the unavailable slots. Please choose another slot.");
+      } else {
+        setTimeConflictError(null);
+      }
+    }
+  }, [startTime, endTime, bookedSlots]);
 
   // Direct API call to get all screens
   const fetchScreens = async () => {
@@ -190,6 +201,35 @@ const ImprovedCampaignCreation: React.FC = () => {
     }
   }, [selectedCity, allScreens]);
 
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      if (startDate && endDate && selectedScreens.length > 0) {
+        try {
+          const allBookedSlots: any[] = [];
+          for (const screen of selectedScreens) {
+            const url = `http://localhost:4000/api/bookings/booked-time-slots?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&screen_id=${screen.id}`;
+            console.log('Fetching booked slots from:', url);
+            const response = await fetch(url);
+            const result = await response.json();
+            console.log('Result for screen', screen.id, result);
+            if (result.success) {
+              allBookedSlots.push(...result.data);
+            }
+          }
+          setBookedSlots(allBookedSlots);
+        } catch (error) {
+          console.error('Error fetching booked time slots:', error);
+        }
+      }
+    };
+
+    fetchBookedSlots();
+  }, [startDate, endDate, selectedScreens]);
+
+  useEffect(() => {
+    console.log('Booked slots:', bookedSlots);
+  }, [bookedSlots]);
+
   const handleScreenSelect = (screen: Screen) => {
     setSelectedScreens(prevSelected => {
       if (prevSelected.find(s => s.id === screen.id)) {
@@ -204,7 +244,7 @@ const ImprovedCampaignCreation: React.FC = () => {
     if (currentStep === 1 && selectedScreens.length > 0) {
       setCurrentStep(2);
       setError(null);
-    } else if (currentStep === 2 && selectedSlot) {
+    } else if (currentStep === 2 && startDate && endDate && startTime && endTime) {
       setCurrentStep(3);
       setError(null);
     } else if (currentStep === 3 && creativeUrls.length > 0) { // Check for creativeUrl instead of creativeFile
@@ -212,6 +252,9 @@ const ImprovedCampaignCreation: React.FC = () => {
       setError(null);
     } else {
       let errorMessage = 'Please make a selection to proceed.';
+      if (currentStep === 2 && (!startDate || !endDate || !startTime || !endTime)) {
+        errorMessage = 'Please select a valid date and time range.';
+      }
       if (currentStep === 3 && creativeUrls.length === 0) {
         errorMessage = 'Please upload your creative to proceed.';
       }
@@ -224,10 +267,45 @@ const ImprovedCampaignCreation: React.FC = () => {
     setSelectedScreenForModal(screen);
   };
 
-  const handleTimeSlotSelect = (slot: TimeSlot) => {
-    if (!slot.available) return;
-    setSelectedSlot(slot);
-    setCurrentStep(3);
+  const getAvailableTimes = () => {
+    const times: string[] = [];
+    // Generate times from 09:00 to 21:00 in 15-minute increments
+    for (let hour = 9; hour <= 21; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        if (hour === 21 && minute > 0) continue; // Stop at 21:00
+        times.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+      }
+    }
+
+    if (!bookedSlots || bookedSlots.length === 0) return times;
+
+    return times.filter(time => {
+      const checkTime = new Date(`1970-01-01T${time}:00`);
+      return !bookedSlots.some(slot => {
+        const slotStart = new Date(`1970-01-01T${slot.start_time}`);
+        const slotEnd = new Date(`1970-01-01T${slot.end_time}`);
+        return checkTime >= slotStart && checkTime < slotEnd;
+      });
+    });
+  };
+
+  const isSlotBooked = (time: string) => {
+    const checkTime = new Date(`1970-01-01T${time}:00`);
+
+    return bookedSlots.some(slot => {
+      const slotStart = new Date(`1970-01-01T${slot.start_time}`);
+      const slotEnd = new Date(`1970-01-01T${slot.end_time}`);
+      
+      return checkTime >= slotStart && checkTime < slotEnd;
+    });
+  };
+
+  const handleTimeChange = (time: string, type: 'start' | 'end') => {
+    if (type === 'start') {
+      setStartTime(time);
+    } else {
+      setEndTime(time);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,7 +360,7 @@ const ImprovedCampaignCreation: React.FC = () => {
 
 
   const handleBookingSubmit = async () => {
-    if (selectedScreens.length === 0 || !selectedSlot || !campaignName) {
+    if (selectedScreens.length === 0 || !startDate || !endDate || !startTime || !endTime || !campaignName) {
       setError('Please fill in all required fields');
       return;
     }
@@ -297,10 +375,10 @@ const ImprovedCampaignCreation: React.FC = () => {
           screen_id: screen.id,
           screen_name: screen.name,
           screen_owner_id: screen.user_id, // Using user_id from Screen interface as owner_id
-          start_date: '2024-08-01', // Hardcoded for now
-          end_date: '2024-08-07', // Hardcoded for now
-          start_time: selectedSlot.start_time,
-          end_time: selectedSlot.end_time,
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
+          start_time: startTime,
+          end_time: endTime,
           daily_budget: screen.daily_rate,
           total_budget: screen.daily_rate * 7, // Example calculation
           message: 'New campaign booking request',
@@ -328,15 +406,19 @@ const ImprovedCampaignCreation: React.FC = () => {
       alert(`✅ Booking Requests Sent Successfully for ${selectedScreens.length} screens!
 
 Campaign: ${campaignName}
-Time: ${selectedSlot.start_time} - ${selectedSlot.end_time}
-Total Cost per screen: ₹${selectedSlot.price}
+Date: ${startDate?.toLocaleDateString()} - ${endDate?.toLocaleDateString()}
+Time: ${startTime} - ${endTime}
 
 The venue owners will receive your requests and respond shortly.`);
 
       // Reset form
       setCampaignName('');
       setSelectedScreens([]);
-      setSelectedSlot(null);
+      setStartDate(null);
+      setEndDate(null);
+      setStartTime('09:00');
+      setEndTime('21:00');
+      setCreativeFiles([]);
       setCurrentStep(1);
 
     } catch (error) {
@@ -352,6 +434,8 @@ The venue owners will receive your requests and respond shortly.`);
       setCurrentStep(currentStep - 1);
     }
   };
+
+
 
   const getScreenTypeIcon = (type: string) => {
     switch (type) {
@@ -387,6 +471,7 @@ The venue owners will receive your requests and respond shortly.`);
     );
   }
 
+  // Generate available hourly times (09:00 - 21:00) excluding booked slots
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
@@ -449,6 +534,7 @@ The venue owners will receive your requests and respond shortly.`);
               </h2>
               
               {/* City Filter */}
+              
               <div className="flex items-center space-x-4">
                 <label className="text-sm font-medium text-gray-700">Filter by City:</label>
                 <select
@@ -466,10 +552,9 @@ The venue owners will receive your requests and respond shortly.`);
                 <button
                     onClick={handleNextStep}
                     disabled={selectedScreens.length === 0}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center"
                 >
-                    Next
-                    <ArrowRight className="h-5 w-5 ml-2" />
+                    Next <ArrowRight className="ml-2 h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -577,7 +662,7 @@ The venue owners will receive your requests and respond shortly.`);
                       <div className="mt-auto">
                         <button
                           onClick={(e) => handleViewDetails(e, screen)}
-                          className="w-full bg-blue-100 text-blue-800 py-2 rounded-lg hover:bg-blue-200 transition-colors font-semibold"
+                          className="w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
                         >
                           View Details
                         </button>
@@ -588,98 +673,155 @@ The venue owners will receive your requests and respond shortly.`);
                 </div>
               </div>
             )}
-             <div className="mt-8 flex justify-end">
-                <button
-                    onClick={handleNextStep}
-                    disabled={selectedScreens.length === 0}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
-                >
-                    Next: Choose Time Slot
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                </button>
-            </div>
           </motion.div>
         )}
 
-        {/* Step 2: Time Slot Selection */}
-        {currentStep === 2 && selectedScreens.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-xl p-8"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Choose Time Slot</h2>
-              <button
-                onClick={goBack}
-                className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5 mr-1" />
-                Back
-              </button>
+      {/* Step 2: Choose Date and Time */}
+      {currentStep === 2 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-xl p-8"
+        >
+          <div className="grid grid-cols-2 items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Choose Date and Time</h2>
+            <div className="justify-self-end">
+                <button
+                onClick={handleNextStep}
+                disabled={!startDate || !endDate || !startTime || !endTime || !!timeConflictError}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center"
+                >
+                Next: Upload Creative
+                <ArrowRight className="h-5 w-5 ml-2" />
+                </button>
+            </div>
+          </div>
+
+          {timeConflictError && (
+            <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                <div className="flex items-center">
+                    <AlertCircle className="h-6 w-6 text-red-500 mr-3" />
+                    <div>
+                        <h3 className="text-lg font-semibold text-red-800">Time Slot Conflict</h3>
+                        <p className="text-red-700">{timeConflictError}</p>
+                    </div>
+                </div>
+            </div>
+          )}
+
+          {/* Selected Screen Info */}
+          <div className="bg-blue-50 rounded-xl p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Selected Screens ({selectedScreens.length})
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedScreens.map(screen => (
+                <span key={screen.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                  {screen.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Dates */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Campaign Dates</h3>
+              <div className="flex items-center space-x-4">
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  selectsStart
+                  startDate={startDate}
+                  endDate={endDate}
+                  placeholderText="Start Date"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                />
+                <DatePicker
+                  selected={endDate}
+                  onChange={(date) => setEndDate(date)}
+                  selectsEnd
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={startDate || undefined}
+                  placeholderText="End Date"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                />
+              </div>
             </div>
 
-            {/* Selected Screen Info */}
-            <div className="bg-blue-50 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Selected Screens ({selectedScreens.length})
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {selectedScreens.map(screen => (
-                  <span key={screen.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
-                    {screen.name}
+            {/* Times */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Time Range</h3>
+              <div className="space-y-4">
+                {/* Start Time */}
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">Start Time</label>
+                  <select
+                    value={startTime}
+                    onChange={(e) => handleTimeChange(e.target.value, 'start')}
+                    disabled={!startDate || !endDate}
+                    className="w-full border p-2 rounded"
+                  >
+                    <option value="">Select Start Time</option>
+                    {getAvailableTimes().map((time) => (
+                      <option key={time} value={time} disabled={isSlotBooked(time)}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* End Time */}
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">End Time</label>
+                  <select
+                    value={endTime}
+                    onChange={(e) => handleTimeChange(e.target.value, 'end')}
+                    disabled={!startTime}
+                    className="w-full border p-2 rounded"
+                  >
+                    <option value="">Select End Time</option>
+                    {getAvailableTimes()
+                      .filter((time) => time > startTime)
+                      .map((time) => (
+                        <option key={time} value={time} disabled={isSlotBooked(time)}>
+                          {time}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Show booked slots */}
+          {bookedSlots.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-semibold text-gray-800">Unavailable Slots:</h4>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {bookedSlots.map((slot, idx) => (
+                  <span key={idx} className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                    {slot.start_time} - {slot.end_time}
                   </span>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Time Slots */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {renderCreativePreviews()}
-            </div>
-         
+          <div className="mt-8 flex justify-between items-center">
+            <button
+              onClick={goBack}
+              className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 mr-1" />
+              Back
+            </button>
+            
+          </div>
+        </motion.div>
+      )}
 
-            {/* Time Slots */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {timeSlots.map((slot) => (
-                <motion.div
-                  key={slot.id}
-                  whileHover={slot.available ? { scale: 1.02 } : {}}
-                  whileTap={slot.available ? { scale: 0.98 } : {}}
-                  onClick={() => slot.available && handleTimeSlotSelect(slot)}
-                  className={`border-2 rounded-xl p-6 transition-all duration-300 ${
-                    slot.available 
-                      ? 'border-gray-200 hover-border-green-500 cursor-pointer bg-white' 
-                      : 'border-red-200 bg-red-50 cursor-not-allowed opacity-60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <Clock className={`h-6 w-6 ${slot.available ? 'text-green-600' : 'text-red-500'}`} />
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      slot.available 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {slot.available ? 'Available' : 'Booked'}
-                    </span>
-                  </div>
-                  
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">
-                    {slot.start_time} - {slot.end_time}
-                  </h4>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">3 hours</span>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-green-600">₹{slot.price}</p>
-                      <p className="text-xs text-gray-500">Total cost</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
 
         {/* Step 3: Upload Creative */}
         {currentStep === 3 && (
@@ -768,8 +910,8 @@ The venue owners will receive your requests and respond shortly.`);
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-semibold text-lg mb-2">Time Slot</h3>
-                    <p>{selectedSlot?.start_time} - {selectedSlot?.end_time}</p>
-                    <p className="font-bold">Price: ₹{selectedSlot?.price}</p>
+                    <p>{startDate?.toLocaleDateString()} - {endDate?.toLocaleDateString()}</p>
+                    <p>{startTime} - {endTime}</p>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-semibold text-lg mb-2">Your Creative</h3>

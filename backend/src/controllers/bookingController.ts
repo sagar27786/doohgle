@@ -737,6 +737,47 @@ export async function getAvailableCities(req: Request, res: Response) {
   }
 }
 
+export async function getBookedTimeSlots(req: Request, res: Response) {
+  try {
+    const { start_date, end_date, screen_id } = req.query;
+
+    if (!start_date || !end_date || !screen_id) {
+      return res.status(400).json({
+        success: false,
+        message: "start_date, end_date and screen_id are required",
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      const query = `
+        SELECT start_time, end_time
+        FROM booking_requests
+        WHERE screen_id = $1
+          AND start_date = $2
+          AND end_date <= $3
+          AND status IN ('confirmed', 'pending')
+      `;
+
+      const result = await client.query(query, [screen_id, start_date, end_date]);
+
+      res.json({
+        success: true,
+        data: result.rows,
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("Error fetching booked time slots:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}
+
 export async function getBookingRequestsForOwner(req: Request, res: Response) {
   try {
     const { owner_id } = req.query;

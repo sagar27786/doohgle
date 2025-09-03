@@ -9,6 +9,7 @@ import {
   getMyBookingRequests,
   getAvailableCities,
   getBookingRequestsForOwner,
+  getBookedTimeSlots,
 } from "../controllers/bookingController";
 
 const router = express.Router();
@@ -38,5 +39,8 @@ router.get("/requests/owner", getBookingRequestsForOwner);
 
 // Get available cities with screen counts
 router.get("/cities", getAvailableCities);
+
+// Get booked time slots for a screen
+router.get("/booked-time-slots", getBookedTimeSlots);
 
 export default router;
