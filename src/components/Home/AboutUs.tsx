@@ -127,8 +127,8 @@ const AboutUs = () => {
             const newCounters = [...prev];
             const target = stat.number;
             const value = target * progress;
-            newCounters[index] =
-              target % 1 === 0 ? Math.floor(value) : value.toFixed(1);
+            newCounters[index] = Number(
+              target % 1 === 0 ? Math.floor(value) : value.toFixed(1));
             return newCounters;
           });
           if (progress < 1) {
@@ -175,13 +175,31 @@ const AboutUs = () => {
         variants={containerVariants}
       >
         <motion.h1
-          variants={itemVariants}
+          variants={{
+            hidden: { opacity: 0, y: 30 },
+            visible: {
+              opacity: 1,
+              y: 0,
+              transition: {
+                type: "tween",
+                duration: 0.6,
+                ease: [0.43, 0.13, 0.23, 0.96]
+              }
+            }
+          }}
           className="text-5xl md:text-7xl font-bold mb-6 purple-gray-gradient bg-clip-text text-transparent"
         >
           About Doohgle Media
         </motion.h1>
         <motion.p
-          variants={itemVariants}
+          variants={{
+            hidden: { opacity: 0, y: 30 },
+            visible: {
+              opacity: 1,
+              y: 0,
+              transition: { duration: 0.6, ease: [0.43, 0.13, 0.23, 0.96] }
+            }
+          }}
           className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed"
         >
           Revolutionizing Digital Out-of-Home advertising through innovative
@@ -221,7 +239,21 @@ const AboutUs = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={itemVariants} className="text-center mb-16">
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { 
+                opacity: 1, 
+                y: 0,
+                transition: { 
+                  type: "spring",
+                  duration: 0.6,
+                  ease: "easeOut"
+                }
+              }
+            }} 
+            className="text-center mb-16"
+          >
             <Target className="h-16 w-16 text-purple-600 mx-auto mb-6" />
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Our Mission</h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
@@ -238,7 +270,19 @@ const AboutUs = () => {
             {coreValues.map((value, index) => (
               <motion.div
                 key={index}
-                variants={cardVariants}
+variants={{
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: { 
+    opacity: 1, 
+    scale: 1, 
+    y: 0,
+    transition: { 
+      type: "tween",
+      duration: 0.5,
+      ease: [0.43, 0.13, 0.23, 0.96]
+    } 
+  }
+}}
                 whileHover={{ y: -8, scale: 1.03 }}
                 className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 text-center"
               >
@@ -264,7 +308,21 @@ const AboutUs = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={itemVariants} className="text-center mb-20">
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { 
+                opacity: 1, 
+                y: 0,
+                transition: { 
+                  type: "tween",
+                  duration: 0.6,
+                  ease: [0.43, 0.13, 0.23, 0.96]
+                }
+              }
+            }} 
+            className="text-center mb-20"
+          >
             <Calendar className="h-16 w-16 text-purple-600 mx-auto mb-6" />
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Our Journey</h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -279,7 +337,18 @@ const AboutUs = () => {
               {timelineEvents.map((event, index) => (
                 <motion.div
                   key={index}
-                  variants={itemVariants}
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: {
+                        type: "tween",
+                        duration: 0.6,
+                        ease: [0.43, 0.13, 0.23, 0.96]
+                      }
+                    }
+                  }}
                   className="relative"
                 >
                   <div className="absolute left-4 top-1 md:left-1/2 w-4 h-4 bg-purple-600 rounded-full border-4 border-white dark:border-slate-900 transform -translate-x-1/2"></div>
@@ -321,7 +390,21 @@ const AboutUs = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div variants={itemVariants} className="text-center mb-16">
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { 
+                opacity: 1, 
+                y: 0,
+                transition: { 
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15
+                }
+              }
+            }}
+            className="text-center mb-16"
+          >
             <Users className="h-16 w-16 text-purple-600 mx-auto mb-6" />
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Meet Our Leadership
@@ -338,7 +421,19 @@ const AboutUs = () => {
             {teamMembers.map((member, index) => (
               <motion.div
                 key={index}
-                variants={cardVariants}
+variants={{
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: { 
+    opacity: 1, 
+    scale: 1, 
+    y: 0,
+    transition: { 
+      type: "tween",
+      duration: 0.5,
+      ease: [0.43, 0.13, 0.23, 0.96]
+    } 
+  }
+}}
                 whileHover={{ y: -10 }}
                 className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group text-center"
               >
@@ -392,7 +487,20 @@ const AboutUs = () => {
         variants={containerVariants}
       >
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <motion.div variants={itemVariants}>
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 30 },
+              visible: { 
+                opacity: 1, 
+                y: 0,
+                transition: { 
+                  type: "tween",
+                  duration: 0.6,
+                  ease: [0.43, 0.13, 0.23, 0.96]
+                }
+              }
+            }}
+          >
             <Quote className="h-16 w-16 text-purple-600 mx-auto mb-6" />
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Ready to Transform Your DOOH Strategy?

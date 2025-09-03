@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS booking_requests (
   message TEXT,
   status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled')),
   response_message TEXT,
+  creative_url TEXT[],
+  creative_type TEXT[],
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

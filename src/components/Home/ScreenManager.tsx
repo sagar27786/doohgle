@@ -9,7 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion , Variants} from "framer-motion";
 
 const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
@@ -116,7 +116,7 @@ const ScreenManager = forwardRef<HTMLDivElement>((props, ref) => {
             return (
               <motion.div
                 key={idx}
-                variants={cardVariants}
+                variants={cardVariants as Variants}
                 whileHover={{ y: -8, scale: 1.05 }}
                 animate={isActive ? { y: -16, scale: 1.1 } : { y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}

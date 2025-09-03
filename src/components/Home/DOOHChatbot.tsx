@@ -76,7 +76,7 @@ const DOOHChatbot = () => {
     ],
   };
 
-  const getBotResponse = (message) => {
+  const getBotResponse = (message: string) => {
     const lowerMessage = message.toLowerCase();
 
     // Greeting check
@@ -291,7 +291,7 @@ const DOOHChatbot = () => {
     }, 1000 + Math.random() * 1000); // Random typing delay between 1-2 seconds
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -299,7 +299,7 @@ const DOOHChatbot = () => {
   };
 
   // Auto-resize textarea
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
     e.target.style.height = "auto";
     e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px";
@@ -432,7 +432,7 @@ const DOOHChatbot = () => {
               onKeyDown={handleKeyPress}
               placeholder="Ask about DOOH"
               className="w-full resize-none rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-slate-400 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent max-h-20 min-h-[40px] transition-colors"
-              rows="1"
+              rows={1}
             />
           </div>
           <button

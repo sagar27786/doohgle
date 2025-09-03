@@ -355,6 +355,32 @@ const BookingRequestsPanel: React.FC = () => {
                   </div>
                 )}
 
+                {'creative_url' in request && 'creative_type' in request && (
+                  <div className="mt-4">
+                    <h5 className="text-sm font-semibold text-gray-800 mb-2">Creative Files</h5>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {(Array.isArray(request?.creative_url) ? request.creative_url : (typeof request?.creative_url === 'string' ? request.creative_url.split(',') : [])).map((url: string, index: number) => {
+                        const creative_type_array = Array.isArray(request?.creative_type) 
+                          ? (request.creative_type as string[]) 
+                          : ((request.creative_type as string || '').split(','));
+                        return (
+                        <div key={index} className="relative aspect-w-16 aspect-h-9 rounded-lg overflow-hidden border">
+                          {creative_type_array[index] && creative_type_array[index].startsWith('image/') ? (
+                            <img src={url} alt={`Creative ${index + 1}`} className="object-cover w-full h-full" />
+                          ) : creative_type_array[index] && creative_type_array[index].startsWith('video/') ? (
+                            <video src={url} controls className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="flex items-center justify-center w-full h-full bg-gray-100">
+                              <p className="text-xs text-gray-500">Unsupported file type</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-500">
                     Requested {new Date(request.created_at).toLocaleString()}

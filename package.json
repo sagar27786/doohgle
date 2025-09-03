@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@aws-sdk/client-cloudwatch": "^3.873.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.873.0",
     "@emailjs/browser": "^4.4.1",
