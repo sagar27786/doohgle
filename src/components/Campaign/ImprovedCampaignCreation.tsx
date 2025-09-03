@@ -71,8 +71,8 @@ const ImprovedCampaignCreation: React.FC = () => {
   const [campaignName, setCampaignName] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [selectedScreenForModal, setSelectedScreenForModal] = useState<Screen | null>(null);
-  const [creativeFiles, setCreativeFiles] = useState<File[]>([]);
-  const [creativeUrls, setCreativeUrls] = useState<string[]>([]);
+  const [creativeFile, setCreativeFile] = useState<File | null>(null);
+  const [creativeUrl, setCreativeUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   
   // Time slots
@@ -191,10 +191,10 @@ const ImprovedCampaignCreation: React.FC = () => {
   }, [selectedCity, allScreens]);
 
   useEffect(() => {
-    if (creativeUrls.length > 0 && creativeUrls.length === creativeFiles.length) {
+    if (creativeUrl) {
       handleNextStep();
     }
-  }, [creativeUrls, creativeFiles]);
+  }, [creativeUrl]);
 
   const handleScreenSelect = (screen: Screen) => {
     setSelectedScreens(prevSelected => {
@@ -213,12 +213,12 @@ const ImprovedCampaignCreation: React.FC = () => {
     } else if (currentStep === 2 && selectedSlot) {
       setCurrentStep(3);
       setError(null);
-    } else if (currentStep === 3 && creativeUrls.length > 0) { // Check for creativeUrl instead of creativeFile
+    } else if (currentStep === 3 && creativeUrl) { // Check for creativeUrl instead of creativeFile
       setCurrentStep(4);
       setError(null);
     } else {
       let errorMessage = 'Please make a selection to proceed.';
-      if (currentStep === 3 && creativeUrls.length === 0) {
+      if (currentStep === 3 && !creativeUrl) {
         errorMessage = 'Please upload your creative to proceed.';
       }
       setError(errorMessage);
@@ -237,49 +237,35 @@ const ImprovedCampaignCreation: React.FC = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setCreativeFiles(Array.from(e.target.files));
+    if (e.target.files && e.target.files[0]) {
+      setCreativeFile(e.target.files[0]);
     }
   };
 
-  const renderCreativePreviews = () => {
-    return creativeFiles.map((file, index) => {
-      const url = URL.createObjectURL(file);
-      return (
-        <div key={index} className="relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-          {file.type.startsWith('image/') ? (
-            <img src={url} alt={`preview ${index}`} className="h-full w-full object-contain" />
-          ) : (
-            <video src={url} className="h-full w-full object-contain" controls />
-          )}
-        </div>
-      );
-    });
-  };
-
   const handleFileUpload = async () => {
-    if (creativeFiles.length === 0) return;
+    if (!creativeFile) return;
 
     setUploading(true);
-    const uploadPromises = creativeFiles.map(file => {
-      const formData = new FormData();
-      formData.append('file', file);
+    const formData = new FormData();
+    formData.append('file', creativeFile);
 
-      return fetch('http://localhost:4000/api/upload/single', {
+    try {
+      const response = await fetch('http://localhost:4000/api/upload/single', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
         },
         body: formData,
       });
-    });
 
-    try {
-      const responses = await Promise.all(uploadPromises);
-      const results = await Promise.all(responses.map(res => res.json()));
-      setCreativeUrls(results.map(res => res.url));
+      if (!response.ok) {
+        throw new Error('File upload failed');
+      }
+
+      const result = await response.json();
+      setCreativeUrl(result.url);
     } catch (error) {
-      setError('Failed to upload files.');
+      setError('Failed to upload file.');
       console.error(error);
     } finally {
       setUploading(false);
@@ -310,8 +296,8 @@ const ImprovedCampaignCreation: React.FC = () => {
           daily_budget: screen.daily_rate,
           total_budget: screen.daily_rate * 7, // Example calculation
           message: 'New campaign booking request',
-          creative_url: creativeUrls.join(','),
-          creative_type: creativeFiles.map(f => f.type).join(','),
+          creative_url: creativeUrl,
+          creative_type: creativeFile?.type,
         };
 
         return fetch('http://localhost:4000/api/bookings/request', {
