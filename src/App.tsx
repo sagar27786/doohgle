@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+
 import LoaderAnimation from "./components/Home/LoaderAnimation";
 import Header from "./components/Home/Header";
 import MainHero from "./components/Home/MainHero";
@@ -17,11 +18,14 @@ import GlobalFeed from "./components/Home/GlobalFeed";
 import WhyFramen from "./components/Home/WhyFramen";
 import SuccessStories from "./components/Home/SuccessStories";
 import ContentCreator from "./components/Home/ContentCreator";
+import ScreenManager from "./components/Home/ScreenManager";
 import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
 import DOOHChatbot from "./components/Home/DOOHChatbot";
 import Footer from "./components/Home/Footer";
 import HowItWorks from "./components/Home/HowItWorks";
+import ContactPage from "./components/Home/ContactPage";
+import AboutUs from "./components/Home/AboutUs";
 
 // Auth components
 import LoginSignup from "./components/Auth/LoginSignup";
@@ -42,8 +46,6 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
-import ContactPage from "./components/Home/ContactPage";
-import AboutUs from "./components/Home/AboutUs";
 
 // ThemeProvider for dark mode
 import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
@@ -56,7 +58,6 @@ const ThemeContext = createContext<ThemeContextType>({
   theme: "dark",
   toggleTheme: () => {},
 });
-
 export const useTheme = () => useContext(ThemeContext);
 
 interface ThemeProviderProps {
@@ -76,20 +77,8 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, [theme]);
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
+    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setTheme(savedTheme);
-    document.documentElement.setAttribute("data-theme", savedTheme);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("theme", theme);
-  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
@@ -112,6 +101,8 @@ const HomePage = () => {
       <WhyFramen />
       <SuccessStories />
       <ContentCreator />
+      <ScreenManager />
+      <HowItWorks />
       <FAQ />
       <Contact />
       <Footer />
@@ -169,6 +160,8 @@ function AppContent() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactPage />} />"
           {/* Ads Manager Routes */}
           {/* <Route path="/products/ads-manager" element={<AdsManagerPage />} /> */}
           <Route
@@ -199,10 +192,8 @@ function AppContent() {
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
-
           {/* Debug Route */}
           <Route path="/debug/screens" element={<SimpleScreensTest />} />
-
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />
