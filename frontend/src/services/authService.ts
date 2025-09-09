@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4001/api';
 
 // ...existing code...
 
@@ -172,19 +172,30 @@ export const authService = {
   requestPasswordReset,
   resetPassword,
   setRole: async (role: 'advertiser' | 'venue_owner'): Promise<AuthResponse> => {
-    const response = await axios.post<AuthResponse>(
-      `${API_URL}/auth/set-role`,
-      { role },
-      {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
+    console.log('API URL:', API_URL);
+    console.log('Token being sent:', getAuthToken());
+    try {
+      const response = await axios.post<AuthResponse>(
+        `${API_URL}/auth/set-role`,
+        { role },
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
+      const { user, token } = response.data;
+      setAuthToken(token);
+      setCurrentUser(user);
+      return { user, token };
+    } catch (error) {
+      console.error('Error in setRole:', error);
+      if (error && typeof error === 'object' && 'isAxiosError' in error) {
+        console.error('Request details:', (error as any).config);
+        console.error('Response details:', (error as any).response?.data);
       }
-    );
-    const { user, token } = response.data;
-    setAuthToken(token);
-    setCurrentUser(user);
-    return { user, token };
+      throw error;
+    }
   },
   setAuthData: (token: string, user: User): void => {
     setAuthToken(token);

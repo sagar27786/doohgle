@@ -52,7 +52,7 @@ async function uploadImageToS3(
 
   try {
     await s3Client.send(new PutObjectCommand(uploadParams));
-    return `${AWS_CONSTANTS.S3_BASE_URL}/${key}`;
+    return `https://${AWS_CONSTANTS.S3_BUCKET}.s3.${AWS_CONSTANTS.REGION}.amazonaws.com/${key}`;
   } catch (error) {
     console.error("Error uploading to S3:", error);
     throw new Error("Failed to upload image to S3");

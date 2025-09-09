@@ -67,7 +67,7 @@ const BookingRequestsPanel: React.FC = () => {
         
         // Try direct API call as fallback
         try {
-          const response = await fetch('http://localhost:4000/api/venue/booking-requests', {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/venue/booking-requests`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',

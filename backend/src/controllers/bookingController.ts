@@ -755,11 +755,8 @@ export async function getBookedTimeSlots(req: Request, res: Response) {
         SELECT start_time, end_time
         FROM booking_requests
         WHERE screen_id = $1
-          AND (
-            (start_date <= $2 AND end_date >= $2) OR
-            (start_date <= $3 AND end_date >= $3) OR
-            (start_date >= $2 AND end_date <= $3)
-          )
+          AND start_date = $2
+          AND end_date <= $3
           AND status IN ('confirmed', 'pending')
       `;
 

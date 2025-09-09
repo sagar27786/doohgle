@@ -102,7 +102,7 @@ const ImprovedCampaignCreation: React.FC = () => {
       setError(null);
       console.log('Fetching all screens from API...');
       
-      const response = await fetch('http://localhost:4000/api/screens');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/screens`);
       console.log('API Response status:', response.status, response.ok);
       
       if (!response.ok) {
@@ -207,7 +207,7 @@ const ImprovedCampaignCreation: React.FC = () => {
         try {
           const allBookedSlots: any[] = [];
           for (const screen of selectedScreens) {
-            const url = `http://localhost:4000/api/bookings/booked-time-slots?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&screen_id=${screen.id}`;
+            const url = `${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/bookings/booked-time-slots?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&screen_id=${screen.id}`;
             console.log('Fetching booked slots from:', url);
             const response = await fetch(url);
             const result = await response.json();
@@ -337,7 +337,7 @@ const ImprovedCampaignCreation: React.FC = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      return fetch('http://localhost:4000/api/upload/single', {
+      return fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/upload/single`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
@@ -386,7 +386,7 @@ const ImprovedCampaignCreation: React.FC = () => {
           creative_type: creativeFiles.map(f => f.type),
         };
 
-        return fetch('http://localhost:4000/api/bookings/request', {
+        return fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/bookings/request`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

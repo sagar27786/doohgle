@@ -1,5 +1,5 @@
 export async function signup(data: { email: string; password: string; confirmPassword: string }) {
-  const res = await fetch('http://localhost:4000/api/auth/signup', {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -9,7 +9,7 @@ export async function signup(data: { email: string; password: string; confirmPas
 }
 
 export async function login(data: { email: string; password: string }) {
-  const res = await fetch('http://localhost:4000/api/auth/login', {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

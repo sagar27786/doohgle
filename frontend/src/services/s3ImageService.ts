@@ -1,5 +1,5 @@
 class S3ImageService {
-  private baseUrl = "http://localhost:4000/api/aws-bookings";
+  private baseUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/aws-bookings`;
 
   // Upload images for a screen
   async uploadScreenImages(

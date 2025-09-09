@@ -45,7 +45,7 @@ export interface CampaignBooking {
 }
 
 class BookingService {
-  private baseUrl = 'http://localhost:4000/api';
+  private baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4001/api';
 
   // Get auth token
   private getAuthToken(): string | null {

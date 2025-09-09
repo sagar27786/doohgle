@@ -1,0 +1,35 @@
+# version: "3.9"
+services:
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "4001:4001"   # host:container
+    environment:
+      # - ./backend/.env
+      - DB_HOST=doohgle.covkowi4e8h9.us-east-1.rds.amazonaws.com
+      - DB_PORT=5432
+      - DB_USER=Shiv
+      - DB_PASSWORD=Sada_8324
+      - DB_NAME=doohgle_db
+      - NODE_ENV=production
+      - PORT=4001
+      - PGSSLMODE=require
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"     # host:container
+    environment:
+      - VITE_API_URL=http://backend:4001
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 
@@ -8,6 +8,33 @@ export default function RoleSelect() {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const navigate = useNavigate();
+  
+  // Check if token is manually provided and set it
+  // useEffect(() => {
+  //   // Hardcoded token from user input
+  //   const manualToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiZW1haWwiOiJrQGdtYWlsLmNvbSIsInBob25lIjoiNzAxOTU4MzEyMyIsInJvbGVzIjpbXSwiaWF0IjoxNzU3MDc5MjYzLCJleHAiOjE3NTcxNjU2NjN9.m_ilChcl_3p5ECx-dwms3dhwJ45viYnsxJChPZAXt_I';
+  //   const manualUser = '{"id":7,"email":"k@gmail.com","phone":"7019583123","roles":[]}';
+    
+  //   // Set the token and user directly in localStorage and in authService
+  //   console.log('Setting manual token:', manualToken);
+  //   localStorage.setItem('token', manualToken);
+  //   authService.setAuthToken(manualToken);
+    
+  //   try {
+  //     const userData = JSON.parse(manualUser);
+  //     console.log('Setting manual user:', userData);
+  //     localStorage.setItem('user', manualUser);
+  //     authService.setCurrentUser(userData);
+  //   } catch (e) {
+  //     console.error('Failed to parse user data:', e);
+  //   }
+    
+  //   // Verify the token was set correctly
+  //   const storedToken = authService.getAuthToken();
+  //   console.log('Verified token from authService:', storedToken);
+  //   const storedUser = authService.getCurrentUser();
+  //   console.log('Verified user from authService:', storedUser);
+  // }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +47,7 @@ export default function RoleSelect() {
     }
     try {
       setLoading(true);
+      console.log('Current token before request:', authService.getAuthToken());
       const { token, user } = await authService.setRole(role);
       authService.setAuthData(token, user);
       // redirect based on role

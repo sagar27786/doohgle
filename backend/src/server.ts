@@ -9,6 +9,9 @@ import campaignRoutes from "./routes/campaigns";
 import authRoutes from "./routes/auth";
 import uploadRoutes from "./routes/upload";
 import analyticsRoutes from "./routes/analytics";
+import venueRoutes from "./routes/venue";
+import bookingRoutes from "./routes/bookings";
+import earningsRoutes from "./routes/earnings";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/logger";
 
@@ -16,13 +19,13 @@ import { requestLogger } from "./middleware/logger";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4001;
 
 // Middleware
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [process.env.FRONTEND_URL || "http://localhost:5173", "http://localhost:3000"],
     credentials: true,
   })
 );
@@ -32,10 +35,13 @@ app.use(requestLogger);
 
 // Routes
 app.use("/api/screens", screenRoutes);
-// app.use("/api/auth", authRoutes);
-// app.use("/api/campaigns", campaignRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/campaigns", campaignRoutes);
 app.use("/api/upload", uploadRoutes);
-// app.use("/api/analytics", analyticsRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/venue", venueRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/earnings", earningsRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -50,27 +56,35 @@ app.use("*", (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Initialize database and start server
-async function startServer() {
-  try {
-    await connectDatabase();
-    console.log("✅ Database connected successfully");
+// Start server without database connection for testing
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`📺 Screens API: http://localhost:${PORT}/api/screens`);
+  console.log(`🎯 Campaigns API: http://localhost:${PORT}/api/campaigns`);
+});
 
-    await initializeDatabase();
-    console.log("✅ Database initialized successfully");
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`📺 Screens API: http://localhost:${PORT}/api/screens`);
-      console.log(`🎯 Campaigns API: http://localhost:${PORT}/api/campaigns`);
-    });
-  } catch (error) {
-    console.error("❌ Failed to start server:", error);
-    process.exit(1);
-  }
-}
-
-startServer();
+// Commented out database connection for testing
+// async function startServer() {
+//   try {
+//     await connectDatabase();
+//     console.log("✅ Database connected successfully");
+//
+//     await initializeDatabase();
+//     console.log("✅ Database initialized successfully");
+//
+//     app.listen(PORT, () => {
+//       console.log(`🚀 Server running on port ${PORT}`);
+//       console.log(`📊 Health check: http://localhost:${PORT}/health`);
+//       console.log(`📺 Screens API: http://localhost:${PORT}/api/screens`);
+//       console.log(`🎯 Campaigns API: http://localhost:${PORT}/api/campaigns`);
+//     });
+//   } catch (error) {
+//     console.error("❌ Failed to start server:", error);
+//     process.exit(1);
+//   }
+// }
+//
+// startServer();
 
 export default app;

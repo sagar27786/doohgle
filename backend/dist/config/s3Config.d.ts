@@ -1,0 +1,12 @@
+import { S3Client } from '@aws-sdk/client-s3';
+import multer from 'multer';
+declare const s3: S3Client;
+export declare const S3_BUCKET_NAME: string;
+export declare const S3_REGION: string;
+export declare const upload: multer.Multer;
+export declare const getFileType: (mimetype: string) => "image" | "video";
+export declare const validateFileSize: (file: Express.Multer.File) => boolean;
+export declare const deleteFileFromS3: (fileUrl: string) => Promise<boolean>;
+export declare const generatePresignedUrl: (key: string, expiresIn?: number) => Promise<string>;
+export declare const ensureBucketExists: () => Promise<void>;
+export { s3 };

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../db';
 import { User } from '../models/user';
@@ -137,6 +137,7 @@ export async function verifySignupOTP(req: Request, res: Response) {
     const user: any = result.rows[0];
     const roles: string[] = user.role ? [user.role] : [];
     const token = jwt.sign({ id: user.id, email: user.email, phone: user.phone, roles }, JWT_SECRET, { expiresIn: '1d' });
+    console.log("the token generated is : " ,token);
 
     return res.status(201).json({ 
       token, 

@@ -3,14 +3,17 @@ import { Pool } from 'pg';
 
 // Database connection pool
 export const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
+  user: process.env.DB_USER || 'shiv',
   host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'doohgle_db',
-  password: process.env.DB_PASSWORD || 'password',
+  database: 'dooh_platform',
+  password: process.env.DB_PASSWORD || 'hcqsQTFBAbnMRuPEupbthV5TyG9OUoMB',
   port: parseInt(process.env.DB_PORT || '5432'),
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
+  ssl: process.env.DB_SSL === 'true' ? {
+    rejectUnauthorized: false // Required for connecting to some hosted PostgreSQL services
+  } : false
 });
 
 // Connect to database

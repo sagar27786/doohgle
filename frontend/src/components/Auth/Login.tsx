@@ -21,6 +21,7 @@ export default function Login({ onSwitch }: { onSwitch: () => void }) {
     try {
       const res = await login(form);
       if (res.ok && res.data?.token) {
+        console.log("token generated after login : " , res.data.token);
         localStorage.setItem("token", res.data.token);
         if (res.data.user) {
           localStorage.setItem("user", JSON.stringify(res.data.user));

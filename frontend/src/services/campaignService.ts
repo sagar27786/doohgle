@@ -32,7 +32,7 @@ export interface CreateCampaignPayload {
 }
 
 class CampaignService {
-  private baseUrl = "http://localhost:4000/api/campaigns";
+  private baseUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4001/api'}/campaigns`;
 
   // Get all campaigns with real-time AWS data
   public async getCampaigns(): Promise<Campaign[]> {
