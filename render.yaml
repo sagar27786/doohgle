@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: backend
+    env: node
+    region: singapore   # or choose closer to your DB/users
+    plan: free          # free instance
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    envVars:
+      - key: DB_HOST
+        value: doohgle.covkowi4e8h9.us-east-1.rds.amazonaws.com
+      - key: DB_PORT
+        value: 5432
+      - key: DB_USER
+        value: Shiv
+      - key: DB_PASSWORD
+        value: Sada_8324
+      - key: DB_NAME
+        value: doohgle_db
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4001
+      - key: PGSSLMODE
+        value: require
