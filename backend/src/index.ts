@@ -13,6 +13,7 @@ import locationRoutes from "./routes/locations";
 import uploadRoutes from "./routes/upload";
 import campaignRequestRoutes from "./routes/campaignRequests";
 import adminRoutes from "./routes/admin";
+import campaignRoutes from "./routes/campaigns";
 
 // Load env vars
 
@@ -52,84 +53,7 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/campaign-requests", campaignRequestRoutes);
 app.use("/api/admin", adminRoutes);
-// app.use('/api/campaigns', campaignRoutes);
-
-// Temporary campaigns endpoints
-app.get("/api/campaigns", (req, res) => {
-  // Mock campaigns data
-  res.json({
-    success: true,
-    data: [
-      {
-        id: 1,
-        name: "Summer Fashion Campaign",
-        description: "Promoting latest summer collection across metro areas",
-        budget: 15000,
-        start_date: "2025-08-01",
-        end_date: "2025-08-31",
-        status: "active",
-        impressions: 125000,
-        clicks: 2500,
-        conversions: 125,
-      },
-      {
-        id: 2,
-        name: "Tech Product Launch",
-        description: "New smartphone launch campaign in tech hubs",
-        budget: 25000,
-        start_date: "2025-08-10",
-        end_date: "2025-09-10",
-        status: "active",
-        impressions: 89000,
-        clicks: 1800,
-        conversions: 90,
-      },
-      {
-        id: 3,
-        name: "Food Delivery Promo",
-        description: "Weekend food delivery discount promotion",
-        budget: 8000,
-        start_date: "2025-08-05",
-        end_date: "2025-08-25",
-        status: "paused",
-        impressions: 45000,
-        clicks: 900,
-        conversions: 45,
-      },
-    ],
-    total: 3,
-  });
-});
-
-app.post("/api/campaigns", (req, res) => {
-  const newCampaign = {
-    id: Date.now(),
-    ...req.body,
-    status: "draft",
-    impressions: 0,
-    clicks: 0,
-    conversions: 0,
-  };
-  res.json({ success: true, data: newCampaign });
-});
-
-app.put("/api/campaigns/:id/status", (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  res.json({
-    success: true,
-    message: `Campaign ${id} status updated to ${status}`,
-    data: { id: parseInt(id), status },
-  });
-});
-
-app.delete("/api/campaigns/:id", (req, res) => {
-  const { id } = req.params;
-  res.json({
-    success: true,
-    message: `Campaign ${id} deleted successfully`,
-  });
-});
+app.use('/api/campaigns', campaignRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

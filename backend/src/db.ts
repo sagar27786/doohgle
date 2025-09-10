@@ -2,17 +2,13 @@ import { Pool } from "pg";
 import * as dotenv from "dotenv";
 import path from "path";
 
-// Load .env file from the backend directory
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// Load .env file from the root directory (where .env actually is)
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 // Centralized pool configuration
 export const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-  ssl: process.env.DB_HOST === "localhost" ? false : { rejectUnauthorized: false },
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false },
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
   connectionTimeoutMillis: 10000, // Return an error if connection takes longer than 10 seconds
@@ -35,7 +31,9 @@ pool.on("remove", () => {
 pool
   .connect()
   .then((client) => {
-    console.log(`✅ Connected to PostgreSQL (${process.env.DB_HOST}:${process.env.DB_PORT})`);
+    const dbUrl = process.env.DATABASE_URL;
+    const host = dbUrl ? new URL(dbUrl).host : 'unknown';
+    console.log(`✅ Connected to PostgreSQL (${host})`);
     client.release();
   })
   .catch((err) => {
