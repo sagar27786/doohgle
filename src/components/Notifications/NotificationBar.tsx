@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, X, CreditCard, AlertCircle } from "lucide-react";
+import { Bell, Check, X, CreditCard } from "lucide-react";
 import NotificationService, {
   BookingRequest,
   PaymentNotification,
@@ -16,28 +16,6 @@ const NotificationBar: React.FC<NotificationBarProps> = ({ userType }) => {
     PaymentNotification[]
   >([]);
   const [showNotifications, setShowNotifications] = useState(false);
-
-  // Test function to add sample data
-  const addTestData = () => {
-    const notificationService = NotificationService.getInstance();
-    if (userType === "screen_manager") {
-      notificationService.addTestBookingRequest();
-      console.log("Added test booking request");
-    } else {
-      // Add test payment notification for ads manager
-      const testPayment = {
-        id: Date.now().toString(),
-        type: "payment_required" as const,
-        bookingId: "test-booking-" + Date.now(),
-        amount: 7500,
-        screenName: "Test Screen Downtown",
-        timestamp: new Date(),
-      };
-      notificationService["paymentNotifications"].push(testPayment);
-      notificationService["notifyListeners"]();
-      console.log("Added test payment notification");
-    }
-  };
 
   useEffect(() => {
     const notificationService = NotificationService.getInstance();
@@ -95,17 +73,6 @@ const NotificationBar: React.FC<NotificationBarProps> = ({ userType }) => {
 
   return (
     <div className="relative">
-      {/* Development Test Button */}
-      {process.env.NODE_ENV === "development" && (
-        <button
-          onClick={addTestData}
-          className="mr-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-          title="Add test notification"
-        >
-          Test
-        </button>
-      )}
-
       {/* Notification Bell */}
       <motion.button
         className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"

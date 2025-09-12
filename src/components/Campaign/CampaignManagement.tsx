@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Target,
   Plus,
   Search,
   Filter,
   ChevronDown,
   RefreshCw,
-  Upload,
-  Download,
   Eye,
   Edit3,
   MoreHorizontal,
@@ -84,84 +81,6 @@ interface Campaign {
   };
 }
 
-// Professional Loading screen component with particles and animations
-const LoadingScreen: React.FC = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50 flex items-center justify-center z-50"
-    >
-      <div className="text-center">
-        {/* Animated Logo with rotating effect */}
-        <motion.div
-          className="w-20 h-20 mx-auto mb-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl"
-          animate={{
-            rotateY: 360,
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            rotateY: { duration: 2, repeat: Infinity, ease: "linear" },
-            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-          }}
-        >
-          <Target className="text-white" size={32} />
-        </motion.div>
-
-        {/* Moving particle animation in circle */}
-        <div className="relative mb-8">
-          {[...Array(12)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"
-              animate={{
-                x: Math.cos((i * 30 * Math.PI) / 180) * 50,
-                y: Math.sin((i * 30 * Math.PI) / 180) * 50,
-                scale: [0, 1, 0],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: i * 0.1,
-                ease: "easeInOut",
-              }}
-              style={{ left: "50%", top: "50%" }}
-            />
-          ))}
-        </div>
-
-        {/* Pulsing loading text */}
-        <motion.h2
-          className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          Campaign Manager
-        </motion.h2>
-
-        <motion.p
-          className="text-gray-600 text-lg"
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-        >
-          Preparing your campaigns...
-        </motion.p>
-
-        {/* Animated loading bar */}
-        <div className="w-64 h-1 bg-gray-200 rounded-full mx-auto mt-8 overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
-            animate={{ x: ["-100%", "100%"] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
 // Animated Counter Component with easeOutExpo animation
 interface AnimatedCounterProps {
   value: number;
@@ -213,7 +132,6 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
 };
 
 const CampaignManagement: React.FC = () => {
-  const [loading, setLoading] = useState(true);
   const [campaignData, setCampaignData] = useState<Campaign[]>([]);
   const [screensData, setScreensData] = useState<Screen[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -232,8 +150,6 @@ const CampaignManagement: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true);
-        
         // Load real screens and campaigns from APIs - NO FALLBACK DATA
         const [screensResponse, campaignsResponse] = await Promise.all([
           getAllScreens(),
@@ -297,7 +213,7 @@ const CampaignManagement: React.FC = () => {
         setCampaignData([]);
         setScreensData([]);
       } finally {
-        setLoading(false);
+        // Loading removed
       }
     };
 
@@ -345,54 +261,34 @@ const CampaignManagement: React.FC = () => {
     (c) => c.status.toLowerCase() === "active"
   ).length;
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 lg:px-6 py-4 lg:py-8">
         {/* Professional Header Section with gradient text */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-6 lg:mb-8"
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 Screen Management
               </h1>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-base lg:text-lg">
                 Manage and monitor all your digital screens and their campaigns
               </p>
             </div>
             <div className="flex items-center space-x-4 mt-4 lg:mt-0">
               <motion.button
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold shadow-lg"
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 lg:px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold shadow-lg"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowCreateWorkflow(true)}
               >
                 <Plus size={20} />
                 <span>Create Campaign</span>
-              </motion.button>
-              <motion.button
-                className="flex items-center space-x-2 bg-white text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Upload size={18} />
-                <span>Import</span>
-              </motion.button>
-              <motion.button
-                className="flex items-center space-x-2 bg-white text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Download size={18} />
-                <span>Export</span>
               </motion.button>
             </div>
           </div>
@@ -526,16 +422,16 @@ const CampaignManagement: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-6"
+          className="bg-white rounded-xl p-4 lg:p-6 shadow-lg border border-gray-100 mb-6"
         >
           {/* Tab Navigation */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
-            <div className="flex space-x-1 mb-4 lg:mb-0 overflow-x-auto">
+          <div className="flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:items-center justify-between mb-6">
+            <div className="flex space-x-1 overflow-x-auto pb-2 lg:pb-0">
               {tabs.map((tab, index) => (
                 <motion.button
                   key={tab}
                   onClick={() => setSelectedTab(tab)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`px-3 lg:px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                     selectedTab === tab
                       ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200 shadow-sm"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -562,8 +458,8 @@ const CampaignManagement: React.FC = () => {
               ))}
             </div>
 
-            <div className="flex items-center space-x-3">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+              <div className="relative flex-1 sm:flex-none">
                 <Search
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   size={18}
@@ -573,31 +469,34 @@ const CampaignManagement: React.FC = () => {
                   placeholder="Search campaigns..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
-              <motion.button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Filter size={18} />
-                <span>Filters</span>
-                <ChevronDown
-                  className={`transform transition-transform ${
-                    showFilters ? "rotate-180" : ""
-                  }`}
-                  size={16}
-                />
-              </motion.button>
-              <motion.button
-                className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                whileHover={{ scale: 1.05, rotate: 90 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <RefreshCw size={18} />
-              </motion.button>
+              
+              <div className="flex space-x-3">
+                <motion.button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex-1 sm:flex-none"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Filter size={18} />
+                  <span className="hidden sm:inline">Filters</span>
+                  <ChevronDown
+                    className={`transform transition-transform ${
+                      showFilters ? "rotate-180" : ""
+                    }`}
+                    size={16}
+                  />
+                </motion.button>
+                <motion.button
+                  className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  whileHover={{ scale: 1.05, rotate: 90 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <RefreshCw size={18} />
+                </motion.button>
+              </div>
             </div>
           </div>
 
@@ -617,7 +516,11 @@ const CampaignManagement: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer hover:border-gray-400 transition-colors"
+                    style={{ 
+                      backgroundColor: 'white',
+                      color: '#111827'
+                    }}
                   >
                     <option value="name">Name</option>
                     <option value="brand">Brand</option>
@@ -636,7 +539,11 @@ const CampaignManagement: React.FC = () => {
                     onChange={(e) =>
                       setSortOrder(e.target.value as "asc" | "desc")
                     }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer hover:border-gray-400 transition-colors"
+                    style={{ 
+                      backgroundColor: 'white',
+                      color: '#111827'
+                    }}
                   >
                     <option value="asc">Ascending</option>
                     <option value="desc">Descending</option>
@@ -1053,7 +960,7 @@ const CampaignManagement: React.FC = () => {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl"
+                className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl"
               >
                 <ImprovedCampaignCreation />
               </motion.div>

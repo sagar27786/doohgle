@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { 
   MapPin, 
   Clock, 
-  DollarSign, 
-  Calendar, 
   Monitor,
   CheckCircle,
   Loader2,
@@ -14,7 +12,6 @@ import {
   Users,
   Zap,
   Play,
-  Star,
   Eye
 } from 'lucide-react';
 
@@ -283,8 +280,8 @@ The venue owner will receive your request and respond shortly.`);
 
   if (loading && currentStep === 1) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="p-6">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
@@ -298,8 +295,8 @@ The venue owner will receive your request and respond shortly.`);
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="p-6">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Create Campaign</h1>
@@ -389,10 +386,24 @@ The venue owner will receive your request and respond shortly.`);
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {screens.map((screen) => (
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-gray-100 hover:scrollbar-thumb-blue-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                style={{ 
+                  scrollBehavior: 'smooth',
+                  // Custom scrollbar styles for webkit browsers
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#60a5fa #f3f4f6'
+                }}
+              >
+                {screens.map((screen, index) => (
                   <motion.div
                     key={screen.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
                     whileHover={{ scale: 1.02, y: -5 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleScreenSelect(screen)}
@@ -461,7 +472,7 @@ The venue owner will receive your request and respond shortly.`);
                     </div>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </motion.div>
         )}

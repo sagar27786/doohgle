@@ -1,12 +1,10 @@
 // Professional Enhanced Dashboard - Industry Ready with Advanced Animations
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,30 +18,14 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
-  Calendar,
-  Settings,
-  Bell,
-  Search,
   Plus,
   Eye,
-  DollarSign,
-  CheckCircle,
-  Clock,
   ArrowUpRight,
   Star,
   MoreHorizontal,
   RefreshCw,
-  Users,
-  Target,
-  Activity,
-  Zap,
-  Award,
-  MousePointer,
   BarChart3,
-  Globe,
   Monitor,
-  PlayCircle,
   Upload,
   UserPlus,
   Navigation,
@@ -51,11 +33,7 @@ import {
 
 const ProfessionalDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [countersStarted, setCountersStarted] = useState(false);
-  const [showTagline, setShowTagline] = useState(false);
-  const [showMainContent, setShowMainContent] = useState(false);
-  const [logoAnimationComplete, setLogoAnimationComplete] = useState(false);
+  const [countersStarted] = useState(true);
 
   // Enhanced data sets
   const impressionsOverTime = [
@@ -102,34 +80,6 @@ const ProfessionalDashboard: React.FC = () => {
     },
     { id: 4, text: "High CTR detected", time: "12 min ago", type: "success" },
   ];
-
-  // Enhanced loading sequence
-  useEffect(() => {
-    const sequence = async () => {
-      // Logo animation phase (2.5 seconds)
-      setTimeout(() => {
-        setLogoAnimationComplete(true);
-      }, 2000);
-
-      // Tagline phase (1.5 seconds)
-      setTimeout(() => {
-        setShowTagline(true);
-      }, 2800);
-
-      // Main content phase
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 4500);
-
-      // Counter animations start
-      setTimeout(() => {
-        setShowMainContent(true);
-        setCountersStarted(true);
-      }, 5000);
-    };
-
-    sequence();
-  }, []);
 
   // Enhanced animated counter
   const AnimatedCounter: React.FC<{
@@ -233,268 +183,6 @@ const ProfessionalDashboard: React.FC = () => {
     },
   ];
 
-  // Professional loading screen
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center overflow-hidden relative">
-        {/* Advanced background particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(30)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full"
-              style={{
-                left: Math.random() * 100 + "%",
-                top: Math.random() * 100 + "%",
-              }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{
-                opacity: [0, 1, 0],
-                scale: [0, 1, 0],
-                y: [0, -100, -200],
-              }}
-              transition={{
-                duration: Math.random() * 3 + 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Gradient orbs */}
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full opacity-20 blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ duration: 4, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500 rounded-full opacity-20 blur-3xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.3, 0.2],
-          }}
-          transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-        />
-
-        <div className="text-center z-10 relative">
-          {/* Professional logo animation */}
-          <motion.div
-            className="relative mb-12"
-            initial={{ scale: 0, rotateY: -180, opacity: 0 }}
-            animate={{
-              scale: logoAnimationComplete ? [1, 1.05, 1] : 1,
-              rotateY: 0,
-              opacity: 1,
-            }}
-            transition={{
-              duration: 2.5,
-              ease: [0.25, 0.46, 0.45, 0.94],
-            }}
-          >
-            {/* Multiple animated rings */}
-            {[...Array(3)].map((_, i) => (
-              <motion.div
-                key={i}
-                className={`absolute inset-0 w-40 h-40 mx-auto border-2 rounded-3xl`}
-                style={{
-                  borderColor:
-                    i === 0 ? "#3b82f6" : i === 1 ? "#8b5cf6" : "#ec4899",
-                  borderStyle: "dashed",
-                }}
-                animate={{ rotate: 360 }}
-                transition={{
-                  duration: 8 - i * 2,
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: i * 0.5,
-                }}
-              />
-            ))}
-
-            <motion.div className="w-40 h-40 mx-auto relative">
-              {/* Outer glow */}
-              <motion.div
-                className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-40 blur-2xl"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.4, 0.8, 0.4],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              {/* Main logo */}
-              <motion.div
-                className="relative w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 rounded-3xl flex items-center justify-center shadow-2xl border-2 border-white/30"
-                animate={{
-                  boxShadow: [
-                    "0 0 0 0 rgba(59, 130, 246, 0.7)",
-                    "0 0 0 20px rgba(59, 130, 246, 0)",
-                    "0 0 0 0 rgba(59, 130, 246, 0)",
-                  ],
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <motion.span
-                  className="text-white font-bold text-5xl tracking-wider"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1, duration: 1 }}
-                >
-                  DT
-                </motion.span>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-
-          {/* Company name with sophisticated animation */}
-          <motion.div
-            className="mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: logoAnimationComplete ? 1 : 0 }}
-            transition={{ delay: 0.8, duration: 1.2 }}
-          >
-            <h2 className="text-6xl font-bold mb-4">
-              {"Doohgle Tech".split("").map((letter, index) => (
-                <motion.span
-                  key={index}
-                  className="inline-block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
-                  initial={{ opacity: 0, y: 100, rotateX: -90 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{
-                    delay: logoAnimationComplete ? 1 + index * 0.1 : 0,
-                    duration: 0.8,
-                    ease: [0.25, 0.46, 0.45, 0.94],
-                  }}
-                  whileHover={{
-                    scale: 1.2,
-                    color: "#fff",
-                    transition: { duration: 0.2 },
-                  }}
-                >
-                  {letter === " " ? "\u00A0" : letter}
-                </motion.span>
-              ))}
-            </h2>
-          </motion.div>
-
-          {/* Enhanced tagline section */}
-          <AnimatePresence>
-            {showTagline && (
-              <motion.div
-                className="space-y-6 max-w-2xl mx-auto"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -50 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-              >
-                <motion.div
-                  className="space-y-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 1 }}
-                >
-                  <h3 className="text-2xl text-blue-200 font-semibold tracking-wide">
-                    Digital Out-of-Home Advertising Platform
-                  </h3>
-
-                  <p className="text-lg text-gray-300 leading-relaxed">
-                    Revolutionizing outdoor advertising with intelligent
-                    campaign management, real-time analytics, and seamless
-                    screen network integration
-                  </p>
-                </motion.div>
-
-                {/* Feature highlights */}
-                <motion.div
-                  className="flex justify-center space-x-8 text-sm text-gray-400"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.8 }}
-                >
-                  {[
-                    "Smart Campaigns",
-                    "Real-time Analytics",
-                    "Global Network",
-                  ].map((feature, i) => (
-                    <motion.div
-                      key={feature}
-                      className="flex items-center space-x-2"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1 + i * 0.2, duration: 0.5 }}
-                    >
-                      <motion.div
-                        className="w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"
-                        animate={{ scale: [1, 1.5, 1] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: i * 0.3,
-                        }}
-                      />
-                      <span>{feature}</span>
-                    </motion.div>
-                  ))}
-                </motion.div>
-
-                {/* Enhanced progress bar */}
-                <motion.div
-                  className="space-y-3"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.2, duration: 0.8 }}
-                >
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Initializing Dashboard</span>
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      Please wait...
-                    </motion.span>
-                  </div>
-
-                  <div className="w-80 h-2 bg-gray-800 rounded-full mx-auto overflow-hidden border border-gray-700">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full relative"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{
-                        delay: 1.5,
-                        duration: 3,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <motion.div
-                        className="absolute inset-0 bg-white/30 rounded-full"
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      />
-                    </motion.div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <motion.div
       className="min-h-screen bg-white"
@@ -522,59 +210,6 @@ const ProfessionalDashboard: React.FC = () => {
               Manage your digital advertising campaigns with precision
             </p>
           </motion.div>
-
-          <div className="flex items-center space-x-4">
-            <motion.div
-              className="relative"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-            >
-              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search campaigns, screens..."
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 bg-white/70 backdrop-blur-sm transition-all duration-200"
-              />
-            </motion.div>
-
-            <motion.button
-              className="p-2 text-gray-400 hover:text-gray-600 relative transition-colors duration-200"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Bell className="w-5 h-5" />
-              <motion.span
-                className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </motion.button>
-
-            <motion.button
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Settings className="w-5 h-5" />
-            </motion.button>
-
-            <motion.button
-              onClick={handleCreateCampaign}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 flex items-center space-x-2 transition-all duration-200 shadow-lg"
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 10px 25px -3px rgba(0, 0, 0, 0.1)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Campaign</span>
-            </motion.button>
-          </div>
         </div>
       </motion.div>
 
@@ -587,8 +222,8 @@ const ProfessionalDashboard: React.FC = () => {
               className="grid grid-cols-1 md:grid-cols-3 gap-6"
               initial={{ opacity: 0, y: 50 }}
               animate={{
-                opacity: showMainContent ? 1 : 0,
-                y: showMainContent ? 0 : 50,
+                opacity: 1,
+                y: 0,
               }}
               transition={{ duration: 0.8, staggerChildren: 0.1 }}
             >
@@ -740,8 +375,8 @@ const ProfessionalDashboard: React.FC = () => {
                 className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
                 initial={{ opacity: 0, x: -50 }}
                 animate={{
-                  opacity: showMainContent ? 1 : 0,
-                  x: showMainContent ? 0 : -50,
+                  opacity: 1,
+                  x: 0,
                 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
               >
@@ -835,7 +470,6 @@ const ProfessionalDashboard: React.FC = () => {
                         strokeWidth={2}
                         fill="url(#clicksGradient)"
                         animationDuration={2000}
-                        animationDelay={500}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -847,8 +481,8 @@ const ProfessionalDashboard: React.FC = () => {
                 className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{
-                  opacity: showMainContent ? 1 : 0,
-                  x: showMainContent ? 0 : 50,
+                  opacity: 1,
+                  x: 0,
                 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
               >
@@ -900,7 +534,6 @@ const ProfessionalDashboard: React.FC = () => {
                         fill="#a855f7"
                         radius={[4, 4, 0, 0]}
                         animationDuration={2000}
-                        animationDelay={300}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -913,8 +546,8 @@ const ProfessionalDashboard: React.FC = () => {
               className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, y: 50 }}
               animate={{
-                opacity: showMainContent ? 1 : 0,
-                y: showMainContent ? 0 : 50,
+                opacity: 1,
+                y: 0,
               }}
               transition={{ delay: 0.8, duration: 0.8 }}
             >
@@ -983,8 +616,8 @@ const ProfessionalDashboard: React.FC = () => {
               className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, x: 50 }}
               animate={{
-                opacity: showMainContent ? 1 : 0,
-                x: showMainContent ? 0 : 50,
+                opacity: 1,
+                x: 0,
               }}
               transition={{ delay: 0.5, duration: 0.8 }}
             >
@@ -1026,8 +659,8 @@ const ProfessionalDashboard: React.FC = () => {
               className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, x: 50 }}
               animate={{
-                opacity: showMainContent ? 1 : 0,
-                x: showMainContent ? 0 : 50,
+                opacity: 1,
+                x: 0,
               }}
               transition={{ delay: 0.7, duration: 0.8 }}
             >
@@ -1080,8 +713,8 @@ const ProfessionalDashboard: React.FC = () => {
               className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, x: 50 }}
               animate={{
-                opacity: showMainContent ? 1 : 0,
-                x: showMainContent ? 0 : 50,
+                opacity: 1,
+                x: 0,
               }}
               transition={{ delay: 0.9, duration: 0.8 }}
             >

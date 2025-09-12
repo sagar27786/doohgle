@@ -80,7 +80,7 @@ interface RevenueAnalytics {
 }
 
 class AdminService {
-  private baseUrl = 'http://localhost:4001/api';
+  private baseUrl = 'https://doohgle-backend.onrender.com/api';
 
   private getAuthHeaders() {
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token');

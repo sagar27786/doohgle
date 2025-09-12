@@ -45,7 +45,7 @@ export interface CampaignBooking {
 }
 
 class BookingService {
-  private baseUrl = 'http://localhost:4001/api';
+  private baseUrl = 'https://doohgle-backend.onrender.com/api';
 
   // Get auth token
   private getAuthToken(): string | null {
