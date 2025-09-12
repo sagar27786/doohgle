@@ -2,39 +2,28 @@ import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapPin, Tv, Building2 } from "lucide-react";
+import { MapPin, Monitor, Tv, Building2 } from "lucide-react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-// Create custom billboard icon
-const createBillboardIcon = (color = "#3b82f6") => {
+// Create custom monitor icon
+const createMonitorIcon = (color = "#3b82f6") => {
   const iconHtml = renderToStaticMarkup(
     <div
       style={{
         backgroundColor: "white",
         borderRadius: "50%",
-        padding: "6px",
+        padding: "8px",
         border: `2px solid ${color}`,
         boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
       }}
     >
-      <img
-        src="/billboard.png"
-        alt="Billboard"
-        style={{
-          width: "24px",
-          height: "24px",
-          objectFit: "contain",
-        }}
-      />
+      <Monitor size={20} color={color} />
     </div>
   );
 
   return L.divIcon({
     html: iconHtml,
-    className: "custom-billboard-icon",
+    className: "custom-monitor-icon",
     iconSize: [36, 36],
     iconAnchor: [18, 18],
     popupAnchor: [0, -18],
@@ -45,13 +34,13 @@ const createBillboardIcon = (color = "#3b82f6") => {
 const getCustomIcon = (type: string) => {
   switch (type) {
     case "Billboard":
-      return createBillboardIcon("#3b82f6"); // blue
+      return createMonitorIcon("#3b82f6"); // blue
     case "Transit Display":
-      return createBillboardIcon("#16a34a"); // green
+      return createMonitorIcon("#16a34a"); // green
     case "Mall Screen":
-      return createBillboardIcon("#9333ea"); // purple
+      return createMonitorIcon("#9333ea"); // purple
     default:
-      return createBillboardIcon("#6b7280"); // gray
+      return createMonitorIcon("#6b7280"); // gray
   }
 };
 
@@ -384,7 +373,7 @@ const doohScreens = {
 const getScreenTypeIcon = (type: string) => {
   switch (type) {
     case "Billboard":
-      return <img src="/billboard.png" alt="Billboard" className="w-4 h-4" />;
+      return <Monitor className="w-4 h-4 text-blue-600" />;
     case "Transit Display":
       return <MapPin className="w-4 h-4 text-green-600" />;
     case "Mall Screen":

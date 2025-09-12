@@ -39,7 +39,7 @@ const MainHero = () => {
         </video>
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-70 z-0 dark:bg-opacity-70 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black bg-opacity-70 z-0 dark:bg-opacity-70 backdrop-blur-none" />
 
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-6xl mx-auto text-white dark:text-slate-200 px-2 sm:px-4">
