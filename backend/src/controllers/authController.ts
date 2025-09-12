@@ -5,6 +5,7 @@ import { pool } from '../db';
 import { User } from '../models/user';
 import { saveOTP, verifyOTP } from '../models/otp';
 import nodemailer from 'nodemailer';
+import { sendOTPSMS, formatPhoneNumber, isValidPhoneNumber } from '../services/smsService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -60,9 +61,57 @@ export async function sendOTP(req: Request, res: Response) {
 
       const otp = generateOTP();
       await saveOTP({ phone }, otp);
-      // TODO: integrate with SMS provider like Twilio. For now, log for dev.
-      console.log(`[DEV] SMS OTP to ${phone}: ${otp}`);
-      return res.status(200).json({ message: 'OTP sent via SMS' });
+      
+      // Check if SMS is enabled in environment
+      const smsEnabled = process.env.SMS_ENABLED !== 'false';
+      
+      if (smsEnabled) {
+        try {
+          // Format phone number to E.164 format
+          const countryCode = process.env.DEFAULT_COUNTRY_CODE || '+91';
+          const formattedPhone = formatPhoneNumber(phone, countryCode);
+          
+          // Validate phone number format
+          if (!isValidPhoneNumber(formattedPhone)) {
+            return res.status(400).json({ 
+              message: 'Invalid phone number format. Please provide a valid phone number.' 
+            });
+          }
+          
+          // Send OTP via AWS SNS
+          const smsResult = await sendOTPSMS(formattedPhone, otp);
+          
+          if (smsResult.success) {
+            console.log(`SMS OTP sent successfully to ${formattedPhone}. MessageId: ${smsResult.messageId}`);
+            return res.status(200).json({ 
+              message: 'OTP sent via SMS',
+              messageId: smsResult.messageId 
+            });
+          } else {
+            console.error(`Failed to send SMS OTP to ${formattedPhone}:`, smsResult.error);
+            // Fallback to console logging for development
+            console.log(`[FALLBACK] SMS OTP to ${phone}: ${otp}`);
+            return res.status(200).json({ 
+              message: 'OTP generated (SMS delivery failed, check logs)',
+              warning: 'SMS delivery failed, please contact support if you did not receive the OTP'
+            });
+          }
+        } catch (error) {
+          console.error('Error sending SMS OTP:', error);
+          // Fallback to console logging
+          console.log(`[FALLBACK] SMS OTP to ${phone}: ${otp}`);
+          return res.status(200).json({ 
+            message: 'OTP generated (SMS service error, check logs)',
+            warning: 'SMS service temporarily unavailable, please contact support'
+          });
+        }
+      } else {
+        // Development mode - log to console
+        console.log(`[DEV] SMS OTP to ${phone}: ${otp}`);
+        return res.status(200).json({ 
+          message: 'OTP sent via SMS (development mode - check console)' 
+        });
+      }
     }
 
     if (email) {
