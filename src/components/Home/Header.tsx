@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown, Monitor, Target, Sun, Moon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../../App"; // Assuming ThemeProvider is in App.jsx
+import { useTheme } from "../../contexts/ThemeContext";
 
 const Header = () => {
   const navigate = useNavigate();

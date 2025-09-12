@@ -88,7 +88,7 @@ export async function createCampaignRequest(
     const screenQuery = `
       SELECT s.*, u.id as venue_owner_id, u.name as venue_owner_name, u.email as venue_owner_email
       FROM screens s
-      JOIN users u ON s.user_id = u.id
+      JOIN users u ON s.owner_id = u.id
       WHERE s.id = $1 AND s.is_active = true
     `;
 

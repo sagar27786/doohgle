@@ -47,6 +47,14 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
 
+// Admin Components
+import AdminApp from "./components/Admin/AdminApp";
+
+// Map Components
+import MapTestPage from "./pages/MapTestPage";
+import ApiTestPage from "./pages/ApiTestPage";
+import SimpleApiTest from "./pages/SimpleApiTest";
+
 // ThemeProvider for dark mode
 import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
 
@@ -142,6 +150,7 @@ function AppContent() {
     "/venue-dashboard",
     "/products/ads-manager",
     "/products/ads-manager/dashboard",
+    "/admin",
   ];
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
 
@@ -192,8 +201,13 @@ function AppContent() {
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
-          {/* Debug Route */}
+          {/* Debug Routes */}
           <Route path="/debug/screens" element={<SimpleScreensTest />} />
+          <Route path="/test/map" element={<MapTestPage />} />
+          <Route path="/test/api" element={<ApiTestPage />} />
+          <Route path="/test/simple" element={<SimpleApiTest />} />
+          {/* Admin Route */}
+          <Route path="/admin" element={<AdminApp />} />
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />

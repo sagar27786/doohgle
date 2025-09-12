@@ -345,7 +345,7 @@ export async function getMyBookings(
       FROM bookings b
       JOIN screens s ON b.screen_id = s.id
       LEFT JOIN campaigns c ON b.campaign_id = c.id
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.owner_id = u.id
       WHERE b.advertiser_id = $1
     `;
 
@@ -557,7 +557,7 @@ async function getCompleteBookingData(bookingId: number): Promise<any> {
     FROM bookings b
     JOIN screens s ON b.screen_id = s.id
     LEFT JOIN campaigns c ON b.campaign_id = c.id
-    LEFT JOIN users u ON s.user_id = u.id
+    LEFT JOIN users u ON s.owner_id = u.id
     WHERE b.id = $1
   `;
 

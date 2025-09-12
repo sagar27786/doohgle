@@ -154,7 +154,7 @@ const VenueDashboard: React.FC = () => {
       formData.append(mediaType, file);
 
       const response = await fetch(
-        "http://localhost:4000/api/upload/screen-media",
+        "http://localhost:4001/api/upload/screen-media",
         {
           method: "POST",
           headers: {

@@ -99,7 +99,7 @@ export async function getMyScreens(
     const result = await pool.query(
       `SELECT s.*
        FROM screens s
-       WHERE s.user_id = $1
+       WHERE s.owner_id = $1
        ORDER BY s.created_at DESC`,
       [userId]
     );
@@ -123,16 +123,44 @@ export async function getMyScreens(
 export async function getAllScreens(req: Request, res: Response) {
   try {
     const {
-      city,        // Filter screens by city name
-      state,       // Filter screens by state
-      screen_type, // Filter by type of screen (e.g., LED, LCD)
-      min_footfall,// Minimum daily foot traffic requirement
-      max_budget,  // Maximum budget constraint for filtering screens
-      limit = "20",// Number of results to return, defaults to 20
+      city,
+      state,
+      screen_type,
+      min_footfall,
+      max_budget,
+      limit = "20",
     } = req.query;
 
     let query = `
       SELECT s.id, s.user_id, s.screen_name, s.location_in_venue, s.city, s.latitude, s.longitude, s.width_px, s.height_px, s.peak_viewing_hours, s.day_photo_url, s.night_photo_url, s.video_url, s.is_active, s.hourly_rate, s.daily_rate, s.weekly_rate, s.device_type, s.resolution, s.created_at
+      SELECT
+        s.id,
+        s.owner_id,
+        s.name,
+        'Premium advertising display' as description,
+        'LED Billboard' as screen_type,
+        s.location as location_name,
+        CONCAT(s.location, ', ', s.city) as address,
+        s.city,
+        'India' as state,
+        '000000' as pincode,
+        s.latitude,
+        s.longitude,
+        s.width_ft as screen_size_width,
+        s.height_ft as screen_size_height,
+        CASE WHEN s.resolution = '1080p' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE 1280 END as resolution_width,
+        CASE WHEN s.resolution = '1080p' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE 720 END as resolution_height,
+        s.daily_footfall,
+        s.vehicle_count,
+        s.peak_hours,
+        'Mixed demographics' as demographics,
+        s.cost_per_10_seconds,
+        s.image_url,
+        s.video_url,
+        s.is_active,
+        s.price_per_hour as hourly_rate,
+        s.price_per_day as daily_rate,
+        s.price_per_week as weekly_rate
       FROM screens s
       WHERE s.is_active = true
     `;
@@ -153,12 +181,13 @@ export async function getAllScreens(req: Request, res: Response) {
     }
 
     if (max_budget) {
-      query += ` AND s.daily_rate <= $${paramIndex}`;
+      query += ` AND s.price_per_day <= $${paramIndex}`;
       params.push(parseFloat(max_budget as string));
       paramIndex++;
     }
 
     query += ` ORDER BY s.city, s.daily_rate DESC, s.created_at DESC LIMIT $${paramIndex}`;
+    query += ` ORDER BY s.city, s.price_per_day DESC, s.created_at DESC LIMIT $${paramIndex}`;
     params.push(parseInt(limit as string));
 
     const result = await pool.query(query, params);
@@ -618,7 +647,9 @@ function extractS3KeyFromUrl(url: string): string | null {
 }
 
 // Given a DB field (which can be a key or URL), return a presigned URL if private, or the original if already public
-async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null> {
+async function getRenderableUrl(
+  urlOrKey?: string | null
+): Promise<string | null> {
   if (!urlOrKey) return null;
 
   // If it's a URL
@@ -638,7 +669,10 @@ async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null
 
 // Build assets array from the three columns in the screens table
 async function buildAssetsFromScreenRow(screen: any) {
-  const assets: { asset_type: "photo_day" | "photo_night" | "video"; url: string }[] = [];
+  const assets: {
+    asset_type: "photo_day" | "photo_night" | "video";
+    url: string;
+  }[] = [];
 
   const dayUrl = await getRenderableUrl(screen.day_photo_url);
   if (dayUrl) assets.push({ asset_type: "photo_day", url: dayUrl });

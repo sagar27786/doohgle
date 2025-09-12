@@ -110,7 +110,7 @@ export async function getVenueBookingRequests(req: Request & { user?: AuthUser }
                 br.creative_type
             FROM booking_requests br 
             JOIN screens s ON br.screen_id = s.id 
-            WHERE s.user_id = $1 
+            WHERE s.owner_id = $1 
             ORDER BY br.created_at DESC
         `, [req.user?.id]);
 
@@ -200,7 +200,7 @@ export async function getVenueBookingRequests(req: Request & { user?: AuthUser }
 export async function getVenueBookings(req: Request & { user?: AuthUser }, res: Response) {
     try {
         const result = await pool.query(
-            'SELECT b.*, s.screen_name FROM bookings b JOIN screens s ON b.screen_id = s.id WHERE s.user_id = $1 ORDER BY b.created_at DESC',
+            'SELECT b.*, s.screen_name FROM bookings b JOIN screens s ON b.screen_id = s.id WHERE s.owner_id = $1 ORDER BY b.created_at DESC',
             [req.user?.id]
         );
         res.status(200).json(result.rows);
@@ -224,7 +224,7 @@ export async function updateBookingRequestStatus(req: Request & { user?: AuthUse
     try {
         // Check if the venue owner owns the screen for this booking request
         const requestCheck = await pool.query(
-            'SELECT br.*, s.user_id FROM booking_requests br JOIN screens s ON br.screen_id = s.id WHERE br.id = $1',
+            'SELECT br.*, s.owner_id FROM booking_requests br JOIN screens s ON br.screen_id = s.id WHERE br.id = $1',
             [request_id]
         );
 
@@ -260,7 +260,7 @@ export async function updateBookingStatus(req: Request & { user?: AuthUser }, re
 
     try {
         const bookingCheck = await pool.query(
-            'SELECT s.user_id FROM bookings b JOIN screens s ON b.screen_id = s.id WHERE b.id = $1',
+            'SELECT s.owner_id FROM bookings b JOIN screens s ON b.screen_id = s.id WHERE b.id = $1',
             [booking_id]
         );
 
@@ -292,7 +292,7 @@ export async function addProofOfPlay(req: Request & { user?: AuthUser }, res: Re
 
     try {
         const bookingCheck = await pool.query(
-            'SELECT s.user_id FROM bookings b JOIN screens s ON b.screen_id = s.id WHERE b.id = $1',
+            'SELECT s.owner_id FROM bookings b JOIN screens s ON b.screen_id = s.id WHERE b.id = $1',
             [booking_id]
         );
 

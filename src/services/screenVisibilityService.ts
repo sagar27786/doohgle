@@ -1,6 +1,7 @@
 // Screen Visibility Service - Ensures screens are visible to advertisers
 import { ScreenSearchResult } from "../api/screens";
 import { searchScreensByCity, getMyScreens } from "../api/screens";
+import GoogleMapService from "./googleMapService";
 
 class ScreenVisibilityService {
   private static instance: ScreenVisibilityService;
@@ -120,35 +121,55 @@ class ScreenVisibilityService {
       });
 
       if (ok && data?.screens) {
-        // Transform user screens to match ScreenSearchResult format
-        const userScreens: ScreenSearchResult[] = data.screens.map(
-          (screen: any) => ({
+        // Transform user screens to match ScreenSearchResult format with geocoding
+        const userScreens: ScreenSearchResult[] = [];
+        const mapService = GoogleMapService.getInstance();
+        
+        for (const screen of data.screens) {
+          let lat = screen.latitude;
+          let lng = screen.longitude;
+          
+          // If coordinates are missing, try to geocode from address
+          const fullAddress = `${screen.location_in_venue}, ${screen.city || "Unknown City"}`;
+          if ((!lat || !lng || lat === 0 || lng === 0) && fullAddress) {
+            console.log(`Geocoding user screen address: ${fullAddress}`);
+            try {
+              const coords = await mapService.geocodeAddress(fullAddress);
+              if (coords) {
+                lat = coords.lat;
+                lng = coords.lng;
+                console.log(`Geocoded user screen coordinates: ${lat}, ${lng}`);
+              }
+            } catch (geocodeError) {
+              console.warn(`Failed to geocode user screen:`, geocodeError);
+            }
+          }
+          
+          userScreens.push({
             id: screen.id,
             name: screen.screen_name,
             description: "Your own screen available for advertising",
             screen_type: screen.device_type || "smart_tv",
             location_name: screen.location_in_venue,
-            address: `${screen.location_in_venue}, ${
-              screen.city || "Unknown City"
-            }`,
+            address: fullAddress,
             city: screen.city || "Unknown City",
             state: "India",
-            pincode: "000000",
-            latitude: screen.latitude,
-            longitude: screen.longitude,
+            pincode: screen.pincode || "000000",
+            latitude: lat,
+            longitude: lng,
             screen_size_width: screen.screen_size_inches || 55,
             screen_size_height: screen.screen_size_inches || 55,
-            resolution_width: 1920,
-            resolution_height: 1080,
-            daily_footfall: 5000, // Default estimate
-            vehicle_count: 2000, // Default estimate
+            resolution_width: screen.resolution_width || 1920,
+            resolution_height: screen.resolution_height || 1080,
+            daily_footfall: screen.daily_footfall || screen.estimated_daily_viewers || 1000,
+            vehicle_count: screen.vehicle_count || Math.floor((screen.daily_footfall || 1000) * 0.4),
             peak_hours: screen.peak_viewing_hours || [
               "09:00",
               "17:00",
               "19:00",
             ],
-            demographics: "Mixed demographics",
-            cost_per_10_seconds: 50, // Default cost
+            demographics: screen.target_demographics || "Mixed demographics",
+            cost_per_10_seconds: screen.cost_per_slot || screen.hourly_rate ? Math.floor((screen.hourly_rate || 100) / 360) : 50,
             // Use same image logic as Screen Manager
             image_url: (() => {
               // Check if we have uploaded images in image_urls (same logic as Screen Manager)
@@ -160,7 +181,7 @@ class ScreenVisibilityService {
                     const imageUrl = urls[0];
                     // Convert relative paths to full URLs
                     if (imageUrl.startsWith("/api/")) {
-                      return `http://localhost:4000${imageUrl}`;
+                      return `http://localhost:4001${imageUrl}`;
                     }
                     return imageUrl;
                   }
@@ -175,11 +196,9 @@ class ScreenVisibilityService {
               // Use only user-uploaded images, no fallback to random images
               return screen.day_photo_url || null;
             })(),
-            // Also pass through image_urls for consistency with search API results
-            image_urls: screen.image_urls,
             video_url: screen.promotional_video_url || null,
-          })
-        );
+          });
+        }
 
         this.userScreensCache = userScreens;
         this.lastUserScreensRefresh = now;
@@ -190,8 +209,7 @@ class ScreenVisibilityService {
         userScreens.forEach((screen) => {
           console.log(
             `   👤 ${screen.name} - ${screen.location_name} (Your Screen)`,
-            `Image: ${screen.image_url ? "HAS IMAGE" : "NO IMAGE"}`,
-            `Image URLs: ${screen.image_urls ? "HAS DATA" : "NO DATA"}`
+            `Image: ${screen.image_url ? "HAS IMAGE" : "NO IMAGE"}`
           );
         });
 

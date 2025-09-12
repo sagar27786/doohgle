@@ -149,27 +149,81 @@ export async function verifySignupOTP(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const { email, phone, password } = req.body as { email?: string; phone?: string; password: string };
-  if ((!email && !phone) || !password) {
-    return res.status(400).json({ message: 'Email or phone and password are required.' });
+  const { email, password } = req.body as { email: string; password: string };
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
   }
+
+  // Check for admin credentials first
+  if (email === 'admin@doohgle.com' && password === 'Admin@2025') {
+    const adminToken = jwt.sign(
+      { 
+        id: 999, 
+        email: 'admin@doohgle.com', 
+        username: 'admin',
+        roles: ['admin'] 
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    return res.status(200).json({
+      message: 'Admin login successful',
+      token: adminToken,
+      user: {
+        id: 999,
+        email: 'admin@doohgle.com',
+        username: 'admin',
+        roles: ['admin']
+      }
+    });
+  }
+
   try {
-    const result = email
-      ? await pool.query('SELECT * FROM users WHERE email = $1', [email])
-      : await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(401).json({ message: 'Invalid email or password.' });
     }
-    const user: any = result.rows[0];
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+
+    const user = result.rows[0];
+    
+    // Check if password exists (some users might not have set password yet)
+    if (!user.password_hash) {
+      return res.status(401).json({ message: 'Please complete your signup process first.' });
     }
-    const roles: string[] = user.role ? [user.role] : [];
-    const token = jwt.sign({ id: user.id, email: user.email, phone: user.phone, roles }, JWT_SECRET, { expiresIn: '1d' });
-    return res.json({ token, user: { id: user.id, email: user.email, phone: user.phone, roles } });
-  } catch (err) {
-    return res.status(500).json({ message: 'Server error', error: err });
+
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email, 
+        username: user.username,
+        roles: user.roles || [] 
+      },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        roles: user.roles || []
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 }
 

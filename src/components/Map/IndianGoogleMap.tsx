@@ -15,6 +15,8 @@ import GoogleMapService, {
   LocationDetails,
   LocationSuggestion,
 } from "../../services/googleMapService";
+import { screensService } from "../../services/screensService";
+import { ScreenSearchResult } from "../../api/screens";
 
 interface IndianGoogleMapProps {
   onLocationSelect?: (lat: number, lng: number, address?: string) => void;
@@ -39,6 +41,7 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
   zoom = 5,
   center,
 }) => {
+  console.log('🚀 IndianGoogleMap component rendered with props:', { showScreenLocations, height, zoom, center });
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -59,58 +62,145 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const mapService = GoogleMapService.getInstance();
+  const [screenLocations, setScreenLocations] = useState<ScreenMarker[]>([]);
+  const [filteredScreens, setFilteredScreens] = useState<ScreenMarker[]>([]);
+  const [screensLoading, setScreensLoading] = useState(false);
+  const [showScreenSuggestions, setShowScreenSuggestions] = useState(false);
 
-  // Sample screen locations in India
-  const screenLocations: ScreenMarker[] = [
-    {
-      id: 1,
-      name: "Delhi Mall Screen",
-      position: { lat: 28.6139, lng: 77.209 },
-      city: "New Delhi",
-      status: "active",
-    },
-    {
-      id: 2,
-      name: "Mumbai Billboard",
-      position: { lat: 19.076, lng: 72.8777 },
-      city: "Mumbai",
-      status: "active",
-    },
-    {
-      id: 3,
-      name: "Bangalore Metro Display",
-      position: { lat: 12.9716, lng: 77.5946 },
-      city: "Bengaluru",
-      status: "active",
-    },
-    {
-      id: 4,
-      name: "Chennai Bus Stand",
-      position: { lat: 13.0827, lng: 80.2707 },
-      city: "Chennai",
-      status: "inactive",
-    },
-    {
-      id: 5,
-      name: "Kolkata Market",
-      position: { lat: 22.5726, lng: 88.3639 },
-      city: "Kolkata",
-      status: "maintenance",
-    },
-  ];
+  // Load screens from backend (kept for reference but replaced by inline function)
+  const loadScreens = async () => {
+    try {
+      setScreensLoading(true);
+      const screens = await screensService.getAllScreens();
+      
+      const transformedScreens: ScreenMarker[] = screens
+        .filter(screen => screen.latitude && screen.longitude)
+        .map((screen: ScreenSearchResult) => {
+          const lat = parseFloat(screen.latitude!.toString());
+          const lng = parseFloat(screen.longitude!.toString());
+          return {
+             id: screen.id,
+             name: screen.name,
+             position: { lat, lng },
+             city: screen.city,
+             status: (screen.is_active ? "active" : "inactive") as "active" | "inactive" | "maintenance"
+           };
+        })
+        .filter(screen => !isNaN(screen.position.lat) && !isNaN(screen.position.lng));
+      
+      setScreenLocations(transformedScreens);
+    } catch (error) {
+      console.error('Failed to load screens:', error);
+    } finally {
+      setScreensLoading(false);
+    }
+  };
+
+  // Load screens on component mount
+  useEffect(() => {
+    const loadScreensWithTest = async () => {
+      try {
+        console.log('🔄 Starting to load screens...');
+        setScreensLoading(true);
+        
+        // Add test data first to verify markers work
+        const testScreens: ScreenMarker[] = [
+          {
+            id: 999,
+            name: "Test Screen Delhi",
+            position: { lat: 28.6139, lng: 77.2090 },
+            city: "Delhi",
+            status: "active"
+          },
+          {
+            id: 998,
+            name: "Test Screen Mumbai",
+            position: { lat: 19.0760, lng: 72.8777 },
+            city: "Mumbai",
+            status: "active"
+          }
+        ];
+        console.log('📍 Test screens prepared:', testScreens.length);
+        
+        try {
+          const screens = await screensService.getAllScreens();
+          
+          const transformedScreens: ScreenMarker[] = screens
+            .filter(screen => screen.latitude && screen.longitude)
+            .map((screen: ScreenSearchResult) => {
+              const lat = parseFloat(screen.latitude!.toString());
+              const lng = parseFloat(screen.longitude!.toString());
+              return {
+                 id: screen.id,
+                 name: screen.name,
+                 position: { lat, lng },
+                 city: screen.city,
+                 status: (screen.is_active ? "active" : "inactive") as "active" | "inactive" | "maintenance"
+               };
+            })
+            .filter(screen => !isNaN(screen.position.lat) && !isNaN(screen.position.lng));
+          
+          // Combine test screens with real screens
+          setScreenLocations([...testScreens, ...transformedScreens]);
+        } catch (apiError) {
+          console.error('Failed to load screens from API:', apiError);
+          // If API fails, at least show test screens
+          setScreenLocations(testScreens);
+        }
+      } catch (error) {
+        console.error('Failed to load screens:', error);
+      } finally {
+        setScreensLoading(false);
+      }
+    };
+
+    loadScreensWithTest();
+  }, []);
+
+  // Add screen markers when screen data is loaded
+  useEffect(() => {
+    if (mapInstance.current && screenLocations.length > 0 && showScreenLocations && (window as any).google?.maps) {
+      // Clear existing screen markers
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current = [];
+      
+      // Add new screen markers
+      addScreenMarkers(mapInstance.current);
+      
+      // Show marker count indicator
+      const markerCountDiv = document.createElement('div');
+      markerCountDiv.innerHTML = `📍 ${screenLocations.length} screen markers added`;
+      markerCountDiv.style.cssText = 'position: fixed; top: 10px; left: 10px; background: blue; color: white; padding: 8px; border-radius: 4px; z-index: 9999; font-size: 12px;';
+      document.body.appendChild(markerCountDiv);
+      setTimeout(() => {
+        if (document.body.contains(markerCountDiv)) {
+          document.body.removeChild(markerCountDiv);
+        }
+      }, 3000);
+    }
+  }, [screenLocations, showScreenLocations]);
 
   // Initialize Google Map
   useEffect(() => {
     const initializeMap = async () => {
-      if (!mapRef.current) return;
+      console.log('🗺️ Starting map initialization...');
+      if (!mapRef.current) {
+        console.log('❌ Map ref not available');
+        return;
+      }
 
       try {
+        console.log('⏳ Loading Google Maps API...');
         setIsLoading(true);
+        const mapService = GoogleMapService.getInstance();
         await mapService.loadGoogleMapsAPI();
+        console.log('✅ Google Maps API loaded successfully');
 
         const mapCenter = center || mapService.getIndiaCenter();
+        console.log('🎯 Map center:', mapCenter);
 
         // Create map
+        console.log('🏗️ Creating Google Map instance...');
         const map = new (window as any).google.maps.Map(mapRef.current, {
           center: mapCenter,
           zoom: zoom,
@@ -130,6 +220,7 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
         });
 
         mapInstance.current = map;
+        console.log('✅ Map instance created and stored');
 
         // Add enhanced click listener for location details
         map.addListener("click", async (event: any) => {
@@ -155,9 +246,12 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
           }
         });
 
-        // Add screen location markers
-        if (showScreenLocations) {
+        // Add screen markers if data is already loaded
+        if (screenLocations.length > 0 && showScreenLocations) {
+          console.log('📍 Adding screen markers to map, count:', screenLocations.length);
           addScreenMarkers(map);
+        } else {
+          console.log('⚠️ No screen markers to add:', { screenCount: screenLocations.length, showScreens: showScreenLocations });
         }
 
         setError(null);
@@ -180,9 +274,17 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
     };
   }, [center, zoom, onLocationSelect, showScreenLocations]);
 
-  // Add screen markers to map
+  // Add screen markers to the map
   const addScreenMarkers = (map: any) => {
-    screenLocations.forEach((screen) => {
+    console.log('🎯 addScreenMarkers called with:', { mapExists: !!map, screenCount: screenLocations.length });
+    if (!(window as any).google?.maps) {
+      console.log('❌ Google Maps API not available');
+      return;
+    }
+    console.log('✅ Google Maps API available, adding markers...');
+    
+    screenLocations.forEach((screen, index) => {
+      console.log(`📍 Adding marker ${index + 1}/${screenLocations.length}:`, screen.name, screen.position);
       const markerColor =
         screen.status === "active"
           ? "#22c55e"
@@ -195,12 +297,14 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
         map: map,
         title: `${screen.name} - ${screen.city}`,
         icon: {
-          path: (window as any).google.maps.SymbolPath.CIRCLE,
-          fillColor: markerColor,
-          fillOpacity: 1,
-          scale: 8,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+            <svg width="24" height="16" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0" y="0" width="24" height="16" fill="${markerColor}" stroke="white" stroke-width="2" rx="2"/>
+              <text x="12" y="10" text-anchor="middle" fill="white" font-size="8" font-family="Arial">TV</text>
+            </svg>
+          `)}`,
+          scaledSize: new (window as any).google.maps.Size(24, 16),
+          anchor: new (window as any).google.maps.Point(12, 8),
         },
       });
 
@@ -267,12 +371,53 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
     }
   };
 
+  // Search screens based on query
+  const searchScreens = (query: string) => {
+    if (query.length < 2) {
+      setFilteredScreens([]);
+      setShowScreenSuggestions(false);
+      return;
+    }
+
+    const filtered = screenLocations.filter(screen => 
+      screen.name.toLowerCase().includes(query.toLowerCase()) ||
+      screen.city.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    setFilteredScreens(filtered.slice(0, 5)); // Limit to 5 suggestions
+    setShowScreenSuggestions(filtered.length > 0);
+  };
+
+  // Handle screen selection from search
+  const selectScreen = (screen: ScreenMarker) => {
+    if (mapInstance.current) {
+      mapInstance.current.setCenter(screen.position);
+      mapInstance.current.setZoom(15);
+      
+      // Find and trigger click on the screen marker
+      const marker = markersRef.current.find(m => 
+        m.getTitle() === `${screen.name} - ${screen.city}`
+      );
+      if (marker) {
+        new (window as any).google.maps.event.trigger(marker, 'click');
+      }
+    }
+    
+    setSearchQuery('');
+    setSuggestions([]);
+    setFilteredScreens([]);
+    setShowScreenSuggestions(false);
+  };
+
   // Get location suggestions as user types
   const getSuggestionsAsUserTypes = async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
       return;
     }
+
+    // Also search screens
+    searchScreens(query);
 
     try {
       const suggestions = await mapService.getLocationSuggestions(query);
@@ -433,40 +578,90 @@ const IndianGoogleMap: React.FC<IndianGoogleMapProps> = ({
             }}
             onBlur={() => {
               // Clear suggestions after a delay to allow clicks on suggestions
-              setTimeout(() => setSuggestions([]), 200);
+              setTimeout(() => {
+                setSuggestions([]);
+                setFilteredScreens([]);
+                setShowScreenSuggestions(false);
+              }, 200);
             }}
-            placeholder="Search Indian cities, landmarks..."
+            placeholder="Search cities, landmarks, or screens..."
             className="w-full pl-10 pr-4 py-2 bg-white rounded-lg shadow-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
           />
 
           {/* Search Suggestions Dropdown */}
-          {suggestions.length > 0 && searchQuery.length > 2 && (
+          {(suggestions.length > 0 || showScreenSuggestions) && searchQuery.length > 2 && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-48 overflow-y-auto z-20"
+              className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto z-20"
             >
-              {suggestions.map((suggestion, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => {
-                    setSearchQuery(suggestion.description);
-                    setSuggestions([]);
-                    searchLocation();
-                  }}
-                  className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                >
-                  <div className="font-medium text-sm text-gray-900">
-                    {suggestion.mainText}
+              {/* Screen Suggestions */}
+              {showScreenSuggestions && filteredScreens.length > 0 && (
+                <>
+                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                    📺 Screens
                   </div>
-                  <div className="text-xs text-gray-600">
-                    {suggestion.secondaryText}
-                  </div>
-                </motion.div>
-              ))}
+                  {filteredScreens.map((screen, index) => (
+                    <motion.div
+                      key={`screen-${screen.id}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => selectScreen(screen)}
+                      className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-sm text-gray-900">
+                            {screen.name}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            📍 {screen.city}
+                          </div>
+                        </div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          screen.status === 'active' ? 'bg-green-500' : 
+                          screen.status === 'inactive' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`}></div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </>
+              )}
+              
+              {/* Location Suggestions */}
+              {suggestions.length > 0 && (
+                <>
+                  {showScreenSuggestions && filteredScreens.length > 0 && (
+                    <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                      📍 Locations
+                    </div>
+                  )}
+                  {suggestions.map((suggestion, index) => (
+                    <motion.div
+                      key={`location-${index}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (filteredScreens.length + index) * 0.05 }}
+                      onClick={() => {
+                        setSearchQuery(suggestion.description);
+                        setSuggestions([]);
+                        setFilteredScreens([]);
+                        setShowScreenSuggestions(false);
+                        searchLocation();
+                      }}
+                      className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                    >
+                      <div className="font-medium text-sm text-gray-900">
+                        {suggestion.mainText}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {suggestion.secondaryText}
+                      </div>
+                    </motion.div>
+                  ))}
+                </>
+              )}
             </motion.div>
           )}
         </motion.div>

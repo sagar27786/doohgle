@@ -28,7 +28,6 @@
     "axios": "^1.11.0",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
-    "emailjs": "^4.0.3",
     "framer-motion": "^12.23.12",
     "joi": "^18.0.1",
     "leaflet": "^1.9.4",

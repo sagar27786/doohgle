@@ -12,10 +12,15 @@ import {
   TrendingUp,
   Activity,
   Target,
+  Monitor,
+  Zap,
+  DollarSign,
 } from "lucide-react";
 import IndianGoogleMap from "./IndianGoogleMap";
 import MapNavigation from "../Navigation/MapNavigation";
+import EnhancedMapDashboard from "./EnhancedMapDashboard";
 import { LocationDetails } from "../../services/googleMapService";
+import { ScreenSearchResult } from "../../api/screens";
 
 interface DashboardMapProps {
   className?: string;
@@ -60,6 +65,8 @@ const DashboardMap: React.FC<DashboardMapProps> = ({
   const [selectedLocation, setSelectedLocation] =
     useState<LocationDetails | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedScreen, setSelectedScreen] = useState<ScreenSearchResult | null>(null);
+  const [useEnhancedMap, setUseEnhancedMap] = useState(true);
   const [mapFilters, setMapFilters] = useState<MapFilter[]>([
     {
       id: "active",
@@ -233,6 +240,18 @@ const DashboardMap: React.FC<DashboardMapProps> = ({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setUseEnhancedMap(!useEnhancedMap)}
+                className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${
+                  useEnhancedMap ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+                }`}
+                title={`Switch to ${useEnhancedMap ? 'basic' : 'enhanced'} map`}
+              >
+                <Monitor className="w-4 h-4" />
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setIsFullscreen(!isFullscreen)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
@@ -292,18 +311,27 @@ const DashboardMap: React.FC<DashboardMapProps> = ({
 
         {/* Map Component */}
         <div className="pt-24">
-          <IndianGoogleMap
-            onLocationSelect={handleLocationSelect}
-            showScreenLocations={true}
-            height={isFullscreen ? "calc(100vh - 96px)" : "calc(600px - 96px)"}
-            zoom={initialZoom}
-            center={getMapCenter()}
-          />
+          {useEnhancedMap ? (
+            <EnhancedMapDashboard
+              className="h-full"
+              height={isFullscreen ? "calc(100vh - 96px)" : "calc(600px - 96px)"}
+              showControls={true}
+              onScreenSelect={setSelectedScreen}
+            />
+          ) : (
+            <IndianGoogleMap
+              onLocationSelect={handleLocationSelect}
+              showScreenLocations={true}
+              height={isFullscreen ? "calc(100vh - 96px)" : "calc(600px - 96px)"}
+              zoom={initialZoom}
+              center={getMapCenter()}
+            />
+          )}
         </div>
 
-        {/* Location Details Overlay */}
+        {/* Selected Screen/Location Details Overlay */}
         <AnimatePresence>
-          {selectedLocation && (
+          {(selectedScreen || selectedLocation) && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -312,10 +340,13 @@ const DashboardMap: React.FC<DashboardMapProps> = ({
             >
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-bold text-lg text-gray-900">
-                  Location Details
+                  {selectedScreen ? 'Screen Details' : 'Location Details'}
                 </h3>
                 <button
-                  onClick={() => setSelectedLocation(null)}
+                  onClick={() => {
+                    setSelectedScreen(null);
+                    setSelectedLocation(null);
+                  }}
                   className="p-1 hover:bg-gray-100 rounded-full"
                 >
                   ✕
@@ -323,29 +354,71 @@ const DashboardMap: React.FC<DashboardMapProps> = ({
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <span className="text-sm text-gray-500">Coordinates:</span>
-                  <div className="text-sm font-mono">
-                    {selectedLocation.coordinates.lat.toFixed(6)},{" "}
-                    {selectedLocation.coordinates.lng.toFixed(6)}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-sm text-gray-500">Address:</span>
-                  <div className="text-sm">
-                    {selectedLocation.formattedAddress}
-                  </div>
-                </div>
-
-                {selectedLocation.locationContext.nearestCity && (
-                  <div>
-                    <span className="text-sm text-gray-500">Nearest City:</span>
-                    <div className="text-sm">
-                      {selectedLocation.locationContext.nearestCity.name},{" "}
-                      {selectedLocation.locationContext.nearestCity.state}
+                {selectedScreen ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                       <div className={`w-3 h-3 rounded-full ${
+                         selectedScreen.status === 'active' ? 'bg-green-500' :
+                         selectedScreen.status === 'maintenance' ? 'bg-yellow-500' : 'bg-red-500'
+                       }`}></div>
+                       <span className="font-semibold">{selectedScreen.name}</span>
+                     </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Address:</span>
+                      <div className="text-sm">{selectedScreen.address}</div>
                     </div>
-                  </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        <div>
+                          <span className="text-gray-500 block">Daily Footfall</span>
+                          <div className="font-medium text-blue-600">
+                            {selectedScreen.daily_footfall?.toLocaleString() || 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-green-500" />
+                        <div>
+                          <span className="text-gray-500 block">Cost/10s</span>
+                          <div className="font-medium text-green-600">
+                            ₹{selectedScreen.cost_per_10_seconds || 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                     {selectedLocation && (
+                       <>
+                         <div>
+                           <span className="text-sm text-gray-500">Coordinates:</span>
+                           <div className="text-sm font-mono">
+                             {selectedLocation.coordinates.lat.toFixed(6)},{" "}
+                             {selectedLocation.coordinates.lng.toFixed(6)}
+                           </div>
+                         </div>
+
+                         <div>
+                           <span className="text-sm text-gray-500">Address:</span>
+                           <div className="text-sm">
+                             {selectedLocation.formattedAddress}
+                           </div>
+                         </div>
+
+                         {selectedLocation.locationContext.nearestCity && (
+                           <div>
+                             <span className="text-sm text-gray-500">Nearest City:</span>
+                             <div className="text-sm">
+                               {selectedLocation.locationContext.nearestCity.name},{" "}
+                               {selectedLocation.locationContext.nearestCity.state}
+                             </div>
+                           </div>
+                         )}
+                       </>
+                     )}
+                   </>
                 )}
               </div>
             </motion.div>

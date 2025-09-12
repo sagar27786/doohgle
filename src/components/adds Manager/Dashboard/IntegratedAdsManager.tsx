@@ -68,7 +68,8 @@ import ScreenManager from "./ScreenManager";
 // New Enhanced Components
 import CampaignManagement from "../../Campaign/CampaignManagement";
 import ReportsAnalytics from "../../Reports/ReportsAnalytics";
-import IndiaMapDashboard from "../../Map/IndiaMapDashboard";
+import EnhancedMapDashboard from "../../Map/EnhancedMapDashboard";
+import SimpleMapTest from "../../Map/SimpleMapTest";
 import MyCampaignRequests from "../../Campaign/MyCampaignRequestsFixed";
 import MyBookings from "../../Campaign/MyBookings";
 import NotificationPanel from "../../Campaign/NotificationPanel";
@@ -100,12 +101,14 @@ const IntegratedAdsManager: React.FC = () => {
     { id: "screens", label: "Screens", icon: Monitor },
     { id: "reports", label: "Reports & Analytics", icon: FileText },
     { id: "settings", label: "Settings", icon: Settings },
-  ];  const renderCurrentView = () => {
+  ];
+
+  const renderCurrentView = () => {
     switch (currentView) {
       case "dashboard":
         return <ProfessionalDashboard />;
       case "maps":
-        return <IndiaMapDashboard />;
+        return <EnhancedMapDashboard height="calc(100vh - 200px)" />;
       // AWS tabs removed
       case "campaignManagement":
         return <CampaignManagement />;

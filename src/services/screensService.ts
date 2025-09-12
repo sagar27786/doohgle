@@ -14,6 +14,16 @@ export const screensService = {
     return data;
   },
 
+  async getAllScreens() {
+    const data = await screensApi.getAllScreens();
+    return data;
+  },
+
+  async searchScreensByCity(city: string) {
+    const data = await screensApi.searchScreensByCity(city);
+    return data;
+  },
+
   async getScreenById(id: string) {
     const data = await screensApi.getScreenById(id);
     return data;

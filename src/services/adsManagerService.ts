@@ -1,7 +1,7 @@
 // API Service for Ads Manager - Backend Integration
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:4000/api";
+const API_BASE_URL = "http://localhost:4001/api";
 
 // Create axios instance with default config
 const api = axios.create({
@@ -14,7 +14,7 @@ const api = axios.create({
 // Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("authToken");
-  if (token) {
+  if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -173,7 +173,7 @@ class AdsManagerAPI {
     timeSlots: string[];
   }): Promise<BudgetEstimate> {
     const response = await api.post("/campaigns/estimate-budget", data);
-    return response.data.data;
+    return (response.data as any).data;
   }
 
   // 🎯 CAMPAIGN MANAGEMENT
@@ -233,7 +233,7 @@ class AdsManagerAPI {
     const response = await api.get(`/campaigns/${campaignId}/analytics`, {
       params: { days },
     });
-    return response.data.data;
+    return (response.data as any).data;
   }
 
   async getProofOfPlay(campaignId: number) {
