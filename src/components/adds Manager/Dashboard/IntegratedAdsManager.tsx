@@ -3,12 +3,10 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
-  TrendingUp,
   Users,
   MapPin,
   Calendar,
   Settings,
-  Bell,
   Search,
   Plus,
   Eye,
@@ -62,17 +60,13 @@ import {
 import ProfessionalDashboard from "./ProfessionalDashboard";
 
 // Existing Components
-import CampaignManager from "./CampaignManager";
 import ScreenManager from "./ScreenManager";
 
 // New Enhanced Components
 import CampaignManagement from "../../Campaign/CampaignManagement";
 import ReportsAnalytics from "../../Reports/ReportsAnalytics";
 import EnhancedMapDashboard from "../../Map/EnhancedMapDashboard";
-import SimpleMapTest from "../../Map/SimpleMapTest";
-import MyCampaignRequests from "../../Campaign/MyCampaignRequestsFixed";
 import MyBookings from "../../Campaign/MyBookings";
-import NotificationPanel from "../../Campaign/NotificationPanel";
 
 // AWS Enhanced Components removed
 // LocationManager import removed
@@ -96,8 +90,6 @@ const IntegratedAdsManager: React.FC = () => {
     { id: "maps", label: "Maps", icon: MapPin },
     { id: "campaignManagement", label: "Campaign Management", icon: Target },
     { id: "myBookings", label: "My Bookings", icon: Calendar },
-    { id: "campaignRequests", label: "My Campaign Requests", icon: Bell },
-    { id: "campaigns", label: "Campaigns", icon: TrendingUp },
     { id: "screens", label: "Screens", icon: Monitor },
     { id: "reports", label: "Reports & Analytics", icon: FileText },
     { id: "settings", label: "Settings", icon: Settings },
@@ -109,15 +101,10 @@ const IntegratedAdsManager: React.FC = () => {
         return <ProfessionalDashboard />;
       case "maps":
         return <EnhancedMapDashboard height="calc(100vh - 200px)" />;
-      // AWS tabs removed
       case "campaignManagement":
         return <CampaignManagement />;
       case "myBookings":
         return <MyBookings />;
-      case "campaignRequests":
-        return <MyCampaignRequests />;
-      case "campaigns":
-        return <CampaignManager />;
       case "screens":
         return <ScreenManager />;
       case "reports":

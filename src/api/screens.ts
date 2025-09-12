@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
 export interface ScreenAsset {
   asset_type: 'photo_day' | 'photo_night' | 'video';
   url: string;
@@ -76,7 +78,7 @@ export async function createScreen(payload: ScreenPayload) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const res = await fetch('http://localhost:4001/api/screens', {
+    const res = await fetch(`${API_BASE_URL}/screens`, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
@@ -95,7 +97,7 @@ export async function getMyScreens() {
   }
 
   try {
-    const response = await fetch('http://localhost:4001/api/screens/mine', {
+    const response = await fetch(`${API_BASE_URL}/screens/mine`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -120,7 +122,7 @@ export async function getScreenById(id: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:4001/api/screens/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/screens/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -140,7 +142,7 @@ export async function getScreenById(id: string) {
 
 export async function getAllScreens(): Promise<ScreenSearchResult[]> {
   try {
-    const response = await fetch('http://localhost:4001/api/screens');
+    const response = await fetch(`${API_BASE_URL}/screens`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch screens: ${response.statusText}`);
@@ -162,7 +164,7 @@ export async function getAllScreens(): Promise<ScreenSearchResult[]> {
 
 export async function searchScreensByCity(city: string): Promise<ScreenSearchResult[]> {
   try {
-    const response = await fetch(`http://localhost:4001/api/screens/search?city=${encodeURIComponent(city)}`);
+    const response = await fetch(`${API_BASE_URL}/screens/search?city=${encodeURIComponent(city)}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch screens: ${response.statusText}`);

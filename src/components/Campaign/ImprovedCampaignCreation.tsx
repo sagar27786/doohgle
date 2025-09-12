@@ -18,6 +18,9 @@ import {
   Eye
 } from 'lucide-react';
 
+// API base URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
 interface Screen {
   id: number;
   user_id?: number;
@@ -74,7 +77,7 @@ const ImprovedCampaignCreation: React.FC = () => {
       setError(null);
       console.log('Fetching all screens from API...');
       
-      const response = await fetch('http://localhost:4001/api/screens');
+      const response = await fetch(`${API_BASE_URL}/screens`);
       console.log('API Response status:', response.status, response.ok);
       
       if (!response.ok) {
@@ -205,7 +208,7 @@ const ImprovedCampaignCreation: React.FC = () => {
       
       // Try to send to backend
       try {
-        const response = await fetch('http://localhost:4001/api/bookings/request', {
+        const response = await fetch(`${API_BASE_URL}/bookings/request`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: doohgle-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: doohgle
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AWS_ACCESS_KEY_ID
+        value: AKIA46HVBEZPIIHK62PE
+      - key: AWS_SECRET_ACCESS_KEY
+        value: 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
+      - key: AWS_REGION
+        value: ap-southeast-2
+      - key: S3_BUCKET_NAME
+        value: doohgle
+      - key: EMAIL_USER
+        value: devlop8324@gmail.com
+      - key: EMAIL_PASS
+        value: Sada@8324
+      - key: EMAIL_TLS_INSECURE
+        value: true
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+
+databases:
+  - name: doohgle
+    databaseName: doohgle
+    user: doohgle_user
+    region: oregon
+    plan: starter

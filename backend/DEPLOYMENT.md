@@ -10,6 +10,22 @@ This guide will help you deploy the Doohgle backend to Render.com.
 - [x] Render account (free tier available)
 - [x] PostgreSQL database on Render (already configured)
 
+### Repository Structure
+
+Your repository has the following structure:
+```
+doohgle/
+├── frontend/          # React frontend (separate deployment)
+├── backend/           # Node.js backend (this deployment)
+│   ├── src/
+│   ├── package.json
+│   └── ...
+├── .env
+└── ...
+```
+
+**Important:** Set the **Root Directory** to `backend` in Render since you're only deploying the backend service.
+
 ### Deployment Steps
 
 #### 1. Prepare Your Repository
@@ -18,7 +34,7 @@ Make sure your code is pushed to GitHub:
 ```bash
 git add .
 git commit -m "Prepare for Render deployment"
-git push origin main
+git push origin merged
 ```
 
 #### 2. Create Web Service on Render
@@ -33,7 +49,7 @@ git push origin main
 **Basic Settings:**
 - **Name**: `doohgle-backend`
 - **Region**: `Oregon (US West)`
-- **Branch**: `main`
+- **Branch**: `merged`
 - **Root Directory**: `backend`
 
 **Build & Deploy:**
@@ -60,8 +76,35 @@ Add these environment variables in Render:
 
 #### 5. Advanced Settings
 
+**Health Check:**
 - **Health Check Path**: `/api/health`
-- **Auto-Deploy**: `Yes`
+- **Health Check Grace Period**: `60` seconds
+
+**Deployment:**
+- **Auto-Deploy**: `Yes` (Deploy on every push to `merged` branch)
+- **Pull Request Previews**: `No` (Optional - enable if you want preview deployments)
+
+**Runtime:**
+- **Node Version**: `18` (or latest LTS)
+- **Build Filter**: Leave empty (builds on every commit)
+
+**Networking:**
+- **Custom Domain**: Leave empty (use default .onrender.com domain)
+- **Redirects/Rewrites**: Leave empty
+
+**Performance:**
+- **Instance Type**: `Starter` (free tier) or `Standard` (paid)
+- **Scaling**: `1` instance (free tier limit)
+
+**Security:**
+- **Branch Protection**: Enable if you want to restrict deployments
+- **Environment Variables**: Already configured in step 4
+
+**Important Notes for Advanced Settings:**
+- **Health Check Path**: Render will ping `/api/health` to verify your service is running
+- **Grace Period**: Time to wait before marking service as unhealthy
+- **Auto-Deploy**: Automatically deploys when you push to the `merged` branch
+- **Node Version**: Use Node 18+ for best compatibility with your TypeScript setup
 
 #### 6. Deploy
 
@@ -134,7 +177,7 @@ curl https://doohgle-backend.onrender.com/api/campaigns
 
 ### 🔄 Continuous Deployment
 
-Once set up, any push to your main branch will automatically trigger a new deployment.
+Once set up, any push to your merged branch will automatically trigger a new deployment.
 
 For manual deployment:
 1. Push changes to GitHub
