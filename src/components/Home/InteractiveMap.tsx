@@ -3,75 +3,48 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MapPin, Tv, Building2 } from "lucide-react";
-import { renderToStaticMarkup } from "react-dom/server";
 
-// Create custom billboard icon
-const createBillboardIcon = (color = "#3b82f6") => {
-  const iconHtml = renderToStaticMarkup(
-    <div
-      style={{
-        backgroundColor: "white",
-        borderRadius: "50%",
-        padding: "6px",
-        border: `2px solid ${color}`,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <img
-        src="/billboard.png"
-        alt="Billboard"
-        style={{
-          width: "24px",
-          height: "24px",
-          objectFit: "contain",
-        }}
-      />
-    </div>
-  );
+// Define the custom pinpoint icon using your image
+const customMarkerIcon = L.icon({
+  iconUrl: "/billboard.png", // The image for the pinpoint marker
+  iconSize: [40, 40], // A decent size to be clearly visible
+  iconAnchor: [20, 40], // Anchors the tip of the pin to the geographical point
+  popupAnchor: [0, -40], // Positions the popup directly above the pin
+});
 
-  return L.divIcon({
-    html: iconHtml,
-    className: "custom-billboard-icon",
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
-  });
+// The getCustomIcon function now simply returns the single, predefined icon for all marker types.
+const getCustomIcon = (type: string) => {
+  return customMarkerIcon;
 };
 
-// Get custom icon based on screen type
-const getCustomIcon = (type: string) => {
+// Get icon for screen type (for popup display) - NO CHANGES HERE
+const getScreenTypeIcon = (type: string) => {
   switch (type) {
     case "Billboard":
-      return createBillboardIcon("#3b82f6"); // blue
+      return <img src="/billboard.png" alt="Billboard" className="w-4 h-4" />;
     case "Transit Display":
-      return createBillboardIcon("#16a34a"); // green
+      return <MapPin className="w-4 h-4 text-green-600" />;
     case "Mall Screen":
-      return createBillboardIcon("#9333ea"); // purple
+      return <Building2 className="w-4 h-4 text-purple-600" />;
     default:
-      return createBillboardIcon("#6b7280"); // gray
+      return <Tv className="w-4 h-4 text-gray-600" />;
   }
 };
 
 // Country data with coordinates
-const countries = [
-  { name: "India", code: "IN", lat: 20.5937, lng: 78.9629, zoom: 5 },
-  { name: "United States", code: "US", lat: 39.8283, lng: -98.5795, zoom: 4 },
-  { name: "United Kingdom", code: "UK", lat: 55.3781, lng: -3.436, zoom: 6 },
-  { name: "Germany", code: "DE", lat: 51.1657, lng: 10.4515, zoom: 6 },
-  { name: "Japan", code: "JP", lat: 36.2048, lng: 138.2529, zoom: 6 },
-  { name: "Australia", code: "AU", lat: -25.2744, lng: 133.7751, zoom: 4 },
-  { name: "France", code: "FR", lat: 46.2276, lng: 2.2137, zoom: 6 },
-  { name: "Canada", code: "CA", lat: 56.1304, lng: -106.3468, zoom: 4 },
-  { name: "Brazil", code: "BR", lat: -14.235, lng: -51.9253, zoom: 4 },
-  { name: "China", code: "CN", lat: 35.8617, lng: 104.1954, zoom: 4 },
+const cities = [
+  { name: "India", code: "IND", lat: 22.9734, lng: 78.6569, zoom: 5 },
+  { name: "Delhi", code: "DEL", lat: 28.7041, lng: 77.1025, zoom: 11 },
+  { name: "Mumbai", code: "MUM", lat: 19.076, lng: 72.8777, zoom: 11 },
+  { name: "Bengaluru", code: "BLR", lat: 12.9716, lng: 77.5946, zoom: 11 },
+  { name: "Chennai", code: "CHE", lat: 13.0827, lng: 80.2707, zoom: 11 },
+  { name: "Kolkata", code: "KOL", lat: 22.5726, lng: 88.3639, zoom: 11 },
+  { name: "Hyderabad", code: "HYD", lat: 17.385, lng: 78.4867, zoom: 11 },
 ];
 
 // DOOH screen locations by country
-const doohScreens = {
-  IN: [
+const doohScreens: Record<string, any[]> = {
+  DEL: [
     {
       name: "Connaught Place Billboard",
       lat: 28.6315,
@@ -79,6 +52,45 @@ const doohScreens = {
       type: "Billboard",
       location: "Delhi",
     },
+    {
+      name: "Indira Gandhi Airport Display",
+      lat: 28.5562,
+      lng: 77.1,
+      type: "Transit Display",
+      location: "Delhi",
+    },
+    {
+      name: "Select Citywalk Mall",
+      lat: 28.5286,
+      lng: 77.2197,
+      type: "Mall Screen",
+      location: "Delhi",
+    },
+  ],
+  MUM: [
+    {
+      name: "Bandra Station Display",
+      lat: 19.0544,
+      lng: 72.8406,
+      type: "Transit Display",
+      location: "Mumbai",
+    },
+    {
+      name: "Marine Drive Billboard",
+      lat: 18.943,
+      lng: 72.8237,
+      type: "Billboard",
+      location: "Mumbai",
+    },
+    {
+      name: "Phoenix Marketcity Mall",
+      lat: 19.0865,
+      lng: 72.8895,
+      type: "Mall Screen",
+      location: "Mumbai",
+    },
+  ],
+  BLR: [
     {
       name: "Electronic City Tech Park LED",
       lat: 12.8452,
@@ -94,33 +106,14 @@ const doohScreens = {
       location: "Bengaluru",
     },
     {
-      name: "Outer Ring Road Billboard",
-      lat: 12.9295,
-      lng: 77.6428,
-      type: "Billboard",
-      location: "Bengaluru",
-    },
-    {
-      name: "Bellandur Junction Billboard",
-      lat: 12.9358,
-      lng: 77.6916,
-      type: "Billboard",
-      location: "Bengaluru",
-    },
-    {
-      name: "Mumbai Airport Display",
-      lat: 19.0896,
-      lng: 72.8656,
-      type: "Transit Display",
-      location: "Mumbai",
-    },
-    {
-      name: "Phoenix Mall Screen",
-      lat: 12.9279,
-      lng: 77.6271,
+      name: "Forum Mall Screen",
+      lat: 12.9345,
+      lng: 77.611,
       type: "Mall Screen",
       location: "Bengaluru",
     },
+  ],
+  CHE: [
     {
       name: "Marina Beach Billboard",
       lat: 13.0472,
@@ -129,274 +122,71 @@ const doohScreens = {
       location: "Chennai",
     },
     {
-      name: "Bandra Station Display",
-      lat: 19.0544,
-      lng: 72.8406,
-      type: "Transit Display",
-      location: "Mumbai",
-    },
-    {
       name: "Express Avenue Mall",
       lat: 13.0594,
       lng: 80.2597,
       type: "Mall Screen",
       location: "Chennai",
     },
-  ],
-  US: [
     {
-      name: "Times Square Billboard",
-      lat: 40.758,
-      lng: -73.9855,
-      type: "Billboard",
-      location: "New York",
-    },
-    {
-      name: "LAX Airport Display",
-      lat: 33.9425,
-      lng: -118.4081,
+      name: "Chennai Central Station Display",
+      lat: 13.0827,
+      lng: 80.2757,
       type: "Transit Display",
-      location: "Los Angeles",
+      location: "Chennai",
+    },
+  ],
+  KOL: [
+    {
+      name: "Howrah Bridge Billboard",
+      lat: 22.585,
+      lng: 88.3468,
+      type: "Billboard",
+      location: "Kolkata",
     },
     {
-      name: "Beverly Center Mall",
-      lat: 34.0759,
-      lng: -118.3779,
+      name: "Kolkata Airport Display",
+      lat: 22.6547,
+      lng: 88.4467,
+      type: "Transit Display",
+      location: "Kolkata",
+    },
+    {
+      name: "Quest Mall Screen",
+      lat: 22.539,
+      lng: 88.3656,
       type: "Mall Screen",
-      location: "Los Angeles",
-    },
-    {
-      name: "Union Station Display",
-      lat: 41.8787,
-      lng: -87.6394,
-      type: "Transit Display",
-      location: "Chicago",
-    },
-    {
-      name: "Sunset Boulevard Billboard",
-      lat: 34.0983,
-      lng: -118.3267,
-      type: "Billboard",
-      location: "Los Angeles",
+      location: "Kolkata",
     },
   ],
-  UK: [
+  HYD: [
     {
-      name: "Piccadilly Circus Billboard",
-      lat: 51.51,
-      lng: -0.1347,
+      name: "Charminar Billboard",
+      lat: 17.3616,
+      lng: 78.4747,
       type: "Billboard",
-      location: "London",
+      location: "Hyderabad",
     },
     {
-      name: "Heathrow Airport Display",
-      lat: 51.47,
-      lng: -0.4543,
+      name: "Rajiv Gandhi Airport Display",
+      lat: 17.2403,
+      lng: 78.4294,
       type: "Transit Display",
-      location: "London",
+      location: "Hyderabad",
     },
     {
-      name: "Westfield Shopping Centre",
-      lat: 51.5074,
-      lng: -0.2208,
+      name: "GVK One Mall",
+      lat: 17.412,
+      lng: 78.4483,
       type: "Mall Screen",
-      location: "London",
-    },
-    {
-      name: "King's Cross Station",
-      lat: 51.5308,
-      lng: -0.1238,
-      type: "Transit Display",
-      location: "London",
+      location: "Hyderabad",
     },
   ],
-  DE: [
-    {
-      name: "Potsdamer Platz Billboard",
-      lat: 52.5096,
-      lng: 13.3762,
-      type: "Billboard",
-      location: "Berlin",
-    },
-    {
-      name: "Frankfurt Airport Display",
-      lat: 50.0379,
-      lng: 8.5622,
-      type: "Transit Display",
-      location: "Frankfurt",
-    },
-    {
-      name: "Europa Center Mall",
-      lat: 52.5058,
-      lng: 13.3359,
-      type: "Mall Screen",
-      location: "Berlin",
-    },
-  ],
-  JP: [
-    {
-      name: "Shibuya Crossing Billboard",
-      lat: 35.6598,
-      lng: 139.7006,
-      type: "Billboard",
-      location: "Tokyo",
-    },
-    {
-      name: "Narita Airport Display",
-      lat: 35.772,
-      lng: 140.3929,
-      type: "Transit Display",
-      location: "Tokyo",
-    },
-    {
-      name: "Ginza Mall Screen",
-      lat: 35.6762,
-      lng: 139.7603,
-      type: "Mall Screen",
-      location: "Tokyo",
-    },
-    {
-      name: "Osaka Station Display",
-      lat: 34.7024,
-      lng: 135.4959,
-      type: "Transit Display",
-      location: "Osaka",
-    },
-  ],
-  AU: [
-    {
-      name: "Federation Square Billboard",
-      lat: -37.8176,
-      lng: 144.9685,
-      type: "Billboard",
-      location: "Melbourne",
-    },
-    {
-      name: "Sydney Airport Display",
-      lat: -33.9399,
-      lng: 151.1753,
-      type: "Transit Display",
-      location: "Sydney",
-    },
-    {
-      name: "Queen Victoria Building",
-      lat: -33.8717,
-      lng: 151.2062,
-      type: "Mall Screen",
-      location: "Sydney",
-    },
-  ],
-  FR: [
-    {
-      name: "Champs-Élysées Billboard",
-      lat: 48.8698,
-      lng: 2.3081,
-      type: "Billboard",
-      location: "Paris",
-    },
-    {
-      name: "Charles de Gaulle Airport",
-      lat: 49.0097,
-      lng: 2.5479,
-      type: "Transit Display",
-      location: "Paris",
-    },
-    {
-      name: "Galeries Lafayette Mall",
-      lat: 48.8738,
-      lng: 2.332,
-      type: "Mall Screen",
-      location: "Paris",
-    },
-  ],
-  CA: [
-    {
-      name: "CN Tower Billboard",
-      lat: 43.6426,
-      lng: -79.3871,
-      type: "Billboard",
-      location: "Toronto",
-    },
-    {
-      name: "Pearson Airport Display",
-      lat: 43.6777,
-      lng: -79.6248,
-      type: "Transit Display",
-      location: "Toronto",
-    },
-    {
-      name: "Eaton Centre Mall",
-      lat: 43.6544,
-      lng: -79.3807,
-      type: "Mall Screen",
-      location: "Toronto",
-    },
-  ],
-  BR: [
-    {
-      name: "Paulista Avenue Billboard",
-      lat: -23.5618,
-      lng: -46.6565,
-      type: "Billboard",
-      location: "São Paulo",
-    },
-    {
-      name: "GRU Airport Display",
-      lat: -23.4356,
-      lng: -46.4731,
-      type: "Transit Display",
-      location: "São Paulo",
-    },
-    {
-      name: "Shopping Iguatemi",
-      lat: -23.5515,
-      lng: -46.6753,
-      type: "Mall Screen",
-      location: "São Paulo",
-    },
-  ],
-  CN: [
-    {
-      name: "Bund Billboard",
-      lat: 31.2397,
-      lng: 121.499,
-      type: "Billboard",
-      location: "Shanghai",
-    },
-    {
-      name: "Beijing Capital Airport",
-      lat: 40.0801,
-      lng: 116.5846,
-      type: "Transit Display",
-      location: "Beijing",
-    },
-    {
-      name: "IFC Mall Screen",
-      lat: 31.2352,
-      lng: 121.5062,
-      type: "Mall Screen",
-      location: "Shanghai",
-    },
-  ],
-};
-
-// Get icon for screen type (for popup display)
-const getScreenTypeIcon = (type: string) => {
-  switch (type) {
-    case "Billboard":
-      return <img src="/billboard.png" alt="Billboard" className="w-4 h-4" />;
-    case "Transit Display":
-      return <MapPin className="w-4 h-4 text-green-600" />;
-    case "Mall Screen":
-      return <Building2 className="w-4 h-4 text-purple-600" />;
-    default:
-      return <Tv className="w-4 h-4 text-gray-600" />;
-  }
 };
 
 // Component to control map programmatically
 type MapControllerProps = {
-  selectedCountry: {
+  selectedCity: {
     lat: number;
     lng: number;
     zoom: number;
@@ -406,22 +196,16 @@ type MapControllerProps = {
   searchLocation: { lat: number; lng: number } | null;
 };
 
-function MapController({
-  selectedCountry,
-  searchLocation,
-}: MapControllerProps) {
+function MapController({ selectedCity, searchLocation }: MapControllerProps) {
   const map = useMap();
 
   useEffect(() => {
     if (searchLocation) {
       map.setView([searchLocation.lat, searchLocation.lng], 13);
     } else {
-      map.setView(
-        [selectedCountry.lat, selectedCountry.lng],
-        selectedCountry.zoom
-      );
+      map.setView([selectedCity.lat, selectedCity.lng], selectedCity.zoom);
     }
-  }, [map, selectedCountry, searchLocation]);
+  }, [map, selectedCity, searchLocation]);
 
   return null;
 }
@@ -536,29 +320,27 @@ const geocodePostalCode = async (
 };
 
 export default function InteractiveMap() {
-  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  const [selectedCity, setSelectedCity] = useState(cities[0]); // India by default
+  const [currentScreens, setCurrentScreens] = useState(
+    Object.values(doohScreens).flat()
+  );
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentScreens, setCurrentScreens] = useState(doohScreens.IN);
   const [postalCode, setPostalCode] = useState("");
-  const [searchLocation, setSearchLocation] = useState<
-    GeocodeLocationResult | GeocodePostalCodeResult | null
-  >(null);
+  const [searchLocation, setSearchLocation] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
 
-  interface Country {
-    name: string;
-    code: string;
-    lat: number;
-    lng: number;
-    zoom: number;
-  }
+  const handleCityChange = (city: (typeof cities)[0]) => {
+    setSelectedCity(city);
 
-  const handleCountryChange = (country: Country) => {
-    setSelectedCountry(country);
-    setCurrentScreens(
-      doohScreens[country.code as keyof typeof doohScreens] || []
-    );
+    if (city.code === "IND") {
+      // Show all screens from all cities
+      const allScreens = Object.values(doohScreens).flat();
+      setCurrentScreens(allScreens);
+    } else {
+      setCurrentScreens(doohScreens[city.code] || []);
+    }
+
     setSearchLocation(null);
     setPostalCode("");
     setSearchError("");
@@ -579,13 +361,10 @@ export default function InteractiveMap() {
       if (isPostalCode) {
         location = await geocodePostalCode(
           postalCode.trim(),
-          selectedCountry.code
+          selectedCity.code
         );
       } else {
-        location = await geocodeLocation(
-          postalCode.trim(),
-          selectedCountry.code
-        );
+        location = await geocodeLocation(postalCode.trim(), selectedCity.code);
       }
 
       setSearchLocation(location);
@@ -636,17 +415,17 @@ export default function InteractiveMap() {
 
         <div className="p-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Target Country
+            Target City
           </label>
           <select
-            value={selectedCountry.code}
+            value={selectedCity.code}
             onChange={(e) => {
-              const country = countries.find((c) => c.code === e.target.value);
-              if (country) handleCountryChange(country);
+              const country = cities.find((c) => c.code === e.target.value);
+              if (country) handleCityChange(country);
             }}
             className="w-full px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-white"
           >
-            {countries.map((country) => (
+            {cities.map((country) => (
               <option key={country.code} value={country.code}>
                 {country.name}
               </option>
@@ -709,8 +488,8 @@ export default function InteractiveMap() {
       <div className="flex-1 lg:pl-4">
         <div className="h-[400px] sm:h-[500px] lg:h-[600px] w-full lg:w-[70vw] rounded-lg shadow-md overflow-hidden">
           <MapContainer
-            center={[selectedCountry.lat, selectedCountry.lng]}
-            zoom={selectedCountry.zoom}
+            center={[selectedCity.lat, selectedCity.lng]}
+            zoom={selectedCity.zoom}
             className="h-full w-full"
             zoomControl={true}
           >
@@ -720,10 +499,9 @@ export default function InteractiveMap() {
               attribution="&copy; Google Maps"
             />
             <MapController
-              selectedCountry={selectedCountry}
+              selectedCity={selectedCity}
               searchLocation={searchLocation}
             />
-            {/* Screen markers with custom monitor icons */}
             {filteredScreens.map((screen, idx) => (
               <Marker
                 key={idx}
