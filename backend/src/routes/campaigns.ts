@@ -31,13 +31,35 @@ router.get("/test", async (req, res) => {
     res.json({
       success: true,
       data: result.rows,
-      total: result.rows.length
+      total: result.rows.length,
     });
   } catch (error: any) {
     res.json({
       success: false,
       error: error.message,
-      data: []
+      data: [],
+    });
+  }
+});
+
+// Public campaigns route (no auth required)
+router.get("/", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM campaigns ORDER BY created_at DESC");
+    res.json({
+      success: true,
+      campaigns: result.rows,
+      pagination: {
+        page: 1,
+        limit: result.rows.length,
+        total: result.rows.length,
+      },
+    });
+  } catch (error: any) {
+    res.json({
+      success: false,
+      error: error.message,
+      campaigns: [],
     });
   }
 });

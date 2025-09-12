@@ -2,7 +2,7 @@ import { pool } from "../db";
 
 export interface Screen {
   id?: number;
-  owner_id: number;
+  user_id: number;
   name: string;
   description: string;
   screen_type:
@@ -157,7 +157,7 @@ export class ScreenModel {
       const result = await client.query(
         `
         INSERT INTO screens (
-          owner_id, name, description, screen_type, location_name, address, 
+          user_id, name, description, screen_type, location_name, address, 
           city, state, pincode, latitude, longitude, screen_size_width, 
           screen_size_height, resolution_width, resolution_height, 
           daily_footfall, vehicle_count, peak_hours, demographics, 
@@ -166,7 +166,7 @@ export class ScreenModel {
         RETURNING *
       `,
         [
-          screenData.owner_id,
+          screenData.user_id,
           screenData.name,
           screenData.description,
           screenData.screen_type,

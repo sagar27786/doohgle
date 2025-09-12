@@ -8,7 +8,9 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 // Centralized pool configuration
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false },
+  ssl: process.env.DATABASE_URL?.includes("localhost")
+    ? false
+    : { rejectUnauthorized: false },
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
   connectionTimeoutMillis: 10000, // Return an error if connection takes longer than 10 seconds
@@ -32,7 +34,7 @@ pool
   .connect()
   .then((client) => {
     const dbUrl = process.env.DATABASE_URL;
-    const host = dbUrl ? new URL(dbUrl).host : 'unknown';
+    const host = dbUrl ? new URL(dbUrl).host : "unknown";
     console.log(`✅ Connected to PostgreSQL (${host})`);
     client.release();
   })

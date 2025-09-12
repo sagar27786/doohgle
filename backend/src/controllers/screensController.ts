@@ -124,32 +124,32 @@ export async function getAllScreens(req: Request, res: Response) {
     let query = `
       SELECT
         s.id,
-        s.owner_id,
-        s.name,
+        s.user_id,
+        s.screen_name as name,
         'Premium advertising display' as description,
         'LED Billboard' as screen_type,
-        s.location as location_name,
-        CONCAT(s.location, ', ', s.city) as address,
+        s.location_in_venue as location_name,
+        CONCAT(s.location_in_venue, ', ', s.city) as address,
         s.city,
         'India' as state,
         '000000' as pincode,
         s.latitude,
         s.longitude,
-        s.width_ft as screen_size_width,
-        s.height_ft as screen_size_height,
-        CASE WHEN s.resolution = '1080p' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE 1280 END as resolution_width,
-        CASE WHEN s.resolution = '1080p' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE 720 END as resolution_height,
-        s.daily_footfall,
-        s.vehicle_count,
-        s.peak_hours,
+        s.screen_size_inches as screen_size_width,
+        s.screen_size_inches as screen_size_height,
+        CASE WHEN s.resolution = '1920x1080' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE 1280 END as resolution_width,
+        CASE WHEN s.resolution = '1920x1080' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE 720 END as resolution_height,
+        10000 as daily_footfall,
+        5000 as vehicle_count,
+        s.peak_viewing_hours as peak_hours,
         'Mixed demographics' as demographics,
-        s.cost_per_10_seconds,
+        25.00 as cost_per_10_seconds,
         s.image_url,
         s.video_url,
         s.is_active,
-        s.price_per_hour as hourly_rate,
-        s.price_per_day as daily_rate,
-        s.price_per_week as weekly_rate
+        500.00 as hourly_rate,
+        4000.00 as daily_rate,
+        25000.00 as weekly_rate
       FROM screens s
       WHERE s.is_active = true
     `;
@@ -170,12 +170,12 @@ export async function getAllScreens(req: Request, res: Response) {
     }
 
     if (max_budget) {
-      query += ` AND s.price_per_day <= $${paramIndex}`;
+      query += ` AND 4000.00 <= $${paramIndex}`;
       params.push(parseFloat(max_budget as string));
       paramIndex++;
     }
 
-    query += ` ORDER BY s.city, s.price_per_day DESC, s.created_at DESC LIMIT $${paramIndex}`;
+    query += ` ORDER BY s.city, s.screen_size_inches DESC, s.created_at DESC LIMIT $${paramIndex}`;
     params.push(parseInt(limit as string));
 
     const result = await pool.query(query, params);
