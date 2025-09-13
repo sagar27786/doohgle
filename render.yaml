@@ -2,8 +2,9 @@ services:
   - type: web
     name: backend
     env: node
-    region: singapore   # or choose closer to your DB/users
-    plan: free          # free instance
+    region: singapore
+    plan: free
+    rootDir: ./backend_new
     buildCommand: "npm install && npm run build"
     startCommand: "npm start"
     envVars:
@@ -23,3 +24,33 @@ services:
         value: 4001
       - key: PGSSLMODE
         value: require
+      - key: JWT_SECRET
+        value: Sada_8324
+      - key: AWS_ACCESS_KEY_ID
+        value: AKIA46HVBEZPIIHK62PE
+      - key: AWS_SECRET_ACCESS_KEY
+        value: 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
+      - key: AWS_REGION
+        value: ap-southeast-2
+      - key: S3_BUCKET_NAME
+        value: doohgle
+      - key: EMAIL_USER
+        value: devlop8324@gmail.com
+      - key: EMAIL_PASS
+        value: Sada@8324
+      - key: EMAIL_TLS_INSECURE
+        value: true
+      - key: GOOGLE_MAPS_API_KEY
+        value: AIzaSyC4iDxiFxsSsVvJ0R-WEFwCwCMQ5ow0ZZ8
+
+  - type: web
+    name: frontend
+    env: static
+    region: singapore
+    plan: free
+    rootDir: ./frontend_new
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://backend-[your-render-service-id].onrender.com
