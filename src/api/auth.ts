@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://doohgle-backend.onrender.com/api';
 
 export async function signup(data: { email: string; password: string; confirmPassword: string }) {
   const res = await fetch(`${API_BASE_URL}/auth/signup`, {

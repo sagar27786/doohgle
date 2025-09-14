@@ -1,5 +1,14 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
+import { pool } from "./db-improved";
+
+interface AuthRequest extends Request {
+  user?: {
+    id: number;
+    email: string;
+    roles?: string[];
+  };
+}
 import dotenv from "dotenv";
 import { Pool } from "pg";
 
@@ -29,7 +38,7 @@ app.get("/", (req, res) => {
 // Get all screens
 app.get("/api/screens", async (req, res) => {
   try {
-    const result = await db.query("SELECT * FROM screens LIMIT 10");
+    const result = await pool.query("SELECT * FROM screens LIMIT 10");
     res.json({
       success: true,
       data: result.rows,
@@ -71,7 +80,7 @@ app.get("/api/screens/search", async (req, res) => {
 
     query += " LIMIT 20";
 
-    const result = await db.query(query, params);
+    const result = await pool.query(query, params);
     res.json({
       success: true,
       data: result.rows,
@@ -89,7 +98,7 @@ app.get("/api/screens/search", async (req, res) => {
 app.get("/api/screens/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await db.query("SELECT * FROM screens WHERE id = $1", [id]);
+    const result = await pool.query("SELECT * FROM screens WHERE id = $1", [id]);
 
     if (result.rows.length === 0) {
       res.status(404).json({
@@ -115,7 +124,7 @@ app.get("/api/screens/:id", async (req, res) => {
 // Basic campaign endpoints
 app.get("/api/campaigns", async (req, res) => {
   try {
-    const result = await db.query("SELECT * FROM campaigns LIMIT 10");
+    const result = await pool.query("SELECT * FROM campaigns LIMIT 10");
     res.json({
       success: true,
       data: result.rows,
@@ -129,7 +138,7 @@ app.get("/api/campaigns", async (req, res) => {
   }
 });
 
-app.post("/api/campaigns", async (req, res) => {
+app.post("/campaigns", async (req: AuthRequest, res: Response) => {
   try {
     const {
       name,
@@ -140,9 +149,9 @@ app.post("/api/campaigns", async (req, res) => {
       screen_ids,
     } = req.body;
 
-    const result = await db.query(
+    const result = await pool.query(
       "INSERT INTO campaigns (name, description, start_date, end_date, total_budget, status, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-      [name, description, start_date, end_date, total_budget, "draft", 1] // Using dummy user_id = 1
+      [name, description, start_date, end_date, total_budget, "draft", req.user?.id || 1] // Use authenticated user ID
     );
 
     res.json({
@@ -162,12 +171,12 @@ app.post("/api/campaigns", async (req, res) => {
 app.get("/api/analytics/dashboard", async (req, res) => {
   try {
     const stats = await Promise.all([
-      db.query("SELECT COUNT(*) as total_screens FROM screens"),
-      db.query("SELECT COUNT(*) as total_campaigns FROM campaigns"),
-      db.query(
+      pool.query("SELECT COUNT(*) as total_screens FROM screens"),
+      pool.query("SELECT COUNT(*) as total_campaigns FROM campaigns"),
+      pool.query(
         "SELECT COALESCE(SUM(total_budget), 0) as total_budget FROM campaigns"
       ),
-      db.query(
+      pool.query(
         "SELECT COUNT(*) as active_campaigns FROM campaigns WHERE status = 'active'"
       ),
     ]);

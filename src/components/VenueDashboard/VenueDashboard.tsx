@@ -152,7 +152,7 @@ const VenueDashboard: React.FC = () => {
       const formData = new FormData();
       formData.append(mediaType, file);
 
-      const response = await fetch('http://localhost:4001/api/upload/screen-media', {
+      const response = await fetch('https://doohgle-backend.onrender.com/api/upload/screen-media', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

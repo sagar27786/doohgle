@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 // API base URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://doohgle-backend.onrender.com/api";
 
 interface Screen {
   id: number;

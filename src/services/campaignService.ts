@@ -32,7 +32,7 @@ export interface CreateCampaignPayload {
 }
 
 class CampaignService {
-  private baseUrl = "https://doohgle-backend.onrender.com/api/campaigns";
+  private baseUrl = `${import.meta.env.VITE_API_URL || 'https://doohgle-backend.onrender.com/api'}/campaigns`;
 
   // Get all campaigns with real-time AWS data
   public async getCampaigns(): Promise<Campaign[]> {

@@ -67,7 +67,7 @@ const BookingRequestsPanel: React.FC = () => {
         
         // Try direct API call as fallback
         try {
-          const response = await fetch('http://localhost:4001/api/venue/booking-requests', {
+          const response = await fetch('https://doohgle-backend.onrender.com/api/venue/booking-requests', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',

@@ -8,29 +8,34 @@ import nodemailer from 'nodemailer';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-// Configure Nodemailer to use Ethereal for local testing (no real emails sent).
-// An Ethereal test account will be created on first use, and a preview URL will be logged.
+// Configure Nodemailer for production email sending
 let transporterPromise: Promise<nodemailer.Transporter> | null = null;
 const EMAIL_TLS_INSECURE = (process.env.EMAIL_TLS_INSECURE || 'false').toLowerCase() === 'true';
 
 async function getTransporter(): Promise<nodemailer.Transporter> {
   if (!transporterPromise) {
     transporterPromise = (async () => {
-      const testAccount = await nodemailer.createTestAccount();
+      // Use environment variables for SMTP configuration
       const transportOptions: any = {
-        host: 'smtp.ethereal.email',
-        port: 587,
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
         secure: false,
         auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
         },
       };
+      
       if (EMAIL_TLS_INSECURE) {
         transportOptions.tls = { rejectUnauthorized: false };
       }
+      
+      if (!transportOptions.auth.user || !transportOptions.auth.pass) {
+        throw new Error('SMTP_USER and SMTP_PASS environment variables are required');
+      }
+      
       const transporter = nodemailer.createTransport(transportOptions);
-      console.log('Ethereal test account created:', testAccount.user);
+      console.log('SMTP transporter configured for:', transportOptions.auth.user);
       return transporter;
     })();
   }
@@ -82,10 +87,7 @@ export async function sendOTP(req: Request, res: Response) {
       };
       const transporter = await getTransporter();
       const info = await transporter.sendMail(mailOptions);
-      const previewUrl = nodemailer.getTestMessageUrl(info);
-      if (previewUrl) {
-        console.log('Ethereal preview URL:', previewUrl);
-      }
+      console.log('OTP email sent successfully to:', email);
       return res.status(200).json({ message: 'OTP sent to email' });
     }
 

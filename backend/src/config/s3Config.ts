@@ -6,7 +6,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 // Log credentials for debugging
-console.log("Using AWS Access Key ID:", process.env.AWS_ACCESS_KEY_ID);
+// AWS S3 configuration - credentials loaded from environment
 
 // Configure AWS SDK v3
 const s3Config: { region: string; credentials?: { accessKeyId: string; secretAccessKey: string } } = {

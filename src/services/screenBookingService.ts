@@ -1,7 +1,7 @@
 // Screen Booking Service Integration
 import axios from 'axios';
 
-const API_BASE_URL = 'https://doohgle-backend.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://doohgle-backend.onrender.com/api';
 
 export interface Screen {
   id: number;

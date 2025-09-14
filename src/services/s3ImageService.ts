@@ -1,5 +1,5 @@
 class S3ImageService {
-  private baseUrl = "https://doohgle-backend.onrender.com/api/aws-bookings";
+  private baseUrl = `${import.meta.env.VITE_API_URL || 'https://doohgle-backend.onrender.com/api'}/aws-bookings`;
 
   // Upload images for a screen
   async uploadScreenImages(

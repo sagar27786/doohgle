@@ -14,11 +14,13 @@ import FAQ from "./components/Home/FAQ";
 import Contact from "./components/Home/Contact";
 import DOOHChatbot from "./components/Home/DOOHChatbot";
 import Footer from "./components/Home/Footer";
-import HowItWorks from "./components/Home/HowItWorks";
 
 // Auth components
 import LoginSignup from "./components/Auth/LoginSignup";
 import Login from "./components/Auth/Login";
+
+// Import test credentials for development
+import "./utils/testCredentials";
 import Signup from "./components/Auth/Signup";
 import RoleSelect from "./components/Auth/RoleSelect";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
@@ -35,19 +37,11 @@ import AdsManagerFooter from "./components/adds Manager/Footer";
 
 // Integrated Ads Manager Dashboard
 import IntegratedAdsManager from "./components/adds Manager/Dashboard/IntegratedAdsManager";
-import ContactPage from "./components/Home/ContactPage";
-import AboutUs from "./components/Home/AboutUs";
 
 // Admin Components
 import AdminApp from "./components/Admin/AdminApp";
 
-// Map Components
-import MapTestPage from "./pages/MapTestPage";
-import ApiTestPage from "./pages/ApiTestPage";
-import SimpleApiTest from "./pages/SimpleApiTest";
-
 // ThemeProvider for dark mode
-import SimpleScreensTest from "./components/Debug/SimpleScreensTest";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import LoaderAnimation from "./components/Home/LoaderAnimation";
 
@@ -155,14 +149,6 @@ function AppContent() {
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
-
-
-
-          {/* Debug Routes */}
-          <Route path="/debug/screens" element={<SimpleScreensTest />} />
-          <Route path="/test/map" element={<MapTestPage />} />
-          <Route path="/test/api" element={<ApiTestPage />} />
-            <Route path="/test/simple" element={<SimpleApiTest />} />
 
           {/* Admin Route */}
           <Route path="/admin" element={<AdminApp />} />

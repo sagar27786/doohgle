@@ -55,9 +55,6 @@ import {
 
 // Backend Integration Components removed (AWS)
 
-// Professional Dashboard Component
-import ProfessionalDashboard from "./ProfessionalDashboard";
-
 // Existing Components
 
 // New Enhanced Components
@@ -96,7 +93,7 @@ const IntegratedAdsManager: React.FC = () => {
   const renderCurrentView = () => {
     switch (currentView) {
       case "dashboard":
-        return <ProfessionalDashboard />;
+        return <CampaignManagement />;
       case "maps":
         return <EnhancedMapDashboard height="calc(100vh - 200px)" />;
       case "campaignManagement":
@@ -108,7 +105,7 @@ const IntegratedAdsManager: React.FC = () => {
       case "settings":
         return <SettingsView />;
       default:
-        return <ProfessionalDashboard />;
+        return <CampaignManagement />;
     }
   };
 

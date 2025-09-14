@@ -23,7 +23,7 @@ import ImprovedCampaignCreation from "./ImprovedCampaignCreation";
 import { getAllScreens } from "../../api/screens";
 
 // Import campaign service for real data
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://doohgle-backend.onrender.com/api";
 
 // API function to fetch campaigns
 const fetchCampaigns = async () => {

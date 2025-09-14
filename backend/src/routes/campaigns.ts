@@ -24,24 +24,6 @@ import {
 
 const router = express.Router();
 
-// Test route without auth for debugging
-router.get("/test", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM campaigns LIMIT 5");
-    res.json({
-      success: true,
-      data: result.rows,
-      total: result.rows.length,
-    });
-  } catch (error: any) {
-    res.json({
-      success: false,
-      error: error.message,
-      data: [],
-    });
-  }
-});
-
 // Public campaigns route (no auth required)
 router.get("/", async (req, res) => {
   try {

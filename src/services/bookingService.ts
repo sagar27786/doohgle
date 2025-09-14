@@ -45,7 +45,7 @@ export interface CampaignBooking {
 }
 
 class BookingService {
-  private baseUrl = 'https://doohgle-backend.onrender.com/api';
+  private baseUrl = import.meta.env.VITE_API_URL || 'https://doohgle-backend.onrender.com/api';
 
   // Get auth token
   private getAuthToken(): string | null {

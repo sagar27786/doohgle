@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://doohgle-backend.onrender.com/api';
 
 export interface ScreenAsset {
   asset_type: 'photo_day' | 'photo_night' | 'video';

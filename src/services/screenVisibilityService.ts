@@ -181,7 +181,7 @@ class ScreenVisibilityService {
                     const imageUrl = urls[0];
                     // Convert relative paths to full URLs
                     if (imageUrl.startsWith("/api/")) {
-                      return `https://doohgle-backend.onrender.com${imageUrl}`;
+                      return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://doohgle-backend.onrender.com'}${imageUrl}`;
                     }
                     return imageUrl;
                   }
