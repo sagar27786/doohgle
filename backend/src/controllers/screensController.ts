@@ -599,19 +599,15 @@ function extractS3KeyFromUrl(url: string): string | null {
 async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null> {
   if (!urlOrKey) return null;
 
-  // If it's a URL
+  // If it's a URL, return as-is for now (temporary fix for S3 permissions)
   if (isHttpUrl(urlOrKey)) {
-    const key = extractS3KeyFromUrl(urlOrKey);
-    if (key) {
-      // It's an S3 URL -> generate presigned
-      return await generatePresignedUrl(key);
-    }
-    // Not an S3 URL (e.g., CDN or public HTTPS) -> return as-is
     return urlOrKey;
   }
 
-  // Otherwise, treat as a raw S3 key
-  return await generatePresignedUrl(urlOrKey);
+  // For S3 keys, construct public URL instead of presigned (temporary fix)
+  const bucketName = process.env.S3_BUCKET_NAME || 'doohgle';
+  const region = process.env.AWS_REGION || 'ap-southeast-2';
+  return `https://${bucketName}.s3.${region}.amazonaws.com/${urlOrKey}`;
 }
 
 // Build assets array from the three columns in the screens table
