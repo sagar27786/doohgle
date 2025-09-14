@@ -123,7 +123,7 @@ export async function getAllScreensForAdmin(req: Request & { user?: AuthUser }, 
         COALESCE(u.name, u.email, 'Unknown') as owner_name,
         COUNT(br.id)::INTEGER as booking_requests_count
       FROM screens s
-      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       LEFT JOIN booking_requests br ON s.id = br.screen_id
       GROUP BY s.id, s.name, s.city, s.location, s.is_active, s.resolution, s.created_at, u.email, u.name
       ORDER BY s.created_at DESC
@@ -222,7 +222,7 @@ export async function getAllBookingRequests(req: Request & { user?: AuthUser }, 
         COALESCE(u.email, 'Unknown') as venue_owner_email
       FROM booking_requests br
       LEFT JOIN screens s ON br.screen_id = s.id
-      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       ORDER BY br.created_at DESC
     `);
 
@@ -422,7 +422,7 @@ export async function getBookingDetails(req: Request & { user?: AuthUser }, res:
         u.phone as venue_owner_phone
       FROM booking_requests br
       LEFT JOIN screens s ON br.screen_id = s.id
-      LEFT JOIN users u ON s.owner_id = u.id
+      LEFT JOIN users u ON s.user_id = u.id
       WHERE br.id = $1
     `, [bookingId]);
 
