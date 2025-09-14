@@ -84,7 +84,7 @@ class CampaignService {
       return enhancedCampaigns;
     } catch (error) {
       console.error("Failed to fetch campaigns:", error);
-      return this.getMockCampaigns();
+      return [];
     }
   }
 
@@ -244,82 +244,6 @@ class CampaignService {
   }
 
   // Mock campaigns for fallback
-  private getMockCampaigns(): Campaign[] {
-    return [
-      {
-        id: 1,
-        name: "Summer Fashion Collection 2025",
-        description: "Promoting latest summer collection across metro areas",
-        budget: 150000,
-        startDate: "2025-08-01",
-        endDate: "2025-08-31",
-        status: "active",
-        screenIds: [1, 2, 3, 4],
-        impressions: 125000,
-        views: 89000,
-        clicks: 2500,
-        ctr: 2.8,
-        cost: 45000,
-        roi: 67.5,
-        createdAt: "2025-07-15T10:00:00Z",
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        name: "Tech Product Launch",
-        description: "New smartphone launch campaign in tech hubs",
-        budget: 250000,
-        startDate: "2025-08-10",
-        endDate: "2025-09-10",
-        status: "active",
-        screenIds: [2, 5, 6, 7],
-        impressions: 89000,
-        views: 65000,
-        clicks: 1800,
-        ctr: 2.0,
-        cost: 78000,
-        roi: 45.2,
-        createdAt: "2025-07-20T14:30:00Z",
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 3,
-        name: "Food Delivery Promo",
-        description: "Weekend food delivery discount promotion",
-        budget: 80000,
-        startDate: "2025-08-05",
-        endDate: "2025-08-25",
-        status: "paused",
-        screenIds: [1, 3, 8],
-        impressions: 45000,
-        views: 32000,
-        clicks: 900,
-        ctr: 2.0,
-        cost: 25000,
-        roi: 28.0,
-        createdAt: "2025-07-25T09:15:00Z",
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 4,
-        name: "Holiday Travel Campaign",
-        description: "Promoting holiday packages and travel destinations",
-        budget: 200000,
-        startDate: "2025-09-01",
-        endDate: "2025-09-30",
-        status: "scheduled",
-        screenIds: [4, 5, 6],
-        impressions: 0,
-        views: 0,
-        clicks: 0,
-        ctr: 0,
-        cost: 0,
-        roi: 0,
-        createdAt: "2025-07-30T16:45:00Z",
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-  }
 }
 
 export const campaignService = new CampaignService();

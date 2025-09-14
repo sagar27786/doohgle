@@ -113,10 +113,9 @@ class BookingService {
       });
 
       if (!response.ok) {
-        console.warn(`Booking requests API failed with status ${response.status}, using mock data`);
-        // Return mock data as fallback, but check if we have accepted requests
-        const mockAcceptedBookings = this.getMockAcceptedBookings();
-        return mockAcceptedBookings;
+        console.warn(`Booking requests API failed with status ${response.status}`);
+        // Return empty array if API fails - no fallback data
+        return [];
       }
 
       const result = await response.json();
@@ -129,56 +128,14 @@ class BookingService {
         console.log('Converted bookings:', converted);
         return converted;
       } else {
-        console.log('No booking requests found in API, using mock data');
-        return this.getMockAcceptedBookings();
+        console.log('No booking requests found in API');
+        return [];
       }
 
     } catch (error) {
       console.error('Error fetching booking requests:', error);
-      return this.getMockAcceptedBookings();
+      return [];
     }
-  }
-
-  private getMockAcceptedBookings(): CampaignBooking[] {
-    // Show the actual accepted booking requests from the API test
-    return [
-      {
-        id: '10356d1d-c7c7-40ef-a240-4a99fbebc37b',
-        campaign_name: 'UI Test Campaign',
-        screens: [
-          {
-            id: 12,
-            name: 'Mantri',
-            city: 'Bangalore',
-            status: 'accepted',
-            daily_budget: 1200,
-            start_date: '2025-09-01',
-            end_date: '2025-09-01',
-          }
-        ],
-        total_budget: 1200,
-        status: 'active',
-        created_at: '2025-08-29T10:19:59.222Z',
-      },
-      {
-        id: '6384ba42-8d64-4a59-9848-55787666d5b9',
-        campaign_name: 'rwrwrwrwrwrwr',
-        screens: [
-          {
-            id: 13,
-            name: 'shivaji park',
-            city: 'Chennai',
-            status: 'accepted',
-            daily_budget: 1800,
-            start_date: '2025-08-29',
-            end_date: '2025-08-29',
-          }
-        ],
-        total_budget: 1800,
-        status: 'active',
-        created_at: '2025-08-29T10:22:34.881Z',
-      }
-    ];
   }
 
   private convertBookingRequestsToBookings(requests: any[]): CampaignBooking[] {
@@ -239,36 +196,23 @@ class BookingService {
       const response = await fetch(`${this.baseUrl}/bookings/cities`);
 
       if (!response.ok) {
-        console.warn(`Cities API failed with status ${response.status}, using fallback`);
-        // Fallback to mock data if API fails
-        return [
-          { city: 'Mumbai', state: 'Maharashtra', screen_count: 25 },
-          { city: 'Delhi', state: 'Delhi', screen_count: 18 },
-          { city: 'Bangalore', state: 'Karnataka', screen_count: 15 },
-          { city: 'Chennai', state: 'Tamil Nadu', screen_count: 12 },
-          { city: 'Hyderabad', state: 'Telangana', screen_count: 10 },
-          { city: 'Pune', state: 'Maharashtra', screen_count: 8 },
-        ];
+        console.warn(`Cities API failed with status ${response.status}`);
+        // Return empty array if API fails - no fallback data
+        return [];
       }
 
       const result = await response.json();
       if (!result.success) {
-        console.warn('Cities API returned failure, using fallback data');
-        // Fallback to mock data
-        return [
-          { city: 'Mumbai', state: 'Maharashtra', screen_count: 25 },
-          { city: 'Delhi', state: 'Delhi', screen_count: 18 },
-          { city: 'Bangalore', state: 'Karnataka', screen_count: 15 },
-          { city: 'Chennai', state: 'Tamil Nadu', screen_count: 12 },
-          { city: 'Hyderabad', state: 'Telangana', screen_count: 10 },
-          { city: 'Pune', state: 'Maharashtra', screen_count: 8 },
-        ];
+        console.warn('Cities API returned failure');
+        // Return empty array if API fails - no fallback data
+        return [];
       }
 
       return result.data;
     } catch (error) {
       console.error('Error fetching available cities:', error);
-      // Return fallback data instead of throwing error
+      // Return empty array instead of fallback data
+      return [];
       return [
         { city: 'Mumbai', state: 'Maharashtra', screen_count: 25 },
         { city: 'Delhi', state: 'Delhi', screen_count: 18 },

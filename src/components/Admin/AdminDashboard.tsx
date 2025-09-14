@@ -79,25 +79,42 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [bookings, setBookings] = useState<AdminBookingRequest[]>([]);
   const [revenue, setRevenue] = useState<RevenueAnalytics | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [processingBooking, setProcessingBooking] = useState<string | null>(null);
 
   const loadDashboardData = async () => {
     try {
       setError(null);
-      const [statsData, screensData, bookingsData, revenueData] = await Promise.all([
-        adminService.getDashboardStats(),
-        adminService.getAllScreens(),
-        adminService.getAllBookingRequests(),
-        adminService.getRevenueAnalytics(),
-      ]);
+      
+      // Load each API separately so one failure doesn't break everything
+      try {
+        const statsData = await adminService.getDashboardStats();
+        setDashboardStats(statsData);
+      } catch (err) {
+        console.error("Failed to load dashboard stats:", err);
+      }
 
-      setDashboardStats(statsData);
-      setScreens(screensData);
-      setBookings(bookingsData);
-      setRevenue(revenueData);
+      try {
+        const screensData = await adminService.getAllScreens();
+        setScreens(screensData);
+      } catch (err) {
+        console.error("Failed to load screens:", err);
+      }
+
+      try {
+        const bookingsData = await adminService.getAllBookingRequests();
+        setBookings(bookingsData);
+      } catch (err) {
+        console.error("Failed to load bookings:", err);
+      }
+
+      try {
+        const revenueData = await adminService.getRevenueAnalytics();
+        setRevenue(revenueData);
+      } catch (err) {
+        console.error("Failed to load revenue analytics:", err);
+      }
+
     } catch (err: any) {
-      setError(err.message || "Failed to load dashboard data. Please check your connection and try again.");
-      console.error("Dashboard data loading error:", err);
+      console.error("General dashboard error:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -122,24 +139,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     setLoading(true);
     setError(null);
     loadDashboardData();
-  };
-
-  const handleBookingAction = async (bookingId: string, status: string) => {
-    try {
-      setProcessingBooking(bookingId);
-      await adminService.updateBookingStatus(bookingId, status);
-      setBookings((prev) =>
-        prev.map((booking) =>
-          booking.id === bookingId ? { ...booking, status: status } : booking
-        )
-      );
-      await handleRefresh();
-    } catch (error: any) {
-      console.error("Error updating booking:", error);
-      setError(error.message || "Failed to update booking status");
-    } finally {
-      setProcessingBooking(null);
-    }
   };
 
   // Loading animation component
@@ -529,24 +528,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           >
                             {booking.status}
                           </span>
-                          {booking.status === 'pending' && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleBookingAction(booking.id, 'accepted')}
-                                disabled={processingBooking === booking.id}
-                                className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 text-sm"
-                              >
-                                {processingBooking === booking.id ? 'Processing...' : 'Accept'}
-                              </button>
-                              <button
-                                onClick={() => handleBookingAction(booking.id, 'rejected')}
-                                disabled={processingBooking === booking.id}
-                                className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 text-sm"
-                              >
-                                {processingBooking === booking.id ? 'Processing...' : 'Reject'}
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </motion.div>
                     ))}

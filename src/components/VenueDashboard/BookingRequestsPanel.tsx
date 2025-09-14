@@ -92,69 +92,9 @@ const BookingRequestsPanel: React.FC = () => {
         }
       }
       
-      // If all API calls fail, show the actual booking requests we created
-      const actualBookingRequests: BookingRequest[] = [
-        {
-          id: '10356d1d-c7c7-40ef-a240-4a99fbebc37b',
-          campaign_name: 'UI Test Campaign',
-          advertiser_id: '1',
-          advertiser_name: 'Demo User',
-          screen_id: 12,
-          screen_name: 'Mantri',
-          screen_owner_id: '3',
-          start_date: '2025-09-01',
-          end_date: '2025-09-01',
-          start_time: '14:00',
-          end_time: '17:00',
-          daily_budget: 1200,
-          total_budget: 1200,
-          message: 'Booking for UI Test Campaign',
-          status: 'pending',
-          created_at: '2025-08-29T10:19:59.222Z',
-          updated_at: '2025-08-29T10:19:59.222Z'
-        },
-        {
-          id: '7294a559-1061-416c-b8d1-b6dec76b44fc',
-          campaign_name: 'Holiday Season Promotion',
-          advertiser_id: '2',
-          advertiser_name: 'Local Business Owner',
-          screen_id: 12,
-          screen_name: 'Mantri',
-          screen_owner_id: '3',
-          start_date: '2025-01-20',
-          end_date: '2025-01-22',
-          start_time: '09:00',
-          end_time: '18:00',
-          daily_budget: 2000,
-          total_budget: 6000,
-          message: 'We would like to book this screen for our holiday promotion campaign. Great location!',
-          status: 'pending',
-          created_at: '2025-08-29T10:14:07.675Z',
-          updated_at: '2025-08-29T10:14:07.675Z'
-        },
-        {
-          id: 'fb2e76b5-c4ca-4d15-a262-b025f2f5fa6f',
-          campaign_name: 'Test Campaign from API',
-          advertiser_id: '1',
-          advertiser_name: 'Test Advertiser',
-          screen_id: 12,
-          screen_name: 'Mantri',
-          screen_owner_id: '2',
-          start_date: '2025-01-15',
-          end_date: '2025-01-15',
-          start_time: '10:00',
-          end_time: '18:00',
-          daily_budget: 1500,
-          total_budget: 1500,
-          message: 'Test booking request from API',
-          status: 'pending',
-          created_at: '2025-08-29T10:01:03.115Z',
-          updated_at: '2025-08-29T10:01:03.115Z'
-        }
-      ];
-
-      setBookingRequests(actualBookingRequests);
-      console.log('Using actual booking requests that were created via API');
+      // No fallback data - if API fails, show empty state
+      setBookingRequests([]);
+      console.log('No booking requests available from API');
 
     } catch (err) {
       console.error('Error fetching booking requests:', err);
