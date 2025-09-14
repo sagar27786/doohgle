@@ -242,21 +242,22 @@ const VenueDashboard: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-900 text-gray-100 overflow-hidden">
-      {/* Decorative gradient blobs for dark theme */}
-      <div className="pointer-events-none absolute -top-32 -left-24 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-indigo-600/20 blur-3xl" />
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 text-gray-900 overflow-hidden">
+      {/* Decorative gradient blobs for light theme */}
+      <div className="pointer-events-none absolute -top-32 -left-24 h-64 w-64 rounded-full bg-gradient-to-r from-blue-400/20 to-cyan-400/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-gradient-to-r from-indigo-400/20 to-purple-400/20 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-gradient-to-r from-pink-300/10 to-orange-300/10 blur-3xl" />
 
       <div className="relative z-10 flex min-h-screen">
         {/* Sidebar */}
         <aside
           className={`${
             isSidebarOpen ? 'w-72' : 'w-20'
-          } transition-all duration-300 ease-in-out bg-gray-900/70 dark:bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border-r border-gray-800 shadow-xl flex flex-col`}
+          } transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 border-r border-gray-200/60 shadow-2xl flex flex-col`}
         >
-          <div className="flex items-center justify-between p-5">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100">
             <h2
-              className={`text-xl font-bold text-gray-100 tracking-tight transition-opacity duration-200 ${
+              className={`text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight transition-opacity duration-200 ${
                 isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
             >
@@ -264,7 +265,7 @@ const VenueDashboard: React.FC = () => {
             </h2>
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-lg text-gray-200 hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-xl text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200"
               aria-label="Toggle sidebar"
               title="Toggle sidebar"
             >
@@ -272,22 +273,22 @@ const VenueDashboard: React.FC = () => {
             </button>
           </div>
 
-          <nav className="px-3 pb-6">
+          <nav className="px-3 pb-6 pt-4">
             <ul className="space-y-2">
               <li>
                 <button
                   className={`group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-[15px] font-medium ${
                     activeTab === 'screens' && !showAddScreen
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-gray-200 hover:bg-gray-800'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                   onClick={() => handleTabChange('screens')}
                 >
                   <span
-                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg ${
+                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg transition-all ${
                       activeTab === 'screens' && !showAddScreen
                         ? 'bg-white/20 text-white'
-                        : 'bg-gray-800 text-gray-200 group-hover:bg-gray-700'
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200 group-hover:text-gray-800'
                     }`}
                   >
                     <FaTv size={18} />
@@ -301,16 +302,16 @@ const VenueDashboard: React.FC = () => {
                 <button
                   className={`group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-[15px] font-medium ${
                     activeTab === 'bookings' && !showAddScreen
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-gray-200 hover:bg-gray-800'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                   onClick={() => handleTabChange('bookings')}
                 >
                   <span
-                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg ${
+                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg transition-all ${
                       activeTab === 'bookings' && !showAddScreen
                         ? 'bg-white/20 text-white'
-                        : 'bg-gray-800 text-gray-200 group-hover:bg-gray-700'
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200 group-hover:text-gray-800'
                     }`}
                   >
                     <FaCalendarCheck size={18} />
@@ -324,16 +325,16 @@ const VenueDashboard: React.FC = () => {
                 <button
                   className={`group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-[15px] font-medium ${
                     activeTab === 'booking-requests' && !showAddScreen
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-gray-200 hover:bg-gray-800'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                   onClick={() => handleTabChange('booking-requests')}
                 >
                   <span
-                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg ${
+                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg transition-all ${
                       activeTab === 'booking-requests' && !showAddScreen
                         ? 'bg-white/20 text-white'
-                        : 'bg-gray-800 text-gray-200 group-hover:bg-gray-700'
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200 group-hover:text-gray-800'
                     }`}
                   >
                     <FaBell size={18} />
@@ -347,16 +348,16 @@ const VenueDashboard: React.FC = () => {
                 <button
                   className={`group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-[15px] font-medium ${
                     activeTab === 'earnings' && !showAddScreen
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-gray-200 hover:bg-gray-800'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                   onClick={() => handleTabChange('earnings')}
                 >
                   <span
-                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg ${
+                    className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg transition-all ${
                       activeTab === 'earnings' && !showAddScreen
                         ? 'bg-white/20 text-white'
-                        : 'bg-gray-800 text-gray-200 group-hover:bg-gray-700'
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200 group-hover:text-gray-800'
                     }`}
                   >
                     <FaMoneyBillWave size={18} />
@@ -368,16 +369,20 @@ const VenueDashboard: React.FC = () => {
               </li>
             </ul>
 
-            <div className="mt-6 pt-6 border-t border-gray-800">
+            <div className="mt-6 pt-6 border-t border-gray-200">
               <button
                 className={`group flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-[15px] font-semibold ${
-                  showAddScreen ? 'bg-green-600 text-white shadow-lg' : 'text-green-300 hover:bg-gray-800'
+                  showAddScreen 
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25' 
+                    : 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700'
                 }`}
                 onClick={handleAddScreenClick}
               >
                 <span
-                  className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg ${
-                    showAddScreen ? 'bg-white/20 text-white' : 'bg-gray-800 text-green-300 group-hover:bg-gray-700'
+                  className={`shrink-0 grid place-items-center h-8 w-8 rounded-lg transition-all ${
+                    showAddScreen 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200 group-hover:text-emerald-700'
                   }`}
                 >
                   <FaPlus size={18} />
@@ -393,28 +398,30 @@ const VenueDashboard: React.FC = () => {
         {/* Main Content */}
         <main className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="sticky top-0 z-20 bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border-b border-gray-800">
-            <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+          <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 border-b border-gray-200/60 shadow-sm">
+            <div className="mx-auto max-w-6xl px-6 py-5 flex items-center justify-between">
               <div>
-                <h1 className="text-2xl md:text-3xl font-extrabold text-white">Venue Owner Dashboard</h1>
-                <p className="text-sm text-gray-400 mt-1">Manage your screens, bookings, and earnings</p>
+                <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
+                  Venue Owner Dashboard
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">Manage your screens, bookings, and earnings with ease</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={toggleTheme}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gray-800 text-gray-200 px-3 py-2 shadow hover:bg-gray-700 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gray-100 text-gray-700 px-3 py-2 shadow-sm hover:bg-gray-200 hover:shadow-md transition-all duration-200"
                   title="Toggle theme"
                 >
-                  {theme === 'dark' ? <FaSun /> : <FaMoon />}
-                  <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+                  {theme === 'dark' ? <FaSun className="text-amber-500" /> : <FaMoon className="text-indigo-500" />}
+                  <span className="hidden sm:inline font-medium">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                 </button>
 
                 <button
                   onClick={handleAddScreenClick}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 active:scale-[0.98] font-medium"
                 >
-                  <FaPlus size={14} /> <span className="hidden sm:inline">Register</span>
+                  <FaPlus size={14} /> <span className="hidden sm:inline">Register Screen</span>
                 </button>
               </div>
             </div>
@@ -423,9 +430,12 @@ const VenueDashboard: React.FC = () => {
           {/* Content */}
           <div className="mx-auto max-w-6xl w-full px-6 py-8 space-y-8">
             {!showAddScreen && activeTab === 'screens' && (
-              <section className="rounded-2xl bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border border-gray-800 shadow-xl transition-all">
-                <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">My Screens</h2>
+              <section className="rounded-2xl bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 border border-gray-200/60 shadow-xl transition-all">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FaTv className="text-blue-600" />
+                    My Screens
+                  </h2>
                 </div>
                 <div className="p-6">
                   <ScreenList />
@@ -434,9 +444,12 @@ const VenueDashboard: React.FC = () => {
             )}
 
             {!showAddScreen && activeTab === 'bookings' && (
-              <section className="rounded-2xl bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border border-gray-800 shadow-xl transition-all">
-                <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">My Bookings</h2>
+              <section className="rounded-2xl bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 border border-gray-200/60 shadow-xl transition-all">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FaCalendarCheck className="text-green-600" />
+                    My Bookings
+                  </h2>
                 </div>
                 <div className="p-6">
                   <BookingList />
@@ -445,7 +458,13 @@ const VenueDashboard: React.FC = () => {
             )}
 
             {!showAddScreen && activeTab === 'booking-requests' && (
-              <section className="rounded-2xl bg-white border border-gray-200 shadow-xl transition-all">
+              <section className="rounded-2xl bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 border border-gray-200/60 shadow-xl transition-all">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FaBell className="text-orange-600" />
+                    Booking Requests
+                  </h2>
+                </div>
                 <div className="p-6">
                   <BookingRequestsPanel />
                 </div>
@@ -453,9 +472,12 @@ const VenueDashboard: React.FC = () => {
             )}
 
             {!showAddScreen && activeTab === 'earnings' && (
-              <section className="rounded-2xl bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border border-gray-800 shadow-xl transition-all">
-                <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">My Earnings</h2>
+              <section className="rounded-2xl bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 border border-gray-200/60 shadow-xl transition-all">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FaMoneyBillWave className="text-emerald-600" />
+                    My Earnings
+                  </h2>
                 </div>
                 <div className="p-6">
                   <EarningsList />
@@ -464,11 +486,14 @@ const VenueDashboard: React.FC = () => {
             )}
 
             {showAddScreen && (
-              <section className="rounded-2xl bg-gray-900/70 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 border border-gray-800 shadow-xl transition-all">
-                <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">Register New Screen</h2>
+              <section className="rounded-2xl bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 border border-gray-200/60 shadow-xl transition-all">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <FaPlus className="text-emerald-600" />
+                    Register New Screen
+                  </h2>
                   <button
-                    className="rounded-lg px-3 py-1.5 text-gray-300 hover:text-red-400 hover:bg-red-900/20 transition-colors"
+                    className="rounded-xl px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-200 font-medium"
                     onClick={() => setShowAddScreen(false)}
                     aria-label="Close registration form"
                   >
@@ -479,11 +504,14 @@ const VenueDashboard: React.FC = () => {
                 <div className="p-6">
                   <form onSubmit={handleScreenSubmit} className="space-y-8">
                     {/* Basic Information */}
-                    <div>
-                      <h3 className="text-sm font-semibold mb-3 text-gray-200">Basic Information</h3>
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                      <h3 className="text-sm font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        Basic Information
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label htmlFor="screen_name" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="screen_name" className="block text-sm font-medium text-gray-700 mb-2">
                             Screen Name
                           </label>
                           <input
@@ -492,13 +520,14 @@ const VenueDashboard: React.FC = () => {
                             name="screen_name"
                             value={screen.screen_name}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            placeholder="Enter screen name"
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="location_in_venue" className="block text-xs font-medium text-gray-400">
-                            Location in Venue
+                          <label htmlFor="location_in_venue" className="block text-sm font-medium text-gray-700 mb-2">
+                            Location Type
                           </label>
                           <select
                             id="location_in_venue"
@@ -506,7 +535,7 @@ const VenueDashboard: React.FC = () => {
                             value={screen.location_in_venue || ''}
                             onChange={handleScreenChange}
                             required
-                            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="block w-full rounded-xl border border-gray-300 bg-white text-gray-900 px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                           >
                             <option value="" disabled>Select location type</option>
                             <option value="indoor">Indoor</option>
@@ -514,8 +543,8 @@ const VenueDashboard: React.FC = () => {
                           </select>
                         </div>
                       </div>
-                      <div className="mt-4">
-                        <label htmlFor="description" className="block text-xs font-medium text-gray-400">
+                      <div className="mt-6">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                           Description
                         </label>
                         <textarea
@@ -524,19 +553,21 @@ const VenueDashboard: React.FC = () => {
                           value={screen.description}
                           onChange={handleScreenChange}
                           rows={3}
-                          className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                          className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                          placeholder="Describe your screen location and features"
                         />
                       </div>
                     </div>
 
-                    <hr className="border-gray-800" />
-
                     {/* Address Information */}
-                    <div>
-                      <h3 className="text-sm font-semibold mb-3 text-gray-200">Address Information</h3>
+                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-6 border border-emerald-100">
+                      <h3 className="text-sm font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                        Address Information
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label htmlFor="address_line1" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="address_line1" className="block text-sm font-medium text-gray-700 mb-2">
                             Address Line 1
                           </label>
                           <input
@@ -545,12 +576,13 @@ const VenueDashboard: React.FC = () => {
                             name="address_line1"
                             value={screen.address_line1}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                            placeholder="Street address"
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="address_line2" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="address_line2" className="block text-sm font-medium text-gray-700 mb-2">
                             Address Line 2
                           </label>
                           <input
@@ -559,11 +591,12 @@ const VenueDashboard: React.FC = () => {
                             name="address_line2"
                             value={screen.address_line2}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                            placeholder="Apartment, suite, etc."
                           />
                         </div>
                         <div>
-                          <label htmlFor="city" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
                             City
                           </label>
                           <input
@@ -572,12 +605,13 @@ const VenueDashboard: React.FC = () => {
                             name="city"
                             value={screen.city}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                            placeholder="City name"
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="state" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
                             State
                           </label>
                           <input
@@ -586,12 +620,13 @@ const VenueDashboard: React.FC = () => {
                             name="state"
                             value={screen.state}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                            placeholder="State/Province"
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="country" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
                             Country
                           </label>
                           <input
@@ -600,12 +635,13 @@ const VenueDashboard: React.FC = () => {
                             name="country"
                             value={screen.country}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                            placeholder="Country"
                             required
                           />
                         </div>
                         <div>
-                          <label htmlFor="postal_code" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="postal_code" className="block text-sm font-medium text-gray-700 mb-2">
                             Postal Code
                           </label>
                           <input
@@ -614,21 +650,24 @@ const VenueDashboard: React.FC = () => {
                             name="postal_code"
                             value={screen.postal_code}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                            placeholder="ZIP/Postal code"
                             required
                           />
                         </div>
                         </div>
                         <div className="mt-6">
-                            <label className="block text-xs font-medium text-gray-400 mb-2">Pinpoint Location on Map</label>
-                            <MapPicker
-                                selectedLocation={screen.latitude && screen.longitude ? { lat: Number(screen.latitude), lng: Number(screen.longitude) } : null}
-                                onMapSelect={handleMapSelect}
-                            />
+                            <label className="block text-sm font-medium text-gray-700 mb-3">Pinpoint Location on Map</label>
+                            <div className="rounded-xl overflow-hidden border border-gray-300 shadow-sm">
+                              <MapPicker
+                                  selectedLocation={screen.latitude && screen.longitude ? { lat: Number(screen.latitude), lng: Number(screen.longitude) } : null}
+                                  onMapSelect={handleMapSelect}
+                              />
+                            </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-6 mt-4">
+                        <div className="grid grid-cols-2 gap-6 mt-6">
                         <div>
-                          <label htmlFor="latitude" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="latitude" className="block text-sm font-medium text-gray-700 mb-2">
                             Latitude
                           </label>
                           <input
@@ -638,11 +677,12 @@ const VenueDashboard: React.FC = () => {
                             value={screen.latitude}
                             onChange={handleScreenChange}
                             readOnly
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-gray-50 rounded-xl shadow-sm p-3 text-gray-700"
+                            placeholder="Auto-filled from map"
                           />
                         </div>
                         <div>
-                          <label htmlFor="longitude" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="longitude" className="block text-sm font-medium text-gray-700 mb-2">
                             Longitude
                           </label>
                           <input
@@ -652,20 +692,22 @@ const VenueDashboard: React.FC = () => {
                             value={screen.longitude}
                             onChange={handleScreenChange}
                             readOnly
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-gray-50 rounded-xl shadow-sm p-3 text-gray-700"
+                            placeholder="Auto-filled from map"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <hr className="border-gray-800" />
-
                     {/* Technical Specs */}
-                    <div>
-                      <h3 className="text-sm font-semibold mb-3 text-gray-200">Technical Specifications</h3>
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+                      <h3 className="text-sm font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        Technical Specifications
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                          <label htmlFor="width_px" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="width_px" className="block text-sm font-medium text-gray-700 mb-2">
                             Width (px)
                           </label>
                           <input
@@ -674,7 +716,8 @@ const VenueDashboard: React.FC = () => {
                             name="width_px"
                             value={screen.width_px}
                             onChange={handleScreenChange}
-                            className="mt-1 block w-full border border-gray-700 bg-gray-900/60 rounded-lg shadow-sm p-3 text-gray-100"
+                            className="block w-full border border-gray-300 bg-white rounded-xl shadow-sm p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                            placeholder="1920"
                           />
                         </div>
                         <div>
@@ -841,10 +884,10 @@ const VenueDashboard: React.FC = () => {
 
                     {/* Media Upload */}
                     <div>
-                      <h3 className="text-sm font-semibold mb-3 text-gray-200">Media Upload</h3>
+                      <h3 className="text-sm font-semibold mb-3 text-black-200">Media Upload</h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-2">Day Photo</label>
+                          <label className="block text-xs font-medium text-gray-1000 mb-2">Day Photo</label>
                           <input
                             type="file"
                             accept="image/*"
@@ -852,14 +895,14 @@ const VenueDashboard: React.FC = () => {
                             className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-900/40 file:text-blue-200 hover:file:bg-blue-900/60"
                           />
                           {uploadingFiles.day_photo && (
-                            <p className="text-xs text-gray-400 mt-2">Uploading day photo...</p>
+                            <p className="text-xs text-gray-600 mt-2">Uploading day photo...</p>
                           )}
                           {screen.day_photo_url && (
-                            <p className="text-xs text-green-300 mt-2">Uploaded</p>
+                            <p className="text-xs text-green-700 mt-2">Uploaded</p>
                           )}
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-2">Night Photo</label>
+                          <label className="block text-xs font-medium text-gray-1000 mb-2">Night Photo</label>
                           <input
                             type="file"
                             accept="image/*"
@@ -867,14 +910,14 @@ const VenueDashboard: React.FC = () => {
                             className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-900/40 file:text-blue-200 hover:file:bg-blue-900/60"
                           />
                           {uploadingFiles.night_photo && (
-                            <p className="text-xs text-gray-400 mt-2">Uploading night photo...</p>
+                            <p className="text-xs text-gray-600 mt-2">Uploading night photo...</p>
                           )}
                           {screen.night_photo_url && (
-                            <p className="text-xs text-green-300 mt-2">Uploaded</p>
+                            <p className="text-xs text-green-700 mt-2">Uploaded</p>
                           )}
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-2">Promotional Video</label>
+                          <label className="block text-xs font-medium text-gray-1000 mb-2">Promotional Video</label>
                           <input
                             type="file"
                             accept="video/*"
@@ -882,9 +925,9 @@ const VenueDashboard: React.FC = () => {
                             className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-900/40 file:text-blue-200 hover:file:bg-blue-900/60"
                           />
                           {uploadingFiles.video && (
-                            <p className="text-xs text-gray-400 mt-2">Uploading video...</p>
+                            <p className="text-xs text-gray-600 mt-2">Uploading video...</p>
                           )}
-                          {screen.video_url && <p className="text-xs text-green-300 mt-2">Uploaded</p>}
+                          {screen.video_url && <p className="text-xs text-green-700 mt-2">Uploaded</p>}
                         </div>
                       </div>
                     </div>
@@ -893,10 +936,10 @@ const VenueDashboard: React.FC = () => {
 
                     {/* Pricing */}
                     <div>
-                      <h3 className="text-sm font-semibold mb-3 text-gray-200">Pricing</h3>
+                      <h3 className="text-sm font-semibold mb-3 text-gray-900">Pricing</h3>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div>
-                          <label htmlFor="hourly_rate" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="hourly_rate" className="block text-xs font-medium text-gray-700">
                             Hourly Rate
                           </label>
                           <input
@@ -909,7 +952,7 @@ const VenueDashboard: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label htmlFor="daily_rate" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="daily_rate" className="block text-xs font-medium text-gray-700">
                             Daily Rate
                           </label>
                           <input
@@ -922,7 +965,7 @@ const VenueDashboard: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label htmlFor="weekly_rate" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="weekly_rate" className="block text-xs font-medium text-gray-700">
                             Weekly Rate
                           </label>
                           <input
@@ -935,7 +978,7 @@ const VenueDashboard: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label htmlFor="currency" className="block text-xs font-medium text-gray-400">
+                          <label htmlFor="currency" className="block text-xs font-medium text-gray-700">
                             Currency
                           </label>
                           <select
