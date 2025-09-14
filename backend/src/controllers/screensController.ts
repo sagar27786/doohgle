@@ -89,7 +89,7 @@ export async function getMyScreens(
     const result = await pool.query(
       `SELECT s.*
        FROM screens s
-       WHERE s.owner_id = $1
+       WHERE s.user_id = $1
        ORDER BY s.created_at DESC`,
       [userId]
     );
