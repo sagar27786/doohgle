@@ -187,8 +187,8 @@ const ImprovedCampaignCreation: React.FC = () => {
       
       const bookingData = {
         campaign_name: campaignName,
-        advertiser_id: '1', // This should be the actual advertiser ID from auth
-        advertiser_name: 'Demo User', // This should be the actual advertiser name from auth
+        advertiser_id: localStorage.getItem('userId') || '1',
+        advertiser_name: localStorage.getItem('userName') || 'User',
         screen_id: selectedScreen.id,
         screen_name: selectedScreen.name,
         screen_owner_id: selectedScreen.user_id || '1', // Use the real screen owner ID
@@ -209,7 +209,7 @@ const ImprovedCampaignCreation: React.FC = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`,
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
           },
           body: JSON.stringify(bookingData),
         });

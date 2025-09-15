@@ -11,8 +11,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -801,38 +799,39 @@ const ReportsAnalytics: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 md:mb-8"
         >
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center">
-                <BarChart3 className="mr-3 text-blue-600" size={36} />
-                Screen Reports & Analytics
+          <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-6">
+            <div className="text-center md:text-left">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center justify-center md:justify-start">
+                <BarChart3 className="mr-2 lg:mr-3 text-blue-600" size={28} />
+                <span className="hidden sm:inline">Screen Reports & Analytics</span>
+                <span className="sm:hidden">Reports</span>
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 Comprehensive analysis of your digital screen network
               </p>
             </div>
-            <div className="flex items-center space-x-3 mt-4 md:mt-0">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3">
               <motion.button
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={generateComprehensiveReport}
               >
-                <Download size={20} />
+                <Download size={18} />
                 <span className="font-semibold">Download Report</span>
               </motion.button>
               <motion.button
-                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-200 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-200 transition-colors text-sm sm:text-base"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   // Refresh data logic
                   window.location.reload();
@@ -845,250 +844,283 @@ const ReportsAnalytics: React.FC = () => {
           </div>
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 md:mb-8">
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     Total Screens
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {filteredScreens.length}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Monitor className="text-blue-600" size={24} />
+                <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
+                  <Monitor className="text-blue-600" size={20} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center text-sm">
-                <ArrowUp className="text-green-600 mr-1" size={16} />
+              <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
+                <ArrowUp className="text-green-600 mr-1" size={14} />
                 <span className="text-green-600 font-medium">12%</span>
-                <span className="text-gray-500 ml-1">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
               </div>
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     Total Revenue
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     ₹{(totalRevenue / 100000).toFixed(1)}L
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <DollarSign className="text-green-600" size={24} />
+                <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
+                  <DollarSign className="text-green-600" size={20} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center text-sm">
-                <ArrowUp className="text-green-600 mr-1" size={16} />
+              <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
+                <ArrowUp className="text-green-600 mr-1" size={14} />
                 <span className="text-green-600 font-medium">8.3%</span>
-                <span className="text-gray-500 ml-1">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
               </div>
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     Avg Occupancy
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {averageOccupancy.toFixed(1)}%
                   </p>
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Activity className="text-yellow-600" size={24} />
+                <div className="p-2 sm:p-3 bg-yellow-100 rounded-lg">
+                  <Activity className="text-yellow-600" size={20} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center text-sm">
-                <ArrowUp className="text-green-600 mr-1" size={16} />
+              <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
+                <ArrowUp className="text-green-600 mr-1" size={14} />
                 <span className="text-green-600 font-medium">5.2%</span>
-                <span className="text-gray-500 ml-1">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
               </div>
             </motion.div>
 
             <motion.div
-              className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+              className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4 }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     Active Screens
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900">
                     {activeScreens}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Zap className="text-purple-600" size={24} />
+                <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
+                  <Zap className="text-purple-600" size={20} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center text-sm">
-                <ArrowDown className="text-red-600 mr-1" size={16} />
+              <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
+                <ArrowDown className="text-red-600 mr-1" size={14} />
                 <span className="text-red-600 font-medium">2.1%</span>
-                <span className="text-gray-500 ml-1">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
               </div>
             </motion.div>
           </div>
         </motion.div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 md:mb-8">
           <motion.div
-            className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+            className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <TrendingUp className="mr-2 text-blue-600" size={20} />
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <TrendingUp className="mr-2 text-blue-600" size={18} />
               Revenue Trend
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis
-                  tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`}
-                />
-                <Tooltip
-                  formatter={(value) => [
-                    `₹${((value as number) / 100000).toFixed(1)}L`,
-                    "Revenue",
-                  ]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#3b82f6"
-                  fill="url(#colorRevenue)"
-                />
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="w-full h-64 sm:h-72 lg:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="month" 
+                    tick={{ fontSize: 12 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`}
+                    tick={{ fontSize: 12 }}
+                    width={60}
+                  />
+                  <Tooltip
+                    formatter={(value) => [
+                      `₹${((value as number) / 100000).toFixed(1)}L`,
+                      "Revenue",
+                    ]}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#3b82f6"
+                    fill="url(#colorRevenue)"
+                  />
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </motion.div>
 
           <motion.div
-            className="bg-white rounded-xl p-6 shadow-lg border border-gray-100"
+            className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <PieChartIcon className="mr-2 text-purple-600" size={20} />
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <PieChartIcon className="mr-2 text-purple-600" size={18} />
               Occupancy Distribution
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={occupancyData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {occupancyData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="w-full h-64 sm:h-72 lg:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={occupancyData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) =>
+                      `${(name || '').split(' ')[0]} ${value}%`
+                    }
+                    outerRadius="70%"
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {occupancyData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </motion.div>
         </div>
 
         {/* City Performance Chart */}
         <motion.div
-          className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8"
+          className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100 mb-6 md:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <BarChart3 className="mr-2 text-green-600" size={20} />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <BarChart3 className="mr-2 text-green-600" size={18} />
             City Performance
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={cityPerformance}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="city" />
-              <YAxis
-                yAxisId="left"
-                tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`}
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                tickFormatter={(value) => `${value}%`}
-              />
-              <Tooltip
-                formatter={(value, name) => [
-                  name === "revenue"
-                    ? `₹${((value as number) / 100000).toFixed(1)}L`
-                    : `${value}%`,
-                  name === "revenue" ? "Revenue" : "Occupancy",
-                ]}
-              />
-              <Legend />
-              <Bar
-                yAxisId="left"
-                dataKey="revenue"
-                fill="#3b82f6"
-                name="revenue"
-              />
-              <Line
-                yAxisId="right"
-                dataKey="occupancy"
-                stroke="#10b981"
-                name="occupancy"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="w-full h-64 sm:h-72 lg:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={cityPerformance}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="city" 
+                  tick={{ fontSize: 12 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  yAxisId="left"
+                  tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`}
+                  tick={{ fontSize: 12 }}
+                  width={60}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tickFormatter={(value) => `${value}%`}
+                  tick={{ fontSize: 12 }}
+                  width={50}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === "revenue"
+                      ? `₹${((value as number) / 100000).toFixed(1)}L`
+                      : `${value}%`,
+                    name === "revenue" ? "Revenue" : "Occupancy",
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                />
+                <Legend />
+                <Bar
+                  yAxisId="left"
+                  dataKey="revenue"
+                  fill="#3b82f6"
+                  name="revenue"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
 
         {/* Filters and Controls */}
         <motion.div
-          className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-6"
+          className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 md:mb-0">
+          <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
               Screen Inventory
             </h3>
-            <div className="flex items-center space-x-3">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+              <div className="relative flex-1 sm:flex-none">
                 <Search
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   size={18}
@@ -1098,43 +1130,47 @@ const ReportsAnalytics: React.FC = () => {
                   placeholder="Search screens..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <Filter size={18} />
-                <span>Filters</span>
-                <ChevronDown
-                  className={`transform transition-transform ${
-                    showFilters ? "rotate-180" : ""
-                  }`}
-                  size={16}
-                />
-              </button>
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center space-x-3">
                 <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "list"
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600"
-                  }`}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                 >
-                  <List size={18} />
+                  <Filter size={18} />
+                  <span className="hidden sm:inline">Filters</span>
+                  <ChevronDown
+                    className={`transform transition-transform ${
+                      showFilters ? "rotate-180" : ""
+                    }`}
+                    size={16}
+                  />
                 </button>
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600"
-                  }`}
-                >
-                  <Grid size={18} />
-                </button>
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "list"
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-gray-600"
+                    }`}
+                    title="List View"
+                  >
+                    <List size={18} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "grid"
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-gray-600"
+                    }`}
+                    title="Grid View"
+                  >
+                    <Grid size={18} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1146,7 +1182,7 @@ const ReportsAnalytics: React.FC = () => {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 overflow-hidden"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 overflow-hidden"
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1155,7 +1191,7 @@ const ReportsAnalytics: React.FC = () => {
                   <select
                     value={filterCity}
                     onChange={(e) => setFilterCity(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
                     {cities.map((city) => (
                       <option key={city} value={city}>
@@ -1171,7 +1207,7 @@ const ReportsAnalytics: React.FC = () => {
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
                     {statuses.map((status) => (
                       <option key={status} value={status}>
@@ -1187,7 +1223,7 @@ const ReportsAnalytics: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
                     <option value="name">Name</option>
                     <option value="city">City</option>
@@ -1205,12 +1241,12 @@ const ReportsAnalytics: React.FC = () => {
                     onClick={() =>
                       setSortOrder(sortOrder === "asc" ? "desc" : "asc")
                     }
-                    className="w-full flex items-center justify-center space-x-2 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-center space-x-2 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors text-sm"
                   >
                     {sortOrder === "asc" ? (
-                      <SortAsc size={18} />
+                      <SortAsc size={16} />
                     ) : (
-                      <SortDesc size={18} />
+                      <SortDesc size={16} />
                     )}
                     <span>
                       {sortOrder === "asc" ? "Ascending" : "Descending"}
@@ -1226,8 +1262,8 @@ const ReportsAnalytics: React.FC = () => {
         <div
           className={
             viewMode === "grid"
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "space-y-4"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+              : "space-y-3 sm:space-y-4"
           }
         >
           {filteredScreens.map((screen, index) => (
@@ -1237,15 +1273,15 @@ const ReportsAnalytics: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index }}
               className={`bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer ${
-                viewMode === "list" ? "p-6" : "p-4"
+                viewMode === "list" ? "p-4 sm:p-6" : "p-4"
               }`}
               onClick={() => setSelectedScreen(screen)}
             >
               {viewMode === "list" ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                  <div className="flex items-center space-x-3 sm:space-x-4 flex-1">
                     <div
-                      className={`p-3 rounded-lg ${
+                      className={`p-2 sm:p-3 rounded-lg ${
                         screen.status === "Active"
                           ? "bg-green-100"
                           : screen.status === "Maintenance"
@@ -1260,56 +1296,56 @@ const ReportsAnalytics: React.FC = () => {
                               ? "text-green-600"
                               : "text-gray-400"
                           }`}
-                          size={24}
+                          size={20}
                         />
                       ) : (
-                        <WifiOff className="text-gray-400" size={24} />
+                        <WifiOff className="text-gray-400" size={20} />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 text-lg">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                         {screen.name}
                       </h4>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 text-xs sm:text-sm text-gray-600 mt-1">
                         <span className="flex items-center">
-                          <MapPin size={14} className="mr-1" />
+                          <MapPin size={12} className="mr-1" />
                           {screen.city}
                         </span>
                         <span className="flex items-center">
-                          <Monitor size={14} className="mr-1" />
+                          <Monitor size={12} className="mr-1" />
                           {screen.size}
                         </span>
                         <span className="flex items-center">
-                          <Eye size={14} className="mr-1" />
+                          <Eye size={12} className="mr-1" />
                           {screen.traffic}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-6">
-                    <div className="text-right">
-                      <p className="font-bold text-lg text-gray-900">
+                  <div className="flex items-center justify-between sm:space-x-6">
+                    <div className="text-left sm:text-right">
+                      <p className="font-bold text-base sm:text-lg text-gray-900">
                         ₹{screen.price.toLocaleString()}
                       </p>
-                      <p className="text-sm text-gray-600">per month</p>
+                      <p className="text-xs sm:text-sm text-gray-600">per month</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-lg text-purple-600">
+                      <p className="font-semibold text-base sm:text-lg text-purple-600">
                         {screen.occupancy}%
                       </p>
-                      <p className="text-sm text-gray-600">occupancy</p>
+                      <p className="text-xs sm:text-sm text-gray-600">occupancy</p>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Star
                         className="text-yellow-400 fill-current"
-                        size={16}
+                        size={14}
                       />
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-900 text-sm">
                         {screen.rating}
                       </span>
                     </div>
                     <div
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
                         screen.status === "Active"
                           ? "bg-green-100 text-green-800"
                           : screen.status === "Maintenance"
@@ -1322,7 +1358,7 @@ const ReportsAnalytics: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div>
+                <div className="h-full flex flex-col">
                   <div className="flex items-center justify-between mb-3">
                     <div
                       className={`p-2 rounded-lg ${
@@ -1334,9 +1370,9 @@ const ReportsAnalytics: React.FC = () => {
                       }`}
                     >
                       {screen.status === "Active" ? (
-                        <Wifi className="text-green-600" size={20} />
+                        <Wifi className="text-green-600" size={18} />
                       ) : (
-                        <WifiOff className="text-gray-400" size={20} />
+                        <WifiOff className="text-gray-400" size={18} />
                       )}
                     </div>
                     <div
@@ -1351,32 +1387,32 @@ const ReportsAnalytics: React.FC = () => {
                       {screen.status}
                     </div>
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-2">
+                  <h4 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base line-clamp-2">
                     {screen.name}
                   </h4>
-                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <div className="space-y-2 text-xs sm:text-sm text-gray-600 mb-4 flex-1">
                     <div className="flex items-center">
-                      <MapPin size={14} className="mr-2" />
-                      {screen.city}
+                      <MapPin size={12} className="mr-2 flex-shrink-0" />
+                      <span className="truncate">{screen.city}</span>
                     </div>
                     <div className="flex items-center">
-                      <Monitor size={14} className="mr-2" />
-                      {screen.size}
+                      <Monitor size={12} className="mr-2 flex-shrink-0" />
+                      <span className="truncate">{screen.size}</span>
                     </div>
                     <div className="flex items-center">
-                      <Eye size={14} className="mr-2" />
-                      {screen.traffic}
+                      <Eye size={12} className="mr-2 flex-shrink-0" />
+                      <span className="truncate">{screen.traffic}</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="font-bold text-lg text-gray-900">
+                      <p className="font-bold text-base sm:text-lg text-gray-900">
                         ₹{screen.price.toLocaleString()}
                       </p>
                       <p className="text-xs text-gray-600">per month</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-purple-600">
+                      <p className="font-semibold text-purple-600 text-sm sm:text-base">
                         {screen.occupancy}%
                       </p>
                       <p className="text-xs text-gray-600">occupancy</p>
@@ -1386,13 +1422,13 @@ const ReportsAnalytics: React.FC = () => {
                     <div className="flex items-center space-x-1">
                       <Star
                         className="text-yellow-400 fill-current"
-                        size={14}
+                        size={12}
                       />
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-xs sm:text-sm font-medium text-gray-900">
                         {screen.rating}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 truncate">
                       {screen.lastUpdated}
                     </p>
                   </div>
@@ -1409,72 +1445,72 @@ const ReportsAnalytics: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4"
               onClick={() => setSelectedScreen(null)}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex-1 min-w-0 mr-4">
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                         {selectedScreen.name}
                       </h2>
-                      <p className="text-gray-600">{selectedScreen.location}</p>
+                      <p className="text-sm sm:text-base text-gray-600 truncate">{selectedScreen.location}</p>
                     </div>
                     <button
                       onClick={() => setSelectedScreen(null)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                     >
-                      <X size={24} />
+                      <X size={20} />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <div className="flex items-center space-x-3">
-                        <DollarSign className="text-blue-600" size={24} />
-                        <div>
-                          <p className="text-sm text-gray-600">Base Price</p>
-                          <p className="text-xl font-bold text-gray-900">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <DollarSign className="text-blue-600" size={20} />
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm text-gray-600">Base Price</p>
+                          <p className="text-sm sm:text-xl font-bold text-gray-900 truncate">
                             ₹{selectedScreen.price.toLocaleString()}
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <div className="flex items-center space-x-3">
-                        <Activity className="text-green-600" size={24} />
+                    <div className="bg-green-50 rounded-lg p-3 sm:p-4">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <Activity className="text-green-600" size={20} />
                         <div>
-                          <p className="text-sm text-gray-600">Occupancy</p>
-                          <p className="text-xl font-bold text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-600">Occupancy</p>
+                          <p className="text-sm sm:text-xl font-bold text-gray-900">
                             {selectedScreen.occupancy}%
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-purple-50 rounded-lg p-4">
-                      <div className="flex items-center space-x-3">
-                        <Eye className="text-purple-600" size={24} />
+                    <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <Eye className="text-purple-600" size={20} />
                         <div>
-                          <p className="text-sm text-gray-600">Impressions</p>
-                          <p className="text-xl font-bold text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-600">Impressions</p>
+                          <p className="text-sm sm:text-xl font-bold text-gray-900">
                             {(selectedScreen.impressions / 1000000).toFixed(1)}M
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-yellow-50 rounded-lg p-4">
-                      <div className="flex items-center space-x-3">
-                        <Star className="text-yellow-600" size={24} />
+                    <div className="bg-yellow-50 rounded-lg p-3 sm:p-4">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <Star className="text-yellow-600" size={20} />
                         <div>
-                          <p className="text-sm text-gray-600">Rating</p>
-                          <p className="text-xl font-bold text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-600">Rating</p>
+                          <p className="text-sm sm:text-xl font-bold text-gray-900">
                             {selectedScreen.rating}
                           </p>
                         </div>
@@ -1484,10 +1520,10 @@ const ReportsAnalytics: React.FC = () => {
 
                   {/* Time Slot Availability */}
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
                       Time Slot Availability
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       {selectedScreen.availability.map(
                         (slot: any, index: number) => (
                           <div

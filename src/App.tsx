@@ -19,8 +19,6 @@ import Footer from "./components/Home/Footer";
 import LoginSignup from "./components/Auth/LoginSignup";
 import Login from "./components/Auth/Login";
 
-// Import test credentials for development
-import "./utils/testCredentials";
 import Signup from "./components/Auth/Signup";
 import RoleSelect from "./components/Auth/RoleSelect";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";

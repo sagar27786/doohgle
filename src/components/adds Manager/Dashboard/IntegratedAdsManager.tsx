@@ -112,10 +112,10 @@ const IntegratedAdsManager: React.FC = () => {
   // Settings View Component
   const SettingsView: React.FC = () => {
     return (
-      <div className="space-y-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Platform Settings</h3>
-          <p className="text-gray-600">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Platform Settings</h3>
+          <p className="text-gray-600 text-sm sm:text-base">
             Configuration options and platform settings will be available here.
           </p>
         </div>
@@ -137,14 +137,14 @@ const IntegratedAdsManager: React.FC = () => {
       <div className={`
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 
-        bg-white shadow-lg border-r transition-transform duration-300 ease-in-out
+        bg-white shadow-xl lg:shadow-lg border-r transition-transform duration-300 ease-in-out
       `}>
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">Ads Manager</h2>
-          <p className="text-sm text-gray-600">Complete DOOH Platform</p>
+        <div className="p-4 sm:p-6 border-b">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Ads Manager</h2>
+          <p className="text-xs sm:text-sm text-gray-600">Complete DOOH Platform</p>
         </div>
 
-        <nav className="mt-6">
+        <nav className="mt-4 sm:mt-6 px-2">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -152,14 +152,14 @@ const IntegratedAdsManager: React.FC = () => {
                 setCurrentView(item.id as ViewType);
                 setSidebarOpen(false); // Close sidebar on mobile after selection
               }}
-              className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
+              className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-3 sm:py-4 text-left rounded-lg mx-2 mb-1 hover:bg-blue-50 transition-colors touch-manipulation ${
                 currentView === item.id
-                  ? "bg-blue-50 border-r-2 border-blue-500 text-blue-700"
+                  ? "bg-blue-50 border border-blue-200 text-blue-700 shadow-sm"
                   : "text-gray-700 hover:text-blue-700"
               }`}
             >
-              <item.icon size={20} />
-              <span className="font-medium">{item.label}</span>
+              <item.icon size={18} className="flex-shrink-0" />
+              <span className="font-medium text-sm sm:text-base truncate">{item.label}</span>
             </button>
           ))}
         </nav>
@@ -168,24 +168,24 @@ const IntegratedAdsManager: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/* Header */}
-        <div className="bg-white border-b px-4 lg:px-6 py-4">
+        <div className="bg-white border-b px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 touch-manipulation"
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
               
-              <div>
-                <h1 className="text-xl lg:text-2xl font-bold text-gray-900 capitalize">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 capitalize truncate">
                   {currentView.replace(/([A-Z])/g, " $1").trim()}
                 </h1>
-                <p className="text-gray-600 text-sm lg:text-base hidden sm:block">
+                <p className="text-gray-600 text-xs sm:text-sm lg:text-base hidden sm:block truncate">
                   {currentView === "dashboard" &&
                     "Overview of your campaigns and screens"}
                   {currentView === "maps" &&
@@ -207,7 +207,7 @@ const IntegratedAdsManager: React.FC = () => {
             </div>
 
             {/* NotificationBar for Ads Managers */}
-            <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
               <NotificationBar userType="ads_manager" />
             </div>
           </div>
@@ -215,7 +215,7 @@ const IntegratedAdsManager: React.FC = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6">{renderCurrentView()}</div>
+          <div className="p-3 sm:p-4 lg:p-6">{renderCurrentView()}</div>
         </div>
       </div>
     </div>

@@ -37,7 +37,7 @@ const fetchCampaigns = async () => {
   }
 };
 
-// Types
+  // Screen interface
 interface Screen {
   id: number;
   name: string;
@@ -45,6 +45,7 @@ interface Screen {
   image_url?: string;
   day_photo_url?: string;
   night_photo_url?: string;
+  video_url?: string;
   hourly_rate?: number;
   location_name?: string;
 }
@@ -164,9 +165,11 @@ const CampaignManagement: React.FC = () => {
           id: screen.id,
           name: screen.screen_name || screen.name,
           city: screen.city,
-          image_url: screen.image_url || `/assets/screen${(screen.id % 3) + 1}.png`,
+          // Priority: image_url -> day_photo_url -> video_url -> fallback to dummy
+          image_url: screen.image_url || screen.day_photo_url || screen.video_url || `/assets/screen${(screen.id % 3) + 1}.png`,
           day_photo_url: screen.day_photo_url,
           night_photo_url: screen.night_photo_url,
+          video_url: screen.video_url,
           hourly_rate: parseFloat(screen.hourly_rate || "500"),
           location_name: screen.location_in_venue || screen.location_name,
         }));
@@ -604,11 +607,22 @@ const CampaignManagement: React.FC = () => {
             >
               {viewMode === "grid" ? (
                 <div className="h-full">
-                  {/* Screen Image */}
+                  {/* Screen Media */}
                   <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600 overflow-hidden">
-                    {screen.image_url || screen.day_photo_url ? (
+                    {screen.video_url && screen.video_url.includes('.mp4') ? (
+                      <video
+                        src={screen.video_url}
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        loop
+                        muted
+                        onError={(e) => {
+                          (e.target as HTMLVideoElement).style.display = "none";
+                        }}
+                      />
+                    ) : (screen.image_url || screen.day_photo_url || screen.night_photo_url) ? (
                       <img
-                        src={screen.image_url || screen.day_photo_url}
+                        src={screen.image_url || screen.day_photo_url || screen.night_photo_url}
                         alt={screen.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -623,6 +637,11 @@ const CampaignManagement: React.FC = () => {
                     <div className="absolute top-4 right-4 bg-white/90 px-2 py-1 rounded-full text-xs font-medium text-gray-700">
                       {screen.city}
                     </div>
+                    {screen.video_url && (
+                      <div className="absolute top-4 left-4 bg-red-500/90 px-2 py-1 rounded-full text-xs font-medium text-white">
+                        VIDEO
+                      </div>
+                    )}
                   </div>
 
                   {/* Header */}
@@ -714,10 +733,21 @@ const CampaignManagement: React.FC = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4 flex-1">
-                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg overflow-hidden flex-shrink-0">
-                        {screen.image_url || screen.day_photo_url ? (
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg overflow-hidden flex-shrink-0 relative">
+                        {screen.video_url && screen.video_url.includes('.mp4') ? (
+                          <video
+                            src={screen.video_url}
+                            className="w-full h-full object-cover"
+                            autoPlay
+                            loop
+                            muted
+                            onError={(e) => {
+                              (e.target as HTMLVideoElement).style.display = "none";
+                            }}
+                          />
+                        ) : (screen.image_url || screen.day_photo_url || screen.night_photo_url) ? (
                           <img
-                            src={screen.image_url || screen.day_photo_url}
+                            src={screen.image_url || screen.day_photo_url || screen.night_photo_url}
                             alt={screen.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -727,6 +757,11 @@ const CampaignManagement: React.FC = () => {
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-white text-xs font-medium">
                             {screen.name.charAt(0)}
+                          </div>
+                        )}
+                        {screen.video_url && (
+                          <div className="absolute top-1 right-1 bg-red-500 px-1 rounded text-white text-xs">
+                            VID
                           </div>
                         )}
                       </div>
@@ -820,12 +855,24 @@ const CampaignManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Screen Image */}
+                  {/* Screen Media */}
                   <div className="mb-6">
                     <div className="relative h-64 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl overflow-hidden">
-                      {selectedScreen.image_url || selectedScreen.day_photo_url ? (
+                      {selectedScreen.video_url && selectedScreen.video_url.includes('.mp4') ? (
+                        <video
+                          src={selectedScreen.video_url}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          loop
+                          muted
+                          controls
+                          onError={(e) => {
+                            (e.target as HTMLVideoElement).style.display = "none";
+                          }}
+                        />
+                      ) : (selectedScreen.image_url || selectedScreen.day_photo_url || selectedScreen.night_photo_url) ? (
                         <img
-                          src={selectedScreen.image_url || selectedScreen.day_photo_url}
+                          src={selectedScreen.image_url || selectedScreen.day_photo_url || selectedScreen.night_photo_url}
                           alt={selectedScreen.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -840,6 +887,22 @@ const CampaignManagement: React.FC = () => {
                       <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full text-sm font-medium text-gray-700">
                         {selectedScreen.city}
                       </div>
+                      {selectedScreen.video_url && (
+                        <div className="absolute top-4 left-4 bg-red-500/90 px-3 py-1 rounded-full text-sm font-medium text-white">
+                          VIDEO SCREEN
+                        </div>
+                      )}
+                      {/* Day/Night toggle if both photos exist */}
+                      {selectedScreen.day_photo_url && selectedScreen.night_photo_url && (
+                        <div className="absolute bottom-4 left-4 flex space-x-2">
+                          <button className="bg-yellow-500/90 px-2 py-1 rounded text-white text-xs">
+                            Day
+                          </button>
+                          <button className="bg-blue-900/90 px-2 py-1 rounded text-white text-xs">
+                            Night
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 

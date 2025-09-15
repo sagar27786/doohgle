@@ -12,23 +12,28 @@ import {
   Zap,
 } from "lucide-react";
 
-const DEMO_EMAIL = "demo@demo.com";
-const DEMO_PASSWORD = "demopassword";
-
 const LoginSignup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  async function handleDemoLogin() {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    const user = { email: DEMO_EMAIL };
-    localStorage.setItem("user", JSON.stringify(user));
-    navigate("/auth/select-role");
-    setIsLoading(false);
-  }
+    
+    try {
+      // Here you would implement actual authentication
+      console.log("Login attempt:", { email, password });
+      // For now, just navigate to role selection
+      navigate("/auth/select-role");
+    } catch (error) {
+      console.error("Login failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4 relative overflow-hidden">
@@ -88,10 +93,12 @@ const LoginSignup: React.FC = () => {
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 font-mono text-sm transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   type="email"
-                  value={DEMO_EMAIL}
-                  disabled
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
                 />
               </div>
             </div>
@@ -106,10 +113,12 @@ const LoginSignup: React.FC = () => {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50 font-mono text-sm transition-all"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   type={showPassword ? "text" : "password"}
-                  value={DEMO_PASSWORD}
-                  disabled
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
                 />
                 <button
                   type="button"
@@ -127,8 +136,8 @@ const LoginSignup: React.FC = () => {
 
             {/* Login button */}
             <button
-              type="button"
-              onClick={handleDemoLogin}
+              type="submit"
+              onClick={handleSubmit}
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 shadow-lg"
             >
@@ -139,7 +148,7 @@ const LoginSignup: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span>Continue with Demo</span>
+                  <span>Sign In</span>
                   <ArrowRight
                     size={16}
                     className="group-hover:translate-x-1 transition-transform"
