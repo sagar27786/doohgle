@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { screensService } from '../../services/screensService';
-import ScreenDetailsModal from './ScreenDetailsModal';
+import { useState, useEffect } from "react";
+import { screensService } from "../../services/screensService";
+import ScreenDetailsModal from "./ScreenDetailsModal";
 
 interface ScreenAsset {
-  asset_type: 'photo_day' | 'photo_night' | 'video';
+  asset_type: "photo_day" | "photo_night" | "video";
   url: string;
 }
 
@@ -13,12 +13,12 @@ interface Screen {
   location_in_venue: string;
   screen_size_inches: number | null;
   resolution: string | null;
-  orientation: 'landscape' | 'portrait';
-  device_type: 'smart_tv' | 'media_player' | 'custom';
+  orientation: "landscape" | "portrait";
+  device_type: "smart_tv" | "media_player" | "custom";
   device_model: string | null;
   ads_enabled: boolean;
   ad_frequency: number;
-  viewing_distance: 'close' | 'medium' | 'far';
+  viewing_distance: "close" | "medium" | "far";
   typical_viewer_duration: string | null;
   peak_viewing_hours: string[];
   assets: ScreenAsset[];
@@ -39,7 +39,7 @@ function ScreenList() {
         const response = await screensService.getMyScreens();
         setScreens(response.screens || []);
       } catch (err: any) {
-        setError(err.message || 'An error occurred while fetching screens.');
+        setError(err.message || "An error occurred while fetching screens.");
       } finally {
         setLoading(false);
       }
@@ -49,7 +49,6 @@ function ScreenList() {
   }, []);
 
   const handleScreenClick = (screen: Screen) => {
-    console.log("Screen clicked:", screen);
     setSelectedScreen(screen);
   };
 
@@ -58,28 +57,37 @@ function ScreenList() {
   };
 
   if (loading) {
-    return <div>Loading screens...</div>;
+    return <div className="text-gray-600 text-sm">Loading screens...</div>;
   }
 
   if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
+    return <div className="text-red-500 text-sm">Error: {error}</div>;
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold">Your Screens</h2>
+    <div className="mt-6">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+        Your Screens
+      </h2>
+
       {screens.length === 0 ? (
-        <p>You have not registered any screens yet.</p>
+        <p className="text-gray-500 text-sm mt-2">
+          You have not registered any screens yet.
+        </p>
       ) : (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {screens.map((screen) => (
             <li
               key={screen.id}
-              className="p-4 border border-gray-200 dark:border-gray-700 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              className="p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors shadow-sm hover:shadow-md"
               onClick={() => handleScreenClick(screen)}
             >
-              <p className="font-bold">{screen.screen_name}</p>
-              <p>{screen.location_in_venue}</p>
+              <p className="font-medium text-gray-900 truncate">
+                {screen.screen_name}
+              </p>
+              <p className="text-sm text-gray-500">
+                {screen.location_in_venue}
+              </p>
             </li>
           ))}
         </ul>
@@ -87,6 +95,6 @@ function ScreenList() {
       <ScreenDetailsModal screen={selectedScreen} onClose={handleCloseModal} />
     </div>
   );
-};
+}
 
 export default ScreenList;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { createContext, useEffect, useState, useContext } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Home/Header";
 import MainHero from "./components/Home/MainHero";
@@ -38,10 +38,47 @@ import IntegratedAdsManager from "./components/adds Manager/Dashboard/Integrated
 
 // Admin Components
 import AdminApp from "./components/Admin/AdminApp";
+import LoaderAnimation from "./components/Home/LoaderAnimation";
+import ContactPage from "./components/Home/ContactPage";
+import AboutUs from "./components/Home/AboutUs";
 
 // ThemeProvider for dark mode
-import { ThemeProvider } from "./contexts/ThemeContext";
-import LoaderAnimation from "./components/Home/LoaderAnimation";
+interface ThemeContextType {
+  theme: string;
+  toggleTheme: () => void;
+}
+const ThemeContext = createContext<ThemeContextType>({
+  theme: "dark",
+  toggleTheme: () => {},
+});
+export const useTheme = () => useContext(ThemeContext);
+
+interface ThemeProviderProps {
+  children: React.ReactNode;
+}
+
+const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "dark"
+  );
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
 // Home page component
 const HomePage = () => {
@@ -115,7 +152,8 @@ function AppContent() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactPage />} />"
           {/* Ads Manager Routes */}
           {/* <Route path="/products/ads-manager" element={<AdsManagerPage />} /> */}
           <Route
@@ -142,15 +180,12 @@ function AppContent() {
           >
             <Route path="/auth/select-role" element={<RoleSelect />} />
           </Route>
-
           {/* Protected Venue Owner Routes */}
           <Route element={<ProtectedRoute allowedRoles={["venue_owner"]} />}>
             <Route path="/venue-dashboard" element={<VenueDashboard />} />
           </Route>
-
           {/* Admin Route */}
           <Route path="/admin" element={<AdminApp />} />
-
           {/* Protected Advertiser Routes */}
           <Route element={<ProtectedRoute allowedRoles={["advertiser"]} />}>
             <Route path="/products/ads-manager" element={<AdsManagerPage />} />

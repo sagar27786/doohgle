@@ -39,7 +39,7 @@ const MainHero = () => {
         </video>
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-70 z-0 dark:bg-opacity-70 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black bg-opacity-70 z-0 dark:bg-opacity-70 backdrop-blur-none" />
 
         {/* Main Content */}
         <div className="relative z-10 text-center max-w-6xl mx-auto text-white dark:text-slate-200 px-2 sm:px-4">
@@ -53,30 +53,32 @@ const MainHero = () => {
             With <span className="purple-gray-gradient"> Perfect Ads</span>
           </h1>
 
-          {/* Description paragraphs - Responsive text sizing */}
-          <p className="max-w-4xl mx-auto text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-[1.4rem] leading-relaxed mb-1 sm:mb-2 text-gray-300 px-2">
-            <span className="purple-gray-gradient">
-              The largest marketplace{" "}
-            </span>
-            for digital out-of-home advertising.
-          </p>
-
-          <p className="max-w-3xl mx-auto text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-[1.4rem] leading-relaxed mb-1 sm:mb-2 text-gray-300 px-2">
-            List your screens,{" "}
-            <span className="purple-gray-gradient">elevate your income.</span>
-          </p>
-
-          <p className="max-w-3xl mx-auto text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-[1.4rem] leading-relaxed mb-3 sm:mb-4 text-gray-300 px-2">
-            Book <span className="purple-gray-gradient">Premium location</span>{" "}
-            for your ad and maximize your reach{" "}
-            <span className="inline-flex whitespace-nowrap">
-              with&nbsp;
+          <div className="backdrop-blur-sm bg-black/10 rounded-xl p-2">
+            {/* Description paragraphs - Responsive text sizing */}
+            <p className="max-w-4xl mx-auto text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-[1.4rem] leading-relaxed mb-1 sm:mb-2 text-gray-300 px-2">
               <span className="purple-gray-gradient">
-                AI&nbsp;driven&nbsp;insights.
+                The largest marketplace{" "}
               </span>
-            </span>
-          </p>
+              for digital out-of-home advertising.
+            </p>
 
+            <p className="max-w-3xl mx-auto text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-[1.4rem] leading-relaxed mb-1 sm:mb-2 text-gray-300 px-2">
+              List your screens,{" "}
+              <span className="purple-gray-gradient">elevate your income.</span>
+            </p>
+
+            <p className="max-w-3xl mx-auto text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-[1.4rem] leading-relaxed mb-3 sm:mb-4 text-gray-300 px-2">
+              Book{" "}
+              <span className="purple-gray-gradient">Premium location</span> for
+              your ad and maximize your reach{" "}
+              <span className="inline-flex whitespace-nowrap">
+                with&nbsp;
+                <span className="purple-gray-gradient">
+                  AI&nbsp;driven&nbsp;insights.
+                </span>
+              </span>
+            </p>
+          </div>
           {/* Buttons - Responsive sizing and stacking */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4">
             <Link

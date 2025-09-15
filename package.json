@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.873.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.873.0",
+    "@emailjs/browser": "^4.4.1",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@fontsource/bebas-neue": "^5.2.6",
@@ -26,6 +27,7 @@
     "axios": "^1.11.0",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
+    "emailjs": "^4.0.3",
     "framer-motion": "^12.23.12",
     "joi": "^18.0.1",
     "leaflet": "^1.9.4",
