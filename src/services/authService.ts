@@ -152,6 +152,42 @@ const verifyOTPAndSignup = async (data: {
   return { user, token };
 };
 
+// MojoAuth methods
+const sendMojoAuthOTP = async (email: string): Promise<{ message: string; state_id: string }> => {
+  const response = await axios.post<{ message: string; state_id: string }>(`${API_URL}/auth/mojoauth/send-otp`, { email });
+  return response.data;
+};
+
+const verifyMojoAuthSignup = async (data: {
+  state_id: string;
+  otp: string;
+  password: string;
+  confirmPassword: string;
+  name?: string;
+}): Promise<AuthResponse> => {
+  const response = await axios.post<AuthResponse>(`${API_URL}/auth/mojoauth/verify-signup`, data);
+  const { user, token } = response.data;
+  setAuthToken(token);
+  setCurrentUser(user);
+  return { user, token };
+};
+
+const sendMojoAuthLoginOTP = async (email: string): Promise<{ message: string; state_id: string }> => {
+  const response = await axios.post<{ message: string; state_id: string }>(`${API_URL}/auth/mojoauth/login-otp`, { email });
+  return response.data;
+};
+
+const verifyMojoAuthLogin = async (data: {
+  state_id: string;
+  otp: string;
+}): Promise<AuthResponse> => {
+  const response = await axios.post<AuthResponse>(`${API_URL}/auth/mojoauth/verify-login`, data);
+  const { user, token } = response.data;
+  setAuthToken(token);
+  setCurrentUser(user);
+  return { user, token };
+};
+
 export const authService = {
   getAuthToken,
   setAuthToken,
@@ -171,6 +207,11 @@ export const authService = {
   updateProfile,
   requestPasswordReset,
   resetPassword,
+  // MojoAuth methods
+  sendMojoAuthOTP,
+  verifyMojoAuthSignup,
+  sendMojoAuthLoginOTP,
+  verifyMojoAuthLogin,
   setRole: async (role: 'advertiser' | 'venue_owner'): Promise<AuthResponse> => {
     const response = await axios.post<AuthResponse>(
       `${API_URL}/auth/set-role`,
