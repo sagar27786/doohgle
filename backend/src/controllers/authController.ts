@@ -5,6 +5,7 @@ import { pool } from '../db';
 import { User } from '../models/user';
 import { saveOTP, verifyOTP } from '../models/otp';
 import nodemailer from 'nodemailer';
+import { mojoAuthBackendService } from '../services/mojoAuthService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -284,5 +285,221 @@ export async function setRole(req: Request, res: Response) {
   } catch (err) {
     console.error('Error setting role:', err);
     return res.status(500).json({ message: 'Failed to set role', error: err });
+  }
+}
+
+// MojoAuth endpoints
+
+/**
+ * Send OTP using MojoAuth for email verification
+ */
+export async function sendMojoAuthOTP(req: Request, res: Response) {
+  const { email } = req.body as { email: string };
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+
+  try {
+    // Check if user already exists
+    const userByEmail = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (userByEmail.rows.length > 0) {
+      return res.status(409).json({ message: 'User with this email already exists.' });
+    }
+
+    // Send OTP using MojoAuth
+    const result = await mojoAuthBackendService.sendEmailOTP(email);
+    
+    return res.status(200).json({
+      message: result.message,
+      state_id: result.state_id,
+    });
+  } catch (err: any) {
+    console.error('Error sending MojoAuth OTP:', err);
+    return res.status(500).json({ 
+      message: err.message || 'Failed to send OTP',
+      error: err.message
+    });
+  }
+}
+
+/**
+ * Verify OTP and complete signup using MojoAuth
+ */
+export async function verifyMojoAuthOTP(req: Request, res: Response) {
+  const { state_id, otp, password, confirmPassword, name } = req.body as {
+    state_id: string;
+    otp: string;
+    password: string;
+    confirmPassword: string;
+    name?: string;
+  };
+
+  if (!state_id || !otp || !password || !confirmPassword) {
+    return res.status(400).json({ message: 'State ID, OTP, password, and confirmPassword are required.' });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: 'Passwords do not match.' });
+  }
+
+  try {
+    // Verify OTP with MojoAuth
+    const mojoAuthUser = await mojoAuthBackendService.verifyEmailOTP(state_id, otp);
+    
+    if (!mojoAuthUser.user_profile?.email) {
+      return res.status(400).json({ message: 'Email not found in MojoAuth response.' });
+    }
+
+    const email = mojoAuthUser.user_profile.email;
+
+    // Check if user already exists
+    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({ message: 'User with this email already exists.' });
+    }
+
+    // Hash password and create user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, role',
+      [name || mojoAuthUser.user_profile.name || '', email, hashedPassword]
+    );
+
+    const user: any = result.rows[0];
+    const roles: string[] = user.role ? [user.role] : [];
+    
+    // Create JWT token
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email, 
+        roles,
+        mojoauth_token: mojoAuthUser.oauth.access_token 
+      },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    return res.status(201).json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        name: user.name,
+        email: user.email, 
+        roles 
+      },
+      mojoauth: {
+        access_token: mojoAuthUser.oauth.access_token,
+        refresh_token: mojoAuthUser.oauth.refresh_token,
+        expires_in: mojoAuthUser.oauth.expires_in
+      }
+    });
+  } catch (err: any) {
+    console.error('Error verifying MojoAuth OTP:', err);
+    return res.status(500).json({ 
+      message: err.message || 'Failed to verify OTP',
+      error: err.message
+    });
+  }
+}
+
+/**
+ * Login using MojoAuth email OTP
+ */
+export async function loginWithMojoAuthOTP(req: Request, res: Response) {
+  const { email } = req.body as { email: string };
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+
+  try {
+    // Check if user exists
+    const userResult = await pool.query('SELECT id, name, email, role FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ message: 'User not found. Please sign up first.' });
+    }
+
+    // Send OTP using MojoAuth for existing user login
+    const result = await mojoAuthBackendService.sendEmailOTP(email);
+    
+    return res.status(200).json({
+      message: result.message,
+      state_id: result.state_id,
+    });
+  } catch (err: any) {
+    console.error('Error sending MojoAuth login OTP:', err);
+    return res.status(500).json({ 
+      message: err.message || 'Failed to send login OTP',
+      error: err.message
+    });
+  }
+}
+
+/**
+ * Verify login OTP using MojoAuth
+ */
+export async function verifyMojoAuthLoginOTP(req: Request, res: Response) {
+  const { state_id, otp } = req.body as {
+    state_id: string;
+    otp: string;
+  };
+
+  if (!state_id || !otp) {
+    return res.status(400).json({ message: 'State ID and OTP are required.' });
+  }
+
+  try {
+    // Verify OTP with MojoAuth
+    const mojoAuthUser = await mojoAuthBackendService.verifyEmailOTP(state_id, otp);
+    
+    if (!mojoAuthUser.user_profile?.email) {
+      return res.status(400).json({ message: 'Email not found in MojoAuth response.' });
+    }
+
+    const email = mojoAuthUser.user_profile.email;
+
+    // Get user from database
+    const userResult = await pool.query('SELECT id, name, email, role FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ message: 'User not found.' });
+    }
+
+    const user: any = userResult.rows[0];
+    const roles: string[] = user.role ? [user.role] : [];
+    
+    // Create JWT token
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email, 
+        roles,
+        mojoauth_token: mojoAuthUser.oauth.access_token 
+      },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    return res.status(200).json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        name: user.name,
+        email: user.email, 
+        roles 
+      },
+      mojoauth: {
+        access_token: mojoAuthUser.oauth.access_token,
+        refresh_token: mojoAuthUser.oauth.refresh_token,
+        expires_in: mojoAuthUser.oauth.expires_in
+      }
+    });
+  } catch (err: any) {
+    console.error('Error verifying MojoAuth login OTP:', err);
+    return res.status(500).json({ 
+      message: err.message || 'Failed to verify login OTP',
+      error: err.message
+    });
   }
 }
