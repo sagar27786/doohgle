@@ -1,29 +1,7 @@
-import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import HeroVideo from "./HeroVideo";
 
 const MainHero = () => {
-  const [scrollY, setScrollY] = useState(0);
-  const [searchExpanded, setSearchExpanded] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const nextSectionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const y = window.scrollY;
-      setScrollY(y);
-      setSearchExpanded(y > 20);
-
-      if (nextSectionRef.current) {
-        const nextTop = nextSectionRef.current.offsetTop;
-        setVisible(y + 400 < nextTop);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <>
       <main className="relative flex items-center justify-center min-h-screen overflow-hidden p-2 sm:p-4 bg-black">
@@ -97,50 +75,10 @@ const MainHero = () => {
               <span className="text-center px-2">Book Screen</span>
             </Link>
           </div>
-
-          {/* Floating Box - Enhanced responsiveness */}
-          <div
-            className={`flex items-center justify-center transition-opacity duration-500 ${
-              visible ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-            style={{
-              position: "fixed",
-              top: `${120 + scrollY * 0.2}px`,
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 50,
-            }}
-          >
-            <div
-              className={`flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 sm:py-4 shadow-lg transition-all duration-500 ease-out mx-4
-              ${
-                searchExpanded
-                  ? "w-[calc(100vw-2rem)] sm:w-[90vw] md:w-[600px] h-16 sm:h-20"
-                  : "w-[calc(100vw-4rem)] sm:w-[80vw] md:w-[300px] h-14 sm:h-16"
-              }
-              bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700
-              hover:shadow-xl cursor-text`}
-            >
-              <div className="flex items-center min-w-0 flex-1">
-                <span className="mr-2 sm:mr-3 text-slate-400 dark:text-slate-500 flex-shrink-0">
-                  ✨
-                </span>
-                <span className="text-slate-600 dark:text-slate-300 text-xs xs:text-sm sm:text-base md:text-lg truncate">
-                  {searchExpanded ? "Keep Scrolling" : "Sign Up. It's free. :)"}
-                </span>
-              </div>
-
-              {searchExpanded && (
-                <button className="ml-2 sm:ml-4 p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 transition flex-shrink-0">
-                  💬
-                </button>
-              )}
-            </div>
-          </div>
         </div>
       </main>
 
-      <div ref={nextSectionRef}>
+      <div>
         <HeroVideo />
       </div>
     </>

@@ -41,6 +41,8 @@ import AdminApp from "./components/Admin/AdminApp";
 import LoaderAnimation from "./components/Home/LoaderAnimation";
 import ContactPage from "./components/Home/ContactPage";
 import AboutUs from "./components/Home/AboutUs";
+import HowItWorks from "./components/Home/HowItWorks";
+import ScreenManager from "./components/Home/ScreenManager";
 
 // ThemeProvider for dark mode
 interface ThemeContextType {
@@ -93,6 +95,8 @@ const HomePage = () => {
       <GlobalFeed />
       <WhyFramen />
       <SuccessStories />
+      <ScreenManager />
+      <HowItWorks />
       <ContentCreator />
       <FAQ />
       <Contact />

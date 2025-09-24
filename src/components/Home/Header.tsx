@@ -43,6 +43,27 @@ const Header = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      // Add offset for header height to prevent section from being hidden under header
+      const headerHeight = 80; // Height of the header in pixels
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - headerHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+
+      // Close menus after scrolling
+      setIsProductsOpen(false);
+      setIsMenuOpen(false);
+      setIsMobileProductsOpen(false);
+    }
+  };
+
   interface NavLinkProps {
     to: string;
     children: React.ReactNode;
@@ -132,15 +153,7 @@ const Header = () => {
                   <div className="absolute top-full left-0 mt-3 w-96 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-down z-50">
                     <div className="p-4 space-y-2">
                       <button
-                        onClick={() => {
-                          const el = document.getElementById("screen-manager");
-                          if (el) {
-                            el.scrollIntoView({ behavior: "smooth" });
-                          }
-                          setIsProductsOpen(false);
-                          setIsMenuOpen(false);
-                          setIsMobileProductsOpen(false);
-                        }}
+                        onClick={() => scrollToSection("screen-manager")}
                         className="flex items-center w-full p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       >
                         <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-800/50 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
@@ -157,15 +170,7 @@ const Header = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          const el = document.getElementById("ads-manager");
-                          if (el) {
-                            el.scrollIntoView({ behavior: "smooth" });
-                          }
-                          setIsProductsOpen(false);
-                          setIsMenuOpen(false);
-                          setIsMobileProductsOpen(false);
-                        }}
+                        onClick={() => scrollToSection("ads-manager")}
                         className="flex items-center w-full p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       >
                         <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-800/50 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
