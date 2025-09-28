@@ -32,10 +32,10 @@ app.use(requestLogger);
 
 // Routes
 app.use("/api/screens", screenRoutes);
-// app.use("/api/auth", authRoutes);
-// app.use("/api/campaigns", campaignRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/campaigns", campaignRoutes);
 app.use("/api/upload", uploadRoutes);
-// app.use("/api/analytics", analyticsRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

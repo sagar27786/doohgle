@@ -1,17 +1,19 @@
-import { pool } from './connection';
+import { pool } from "./connection";
 
 // Initialize database tables
 export const initializeDatabase = async (): Promise<void> => {
   try {
-    console.log('🔄 Initializing database tables...');
-    
+    console.log("🔄 Initializing database tables...");
+
     // Create users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        role VARCHAR(50) NOT NULL DEFAULT 'advertiser',
+        name VARCHAR(255),
+        email VARCHAR(255) UNIQUE,
+        phone VARCHAR(20),
+        password_hash VARCHAR(255),
+        role VARCHAR(50) DEFAULT 'user',
         is_verified BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -74,9 +76,22 @@ export const initializeDatabase = async (): Promise<void> => {
       )
     `);
 
-    console.log('✅ Database tables initialized successfully');
+    // Create OTPs table for authentication
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS otps (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255),
+        phone VARCHAR(20),
+        otp VARCHAR(6) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        is_used BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log("✅ Database tables initialized successfully");
   } catch (error) {
-    console.error('❌ Database initialization failed:', error);
+    console.error("❌ Database initialization failed:", error);
     throw error;
   }
 };
