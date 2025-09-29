@@ -19,7 +19,8 @@ import IndiaMapDashboard from "../components/Map/IndiaMapDashboard";
 import { getAllScreens } from "../api/screens";
 
 // API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://doohgle-backend.onrender.com/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://doohgle-backend.onrender.com/api";
 
 // API function to fetch campaigns
 const fetchCampaigns = async () => {
@@ -265,7 +266,7 @@ const MapDashboardPage: React.FC = () => {
     totalImpressions: 0,
     totalRevenue: 0,
     citiesCount: 0,
-    activeUsers: 0
+    activeUsers: 0,
   });
 
   // Load real data from APIs
@@ -274,27 +275,36 @@ const MapDashboardPage: React.FC = () => {
       try {
         const [screensResponse, campaignsResponse] = await Promise.all([
           getAllScreens(),
-          fetchCampaigns()
+          fetchCampaigns(),
         ]);
-        
+
         const screens = screensResponse || [];
         const campaigns = campaignsResponse || [];
 
         // Calculate real statistics
-        const activeCampaigns = campaigns.filter((c: any) => c.status.toLowerCase() === "active").length;
-        const totalImpressions = campaigns.reduce((sum: number, campaign: any) => sum + (parseInt(campaign.impressions) || 0), 0);
-        const totalRevenue = campaigns.reduce((sum: number, campaign: any) => sum + (parseFloat(campaign.spent) || 0), 0);
+        const activeCampaigns = campaigns.filter(
+          (c: any) => c.status.toLowerCase() === "active"
+        ).length;
+        const totalImpressions = campaigns.reduce(
+          (sum: number, campaign: any) =>
+            sum + (parseInt(campaign.impressions) || 0),
+          0
+        );
+        const totalRevenue = campaigns.reduce(
+          (sum: number, campaign: any) =>
+            sum + (parseFloat(campaign.spent) || 0),
+          0
+        );
         const citiesSet = new Set(screens.map((screen: any) => screen.city));
-        
+
         setRealStats({
           totalScreens: screens.length,
           activeCampaigns: activeCampaigns,
           totalImpressions: totalImpressions,
           totalRevenue: totalRevenue,
           citiesCount: citiesSet.size,
-          activeUsers: campaigns.length * 3 // Estimate 3 users per campaign
+          activeUsers: campaigns.length * 3, // Estimate 3 users per campaign
         });
-        
       } catch (error) {
         console.error("Failed to load real data:", error);
         // Keep default values if API fails
@@ -335,11 +345,12 @@ const MapDashboardPage: React.FC = () => {
     {
       id: "total-impressions",
       title: "Total Impressions",
-      value: realStats.totalImpressions > 1000000 
-        ? `${(realStats.totalImpressions / 1000000).toFixed(1)}M`
-        : realStats.totalImpressions > 1000
-        ? `${(realStats.totalImpressions / 1000).toFixed(1)}K`
-        : realStats.totalImpressions.toString(),
+      value:
+        realStats.totalImpressions > 1000000
+          ? `${(realStats.totalImpressions / 1000000).toFixed(1)}M`
+          : realStats.totalImpressions > 1000
+          ? `${(realStats.totalImpressions / 1000).toFixed(1)}K`
+          : realStats.totalImpressions.toString(),
       change: "+15.2%",
       trend: "up",
       color: "purple",
@@ -357,9 +368,10 @@ const MapDashboardPage: React.FC = () => {
     {
       id: "revenue",
       title: "Revenue",
-      value: realStats.totalRevenue > 100000 
-        ? `₹${(realStats.totalRevenue / 100000).toFixed(1)}L`
-        : `₹${realStats.totalRevenue.toLocaleString()}`,
+      value:
+        realStats.totalRevenue > 100000
+          ? `₹${(realStats.totalRevenue / 100000).toFixed(1)}L`
+          : `₹${realStats.totalRevenue.toLocaleString()}`,
       change: "+18.9%",
       trend: "up",
       color: "indigo",

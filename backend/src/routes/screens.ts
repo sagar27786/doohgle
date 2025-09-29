@@ -9,6 +9,9 @@ import {
   getScreenTypes,
   getPopularCities,
   getDashboardStats,
+  toggleFavoriteScreen,
+  getUserFavoriteScreens,
+  checkFavoriteStatus,
 } from "../controllers/screensController";
 
 const router = Router();
@@ -19,6 +22,11 @@ router.get("/mine", authMiddleware, getMyScreens);
 
 // Dashboard analytics for ads manager
 router.get("/dashboard/stats", authMiddleware, getDashboardStats);
+
+// Favorite screens routes (protected)
+router.post("/:screenId/favorite", authMiddleware, toggleFavoriteScreen);
+router.get("/favorites/mine", authMiddleware, getUserFavoriteScreens);
+router.post("/favorites/check", authMiddleware, checkFavoriteStatus);
 
 // New ads manager routes (public access for browsing screens)
 router.get("/", getAllScreens);

@@ -70,28 +70,50 @@ interface AnalyticsScreenData {
 }
 
 // Transform backend screen data to analytics format
-const transformScreenData = (screens: ScreenSearchResult[]): AnalyticsScreenData[] => {
+const transformScreenData = (
+  screens: ScreenSearchResult[]
+): AnalyticsScreenData[] => {
   return screens.map((screen, index) => ({
     id: screen.id,
     name: screen.name,
     city: screen.city,
-    location: screen.address || 'Location not specified',
-    type: screen.screen_type || 'Digital',
-    size: `${screen.screen_size_width || 30}x${screen.screen_size_height || 15} ft`,
-    resolution: `${screen.resolution_width || 1920}x${screen.resolution_height || 1080}`,
-    price: screen.daily_rate || 25000 + (index * 5000),
+    location: screen.address || "Location not specified",
+    type: screen.screen_type || "Digital",
+    size: `${screen.screen_size_width || 30}x${
+      screen.screen_size_height || 15
+    } ft`,
+    resolution: `${screen.resolution_width || 1920}x${
+      screen.resolution_height || 1080
+    }`,
+    price: screen.daily_rate || 25000 + index * 5000,
     traffic: `${(screen.daily_footfall || 1000000) / 1000000}M/month`,
-    status: screen.is_active ? 'Active' : 'Inactive',
+    status: screen.is_active ? "Active" : "Inactive",
     occupancy: Math.floor(Math.random() * 40) + 60, // Random occupancy 60-100%
     revenue: (screen.daily_rate || 25000) * 10, // Estimated monthly revenue
     impressions: screen.daily_footfall || 1000000,
     rating: 4.0 + Math.random() * 1, // Random rating 4.0-5.0
     lastUpdated: `${Math.floor(Math.random() * 10) + 1} mins ago`,
     availability: [
-      { time: '06:00-12:00', available: Math.random() > 0.5, price: screen.daily_rate || 25000 },
-      { time: '12:00-18:00', available: Math.random() > 0.5, price: (screen.daily_rate || 25000) * 1.2 },
-      { time: '18:00-24:00', available: Math.random() > 0.5, price: (screen.daily_rate || 25000) * 1.4 },
-      { time: '00:00-06:00', available: Math.random() > 0.5, price: (screen.daily_rate || 25000) * 0.8 },
+      {
+        time: "06:00-12:00",
+        available: Math.random() > 0.5,
+        price: screen.daily_rate || 25000,
+      },
+      {
+        time: "12:00-18:00",
+        available: Math.random() > 0.5,
+        price: (screen.daily_rate || 25000) * 1.2,
+      },
+      {
+        time: "18:00-24:00",
+        available: Math.random() > 0.5,
+        price: (screen.daily_rate || 25000) * 1.4,
+      },
+      {
+        time: "00:00-06:00",
+        available: Math.random() > 0.5,
+        price: (screen.daily_rate || 25000) * 0.8,
+      },
     ],
   }));
 };
@@ -288,12 +310,15 @@ const defaultScreenData: AnalyticsScreenData[] = [
 // Calculate revenue data from screen data
 const calculateRevenueData = (screens: AnalyticsScreenData[]) => {
   const totalRevenue = screens.reduce((sum, screen) => sum + screen.revenue, 0);
-  const totalImpressions = screens.reduce((sum, screen) => sum + screen.impressions, 0);
-  
+  const totalImpressions = screens.reduce(
+    (sum, screen) => sum + screen.impressions,
+    0
+  );
+
   // Generate 6 months of data with some variation
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
   return months.map((month, index) => {
-    const variation = 0.8 + (index * 0.1) + (Math.random() * 0.2); // Growth trend with variation
+    const variation = 0.8 + index * 0.1 + Math.random() * 0.2; // Growth trend with variation
     return {
       month,
       revenue: Math.round(totalRevenue * variation),
@@ -306,17 +331,37 @@ const calculateRevenueData = (screens: AnalyticsScreenData[]) => {
 const calculateOccupancyData = (screens: AnalyticsScreenData[]) => {
   const total = screens.length;
   if (total === 0) return [];
-  
-  const high = screens.filter(s => s.occupancy >= 80).length;
-  const moderate = screens.filter(s => s.occupancy >= 60 && s.occupancy < 80).length;
-  const available = screens.filter(s => s.occupancy >= 40 && s.occupancy < 60).length;
-  const low = screens.filter(s => s.occupancy < 40).length;
-  
+
+  const high = screens.filter((s) => s.occupancy >= 80).length;
+  const moderate = screens.filter(
+    (s) => s.occupancy >= 60 && s.occupancy < 80
+  ).length;
+  const available = screens.filter(
+    (s) => s.occupancy >= 40 && s.occupancy < 60
+  ).length;
+  const low = screens.filter((s) => s.occupancy < 40).length;
+
   return [
-    { name: "High (80%+)", value: Math.round((high / total) * 100), color: "#ef4444" },
-    { name: "Moderate (60-80%)", value: Math.round((moderate / total) * 100), color: "#f59e0b" },
-    { name: "Available (40-60%)", value: Math.round((available / total) * 100), color: "#10b981" },
-    { name: "Low (<40%)", value: Math.round((low / total) * 100), color: "#6b7280" },
+    {
+      name: "High (80%+)",
+      value: Math.round((high / total) * 100),
+      color: "#ef4444",
+    },
+    {
+      name: "Moderate (60-80%)",
+      value: Math.round((moderate / total) * 100),
+      color: "#f59e0b",
+    },
+    {
+      name: "Available (40-60%)",
+      value: Math.round((available / total) * 100),
+      color: "#10b981",
+    },
+    {
+      name: "Low (<40%)",
+      value: Math.round((low / total) * 100),
+      color: "#6b7280",
+    },
   ];
 };
 
@@ -344,7 +389,8 @@ const calculateCityPerformance = (screens: AnalyticsScreenData[]) => {
 };
 
 const ReportsAnalytics: React.FC = () => {
-  const [screenData, setScreenData] = useState<AnalyticsScreenData[]>(defaultScreenData);
+  const [screenData, setScreenData] =
+    useState<AnalyticsScreenData[]>(defaultScreenData);
   const [loading, setLoading] = useState(false);
 
   // Load screens from backend
@@ -355,7 +401,7 @@ const ReportsAnalytics: React.FC = () => {
       const transformedData = transformScreenData(screens);
       setScreenData(transformedData);
     } catch (error) {
-      console.error('Failed to load screens for analytics:', error);
+      console.error("Failed to load screens for analytics:", error);
       // Keep using default data on error
     } finally {
       setLoading(false);
@@ -811,7 +857,9 @@ const ReportsAnalytics: React.FC = () => {
             <div className="text-center md:text-left">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center justify-center md:justify-start">
                 <BarChart3 className="mr-2 lg:mr-3 text-blue-600" size={28} />
-                <span className="hidden sm:inline">Screen Reports & Analytics</span>
+                <span className="hidden sm:inline">
+                  Screen Reports & Analytics
+                </span>
                 <span className="sm:hidden">Reports</span>
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
@@ -867,7 +915,9 @@ const ReportsAnalytics: React.FC = () => {
               <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
                 <ArrowUp className="text-green-600 mr-1" size={14} />
                 <span className="text-green-600 font-medium">12%</span>
-                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">
+                  vs last month
+                </span>
               </div>
             </motion.div>
 
@@ -893,7 +943,9 @@ const ReportsAnalytics: React.FC = () => {
               <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
                 <ArrowUp className="text-green-600 mr-1" size={14} />
                 <span className="text-green-600 font-medium">8.3%</span>
-                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">
+                  vs last month
+                </span>
               </div>
             </motion.div>
 
@@ -919,7 +971,9 @@ const ReportsAnalytics: React.FC = () => {
               <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
                 <ArrowUp className="text-green-600 mr-1" size={14} />
                 <span className="text-green-600 font-medium">5.2%</span>
-                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">
+                  vs last month
+                </span>
               </div>
             </motion.div>
 
@@ -945,7 +999,9 @@ const ReportsAnalytics: React.FC = () => {
               <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm">
                 <ArrowDown className="text-red-600 mr-1" size={14} />
                 <span className="text-red-600 font-medium">2.1%</span>
-                <span className="text-gray-500 ml-1 hidden sm:inline">vs last month</span>
+                <span className="text-gray-500 ml-1 hidden sm:inline">
+                  vs last month
+                </span>
               </div>
             </motion.div>
           </div>
@@ -967,13 +1023,15 @@ const ReportsAnalytics: React.FC = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={revenueData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="month" 
+                  <XAxis
+                    dataKey="month"
                     tick={{ fontSize: 12 }}
                     interval="preserveStartEnd"
                   />
                   <YAxis
-                    tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`}
+                    tickFormatter={(value) =>
+                      `₹${(value / 100000).toFixed(1)}L`
+                    }
                     tick={{ fontSize: 12 }}
                     width={60}
                   />
@@ -983,10 +1041,10 @@ const ReportsAnalytics: React.FC = () => {
                       "Revenue",
                     ]}
                     contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px'
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "14px",
                     }}
                   />
                   <Area
@@ -996,7 +1054,13 @@ const ReportsAnalytics: React.FC = () => {
                     fill="url(#colorRevenue)"
                   />
                   <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="colorRevenue"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
@@ -1025,7 +1089,7 @@ const ReportsAnalytics: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     label={({ name, value }) =>
-                      `${(name || '').split(' ')[0]} ${value}%`
+                      `${(name || "").split(" ")[0]} ${value}%`
                     }
                     outerRadius="70%"
                     fill="#8884d8"
@@ -1037,10 +1101,10 @@ const ReportsAnalytics: React.FC = () => {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '14px'
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "14px",
                     }}
                   />
                 </PieChart>
@@ -1064,8 +1128,8 @@ const ReportsAnalytics: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cityPerformance}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="city" 
+                <XAxis
+                  dataKey="city"
                   tick={{ fontSize: 12 }}
                   interval="preserveStartEnd"
                 />
@@ -1090,10 +1154,10 @@ const ReportsAnalytics: React.FC = () => {
                     name === "revenue" ? "Revenue" : "Occupancy",
                   ]}
                   contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    fontSize: '14px'
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    fontSize: "14px",
                   }}
                 />
                 <Legend />
@@ -1327,13 +1391,17 @@ const ReportsAnalytics: React.FC = () => {
                       <p className="font-bold text-base sm:text-lg text-gray-900">
                         ₹{screen.price.toLocaleString()}
                       </p>
-                      <p className="text-xs sm:text-sm text-gray-600">per month</p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        per month
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-base sm:text-lg text-purple-600">
                         {screen.occupancy}%
                       </p>
-                      <p className="text-xs sm:text-sm text-gray-600">occupancy</p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        occupancy
+                      </p>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Star
@@ -1461,7 +1529,9 @@ const ReportsAnalytics: React.FC = () => {
                       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                         {selectedScreen.name}
                       </h2>
-                      <p className="text-sm sm:text-base text-gray-600 truncate">{selectedScreen.location}</p>
+                      <p className="text-sm sm:text-base text-gray-600 truncate">
+                        {selectedScreen.location}
+                      </p>
                     </div>
                     <button
                       onClick={() => setSelectedScreen(null)}
@@ -1476,7 +1546,9 @@ const ReportsAnalytics: React.FC = () => {
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <DollarSign className="text-blue-600" size={20} />
                         <div className="min-w-0">
-                          <p className="text-xs sm:text-sm text-gray-600">Base Price</p>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            Base Price
+                          </p>
                           <p className="text-sm sm:text-xl font-bold text-gray-900 truncate">
                             ₹{selectedScreen.price.toLocaleString()}
                           </p>
@@ -1487,7 +1559,9 @@ const ReportsAnalytics: React.FC = () => {
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <Activity className="text-green-600" size={20} />
                         <div>
-                          <p className="text-xs sm:text-sm text-gray-600">Occupancy</p>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            Occupancy
+                          </p>
                           <p className="text-sm sm:text-xl font-bold text-gray-900">
                             {selectedScreen.occupancy}%
                           </p>
@@ -1498,7 +1572,9 @@ const ReportsAnalytics: React.FC = () => {
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <Eye className="text-purple-600" size={20} />
                         <div>
-                          <p className="text-xs sm:text-sm text-gray-600">Impressions</p>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            Impressions
+                          </p>
                           <p className="text-sm sm:text-xl font-bold text-gray-900">
                             {(selectedScreen.impressions / 1000000).toFixed(1)}M
                           </p>
@@ -1509,7 +1585,9 @@ const ReportsAnalytics: React.FC = () => {
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <Star className="text-yellow-600" size={20} />
                         <div>
-                          <p className="text-xs sm:text-sm text-gray-600">Rating</p>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            Rating
+                          </p>
                           <p className="text-sm sm:text-xl font-bold text-gray-900">
                             {selectedScreen.rating}
                           </p>

@@ -1,8 +1,8 @@
-import axios from 'axios';
+import axios from "axios";
 
 // MojoAuth configuration
-const MOJOAUTH_API_KEY = 'test-3c805d83-38f1-4a3d-96a2-5f0e721d2162';
-const MOJOAUTH_BASE_URL = 'https://api.mojoauth.com';
+const MOJOAUTH_API_KEY = "test-3c805d83-38f1-4a3d-96a2-5f0e721d2162";
+const MOJOAUTH_BASE_URL = "https://api.mojoauth.com";
 
 // MojoAuth interfaces
 export interface MojoAuthEmailRequest {
@@ -59,7 +59,10 @@ class MojoAuthService {
   /**
    * Send OTP to email address using MojoAuth
    */
-  async sendEmailOTP(email: string, language: string = 'en'): Promise<{ state_id: string; message: string }> {
+  async sendEmailOTP(
+    email: string,
+    language: string = "en"
+  ): Promise<{ state_id: string; message: string }> {
     try {
       const response = await axios.post<any>(
         `${this.baseUrl}/users/emailotp`,
@@ -69,8 +72,8 @@ class MojoAuthService {
         },
         {
           headers: {
-            'X-API-Key': this.apiKey,
-            'Content-Type': 'application/json',
+            "X-API-Key": this.apiKey,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -78,21 +81,24 @@ class MojoAuthService {
       if (response.data && response.data.state_id) {
         return {
           state_id: response.data.state_id,
-          message: 'OTP sent successfully to your email',
+          message: "OTP sent successfully to your email",
         };
       }
 
-      throw new Error('Failed to send OTP');
+      throw new Error("Failed to send OTP");
     } catch (error: any) {
-      console.error('MojoAuth send OTP error:', error);
-      
+      console.error("MojoAuth send OTP error:", error);
+
       // Handle different error types
       if (error.response) {
-        const errorMessage = error.response.data?.description || error.response.data?.message || 'Failed to send OTP';
+        const errorMessage =
+          error.response.data?.description ||
+          error.response.data?.message ||
+          "Failed to send OTP";
         throw new Error(errorMessage);
       }
-      
-      throw new Error('Network error while sending OTP');
+
+      throw new Error("Network error while sending OTP");
     }
   }
 
@@ -109,31 +115,34 @@ class MojoAuthService {
         },
         {
           headers: {
-            'X-API-Key': this.apiKey,
-            'Content-Type': 'application/json',
+            "X-API-Key": this.apiKey,
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (response.data && response.data.authenticated) {
         return {
-          identifier: response.data.user_profile?.email || '',
+          identifier: response.data.user_profile?.email || "",
           oauth: response.data.oauth,
           user_profile: response.data.user_profile,
         };
       }
 
-      throw new Error('Invalid OTP or verification failed');
+      throw new Error("Invalid OTP or verification failed");
     } catch (error: any) {
-      console.error('MojoAuth verify OTP error:', error);
-      
+      console.error("MojoAuth verify OTP error:", error);
+
       // Handle different error types
       if (error.response) {
-        const errorMessage = error.response.data?.description || error.response.data?.message || 'Invalid OTP';
+        const errorMessage =
+          error.response.data?.description ||
+          error.response.data?.message ||
+          "Invalid OTP";
         throw new Error(errorMessage);
       }
-      
-      throw new Error('Network error while verifying OTP');
+
+      throw new Error("Network error while verifying OTP");
     }
   }
 
@@ -147,17 +156,17 @@ class MojoAuthService {
         {},
         {
           headers: {
-            'X-API-Key': this.apiKey,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "X-API-Key": this.apiKey,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
       return response.data;
     } catch (error: any) {
-      console.error('MojoAuth verify token error:', error);
-      throw new Error('Invalid or expired token');
+      console.error("MojoAuth verify token error:", error);
+      throw new Error("Invalid or expired token");
     }
   }
 
@@ -166,21 +175,18 @@ class MojoAuthService {
    */
   async getUserProfile(accessToken: string): Promise<any> {
     try {
-      const response = await axios.get(
-        `${this.baseUrl}/users/profile`,
-        {
-          headers: {
-            'X-API-Key': this.apiKey,
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await axios.get(`${this.baseUrl}/users/profile`, {
+        headers: {
+          "X-API-Key": this.apiKey,
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       return response.data;
     } catch (error: any) {
-      console.error('MojoAuth get profile error:', error);
-      throw new Error('Failed to get user profile');
+      console.error("MojoAuth get profile error:", error);
+      throw new Error("Failed to get user profile");
     }
   }
 
@@ -196,16 +202,16 @@ class MojoAuthService {
         },
         {
           headers: {
-            'X-API-Key': this.apiKey,
-            'Content-Type': 'application/json',
+            "X-API-Key": this.apiKey,
+            "Content-Type": "application/json",
           },
         }
       );
 
       return response.data;
     } catch (error: any) {
-      console.error('MojoAuth refresh token error:', error);
-      throw new Error('Failed to refresh token');
+      console.error("MojoAuth refresh token error:", error);
+      throw new Error("Failed to refresh token");
     }
   }
 }

@@ -22,7 +22,7 @@ const LoginSignup: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       // Here you would implement actual authentication
       console.log("Login attempt:", { email, password });

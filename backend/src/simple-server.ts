@@ -98,7 +98,9 @@ app.get("/api/screens/search", async (req, res) => {
 app.get("/api/screens/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query("SELECT * FROM screens WHERE id = $1", [id]);
+    const result = await pool.query("SELECT * FROM screens WHERE id = $1", [
+      id,
+    ]);
 
     if (result.rows.length === 0) {
       res.status(404).json({
@@ -151,7 +153,15 @@ app.post("/campaigns", async (req: AuthRequest, res: Response) => {
 
     const result = await pool.query(
       "INSERT INTO campaigns (name, description, start_date, end_date, total_budget, status, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-      [name, description, start_date, end_date, total_budget, "draft", req.user?.id || 1] // Use authenticated user ID
+      [
+        name,
+        description,
+        start_date,
+        end_date,
+        total_budget,
+        "draft",
+        req.user?.id || 1,
+      ] // Use authenticated user ID
     );
 
     res.json({

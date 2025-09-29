@@ -114,7 +114,9 @@ const IntegratedAdsManager: React.FC = () => {
     return (
       <div className="space-y-4 sm:space-y-6">
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
-          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Platform Settings</h3>
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+            Platform Settings
+          </h3>
           <p className="text-gray-600 text-sm sm:text-base">
             Configuration options and platform settings will be available here.
           </p>
@@ -126,22 +128,30 @@ const IntegratedAdsManager: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Mobile Sidebar Overlay */}
-      <div 
-        className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}
+      <div
+        className={`fixed inset-0 z-40 lg:hidden ${
+          sidebarOpen ? "block" : "hidden"
+        }`}
         onClick={() => setSidebarOpen(false)}
       >
         <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
 
       {/* Sidebar */}
-      <div className={`
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+      <div
+        className={`
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
         lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 
         bg-white shadow-xl lg:shadow-lg border-r transition-transform duration-300 ease-in-out
-      `}>
+      `}
+      >
         <div className="p-4 sm:p-6 border-b">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Ads Manager</h2>
-          <p className="text-xs sm:text-sm text-gray-600">Complete DOOH Platform</p>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            Ads Manager
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-600">
+            Complete DOOH Platform
+          </p>
         </div>
 
         <nav className="mt-4 sm:mt-6 px-2">
@@ -159,7 +169,9 @@ const IntegratedAdsManager: React.FC = () => {
               }`}
             >
               <item.icon size={18} className="flex-shrink-0" />
-              <span className="font-medium text-sm sm:text-base truncate">{item.label}</span>
+              <span className="font-medium text-sm sm:text-base truncate">
+                {item.label}
+              </span>
             </button>
           ))}
         </nav>
@@ -176,11 +188,21 @@ const IntegratedAdsManager: React.FC = () => {
                 onClick={() => setSidebarOpen(true)}
                 className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 touch-manipulation"
               >
-                <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               </button>
-              
+
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 capitalize truncate">
                   {currentView.replace(/([A-Z])/g, " $1").trim()}

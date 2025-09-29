@@ -16,8 +16,10 @@ import {
   Activity,
   Grid,
   List,
+  Flag,
 } from 'lucide-react';
 import { bookingService, CampaignBooking } from '../../services/bookingService';
+import ComplaintForm, { ComplaintData } from '../Booking/ComplaintForm';
 
 const MyBookings: React.FC = () => {
   const [bookings, setBookings] = useState<CampaignBooking[]>([]);
@@ -26,6 +28,8 @@ const MyBookings: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [complaintFormOpen, setComplaintFormOpen] = useState(false);
+  const [selectedBookingForComplaint, setSelectedBookingForComplaint] = useState<CampaignBooking | null>(null);
 
   const fetchBookings = async () => {
     try {
@@ -77,6 +81,28 @@ const MyBookings: React.FC = () => {
       default:
         return <AlertCircle size={16} />;
     }
+  };
+
+  const handleComplaintSubmit = async (complaintData: ComplaintData) => {
+    try {
+      // Submit complaint to backend
+      console.log('Submitting complaint:', complaintData);
+      // You can add API call here
+      // await bookingService.submitComplaint(complaintData);
+      
+      setComplaintFormOpen(false);
+      setSelectedBookingForComplaint(null);
+      
+      // Show success message or refresh data
+      fetchBookings();
+    } catch (error) {
+      console.error('Error submitting complaint:', error);
+    }
+  };
+
+  const openComplaintForm = (booking: CampaignBooking) => {
+    setSelectedBookingForComplaint(booking);
+    setComplaintFormOpen(true);
   };
 
   const filteredBookings = bookings.filter(booking => {
@@ -416,14 +442,28 @@ const MyBookings: React.FC = () => {
                       <span className="text-xs text-gray-500">
                         Created: {new Date(booking.created_at).toLocaleDateString()}
                       </span>
-                      <motion.button
-                        className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm">View</span>
-                      </motion.button>
+                      <div className="flex items-center space-x-2">
+                        {/* Show complaint button only for confirmed/active bookings */}
+                        {(booking.status === 'active' || booking.status === 'completed') && (
+                          <motion.button
+                            onClick={() => openComplaintForm(booking)}
+                            className="flex items-center space-x-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Flag className="w-4 h-4" />
+                            <span className="text-sm">Report</span>
+                          </motion.button>
+                        )}
+                        <motion.button
+                          className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span className="text-sm">View</span>
+                        </motion.button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -457,14 +497,28 @@ const MyBookings: React.FC = () => {
                         <span className="capitalize">{booking.status}</span>
                       </span>
                       
-                      <motion.button
-                        className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm">View</span>
-                      </motion.button>
+                      <div className="flex items-center space-x-2">
+                        {/* Show complaint button only for confirmed/active bookings */}
+                        {(booking.status === 'active' || booking.status === 'completed') && (
+                          <motion.button
+                            onClick={() => openComplaintForm(booking)}
+                            className="flex items-center space-x-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Flag className="w-4 h-4" />
+                            <span className="text-sm">Report</span>
+                          </motion.button>
+                        )}
+                        <motion.button
+                          className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span className="text-sm">View</span>
+                        </motion.button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -473,6 +527,28 @@ const MyBookings: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Complaint Form Modal */}
+      {selectedBookingForComplaint && (
+        <ComplaintForm
+          isOpen={complaintFormOpen}
+          onClose={() => {
+            setComplaintFormOpen(false);
+            setSelectedBookingForComplaint(null);
+          }}
+          booking={{
+            id: selectedBookingForComplaint.id.toString(),
+            campaign_name: selectedBookingForComplaint.campaign_name,
+            screens: selectedBookingForComplaint.screens.map(screen => ({
+              id: screen.id,
+              name: screen.name,
+              city: screen.city
+            })),
+            status: selectedBookingForComplaint.status
+          }}
+          onSubmit={handleComplaintSubmit}
+        />
+      )}
     </motion.div>
   );
 };

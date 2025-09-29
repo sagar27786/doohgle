@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://doohgle-backend.onrender.com/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://doohgle-backend.onrender.com/api";
 const API_URL = `${API_BASE_URL}/venue`;
 
 async function request(endpoint: string, options: RequestInit = {}) {

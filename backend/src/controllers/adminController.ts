@@ -1,21 +1,30 @@
-import { Request, Response } from 'express';
-import { pool } from '../db';
-import { AuthUser } from '../middleware/auth';
+import { Request, Response } from "express";
+import { pool } from "../db";
+import { AuthUser } from "../middleware/auth";
 
 // Middleware to check if the user is an admin
-export const isAdmin = (req: Request & { user?: AuthUser }, res: Response, next: Function) => {
-  if (req.user?.roles?.includes('admin') || req.user?.id === 999) {
+export const isAdmin = (
+  req: Request & { user?: AuthUser },
+  res: Response,
+  next: Function
+) => {
+  if (req.user?.roles?.includes("admin") || req.user?.id === 999) {
     return next();
   } else {
-    return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    return res
+      .status(403)
+      .json({ message: "Forbidden: Admin access required" });
   }
 };
 
 // Get dashboard statistics
-export async function getDashboardStats(req: Request & { user?: AuthUser }, res: Response) {
+export async function getDashboardStats(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   try {
     const client = await pool.connect();
-    
+
     try {
       // Get total screens
       const screensResult = await client.query(`
@@ -83,32 +92,34 @@ export async function getDashboardStats(req: Request & { user?: AuthUser }, res:
         bookingRequests: bookingRequestsResult.rows[0],
         monthlyBookings: monthlyBookingsResult.rows,
         topCities: citiesResult.rows,
-        recentBookings: recentBookingsResult.rows
+        recentBookings: recentBookingsResult.rows,
       };
 
       res.json({
         success: true,
-        data: stats
+        data: stats,
       });
-
     } finally {
       client.release();
     }
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
+    console.error("Error fetching dashboard stats:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 }
 
 // Get all screens for admin management
-export async function getAllScreensForAdmin(req: Request & { user?: AuthUser }, res: Response) {
+export async function getAllScreensForAdmin(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   let client;
   try {
     client = await pool.connect();
-    
+
     const result = await client.query(`
       SELECT 
         s.id,
@@ -131,14 +142,13 @@ export async function getAllScreensForAdmin(req: Request & { user?: AuthUser }, 
 
     res.json({
       success: true,
-      data: result.rows
+      data: result.rows,
     });
-
   } catch (error) {
-    console.error('Error fetching screens for admin:', error);
+    console.error("Error fetching screens for admin:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch screens'
+      message: "Failed to fetch screens",
     });
   } finally {
     if (client) {
@@ -148,61 +158,73 @@ export async function getAllScreensForAdmin(req: Request & { user?: AuthUser }, 
 }
 
 // Approve or reject a screen
-export async function updateScreenStatus(req: Request & { user?: AuthUser }, res: Response) {
+export async function updateScreenStatus(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   const { screen_id, is_active, admin_notes } = req.body;
 
   if (screen_id === undefined || is_active === undefined) {
     return res.status(400).json({
       success: false,
-      message: 'screen_id and is_active are required'
+      message: "screen_id and is_active are required",
     });
   }
 
   try {
     const client = await pool.connect();
-    
+
     try {
-      const result = await client.query(`
+      const result = await client.query(
+        `
         UPDATE screens 
         SET is_active = $1, updated_at = CURRENT_TIMESTAMP
         WHERE id = $2
         RETURNING *
-      `, [is_active, screen_id]);
+      `,
+        [is_active, screen_id]
+      );
 
       if (result.rows.length === 0) {
         return res.status(404).json({
           success: false,
-          message: 'Screen not found'
+          message: "Screen not found",
         });
       }
 
       // Log admin action (you could create an admin_actions table for this)
-      console.log(`Admin ${req.user?.id} ${is_active ? 'approved' : 'rejected'} screen ${screen_id}. Notes: ${admin_notes || 'None'}`);
+      console.log(
+        `Admin ${req.user?.id} ${
+          is_active ? "approved" : "rejected"
+        } screen ${screen_id}. Notes: ${admin_notes || "None"}`
+      );
 
       res.json({
         success: true,
         data: result.rows[0],
-        message: `Screen ${is_active ? 'approved' : 'rejected'} successfully`
+        message: `Screen ${is_active ? "approved" : "rejected"} successfully`,
       });
-
     } finally {
       client.release();
     }
   } catch (error) {
-    console.error('Error updating screen status:', error);
+    console.error("Error updating screen status:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 }
 
 // Get all booking requests for admin
-export async function getAllBookingRequests(req: Request & { user?: AuthUser }, res: Response) {
+export async function getAllBookingRequests(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   let client;
   try {
     client = await pool.connect();
-    
+
     const result = await client.query(`
       SELECT 
         br.id,
@@ -228,14 +250,13 @@ export async function getAllBookingRequests(req: Request & { user?: AuthUser }, 
 
     res.json({
       success: true,
-      data: result.rows
+      data: result.rows,
     });
-
   } catch (error) {
-    console.error('Error fetching booking requests for admin:', error);
+    console.error("Error fetching booking requests for admin:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch booking requests'
+      message: "Failed to fetch booking requests",
     });
   } finally {
     if (client) {
@@ -245,11 +266,14 @@ export async function getAllBookingRequests(req: Request & { user?: AuthUser }, 
 }
 
 // Get revenue analytics
-export async function getRevenueAnalytics(req: Request & { user?: AuthUser }, res: Response) {
+export async function getRevenueAnalytics(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   let client;
   try {
     client = await pool.connect();
-    
+
     // Get monthly revenue for current year
     const monthlyRevenueResult = await client.query(`
       SELECT 
@@ -284,15 +308,14 @@ export async function getRevenueAnalytics(req: Request & { user?: AuthUser }, re
       success: true,
       data: {
         monthlyRevenue: monthlyRevenueResult.rows,
-        cityRevenue: cityRevenueResult.rows
-      }
+        cityRevenue: cityRevenueResult.rows,
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching revenue analytics:', error);
+    console.error("Error fetching revenue analytics:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch revenue analytics'
+      message: "Failed to fetch revenue analytics",
     });
   } finally {
     if (client) {
@@ -302,55 +325,61 @@ export async function getRevenueAnalytics(req: Request & { user?: AuthUser }, re
 }
 
 // Update booking request status (Admin action)
-export async function updateBookingStatus(req: Request & { user?: AuthUser }, res: Response) {
+export async function updateBookingStatus(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   const { bookingId } = req.params;
   const { status, adminNotes } = req.body;
 
-  if (!['pending', 'accepted', 'rejected', 'cancelled'].includes(status)) {
+  if (!["pending", "accepted", "rejected", "cancelled"].includes(status)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid status. Must be pending, accepted, rejected, or cancelled'
+      message:
+        "Invalid status. Must be pending, accepted, rejected, or cancelled",
     });
   }
 
   let client;
   try {
     client = await pool.connect();
-    
+
     // First check if booking exists
     const checkResult = await client.query(
-      'SELECT id, status, advertiser_name FROM booking_requests WHERE id = $1',
+      "SELECT id, status, advertiser_name FROM booking_requests WHERE id = $1",
       [bookingId]
     );
 
     if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Booking request not found'
+        message: "Booking request not found",
       });
     }
 
     // Update booking status
-    const updateResult = await client.query(`
+    const updateResult = await client.query(
+      `
       UPDATE booking_requests 
       SET 
         status = $1,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $2
       RETURNING *
-    `, [status, bookingId]);
+    `,
+      [status, bookingId]
+    );
 
     res.json({
       success: true,
       data: updateResult.rows[0],
-      message: `Booking ${status} successfully`
+      message: `Booking ${status} successfully`,
     });
-
   } catch (error) {
-    console.error('Error updating booking status:', error);
+    console.error("Error updating booking status:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update booking status'
+      message: "Failed to update booking status",
     });
   } finally {
     if (client) {
@@ -360,39 +389,43 @@ export async function updateBookingStatus(req: Request & { user?: AuthUser }, re
 }
 
 // Delete booking request (Admin only)
-export async function deleteBookingRequest(req: Request & { user?: AuthUser }, res: Response) {
+export async function deleteBookingRequest(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   const { bookingId } = req.params;
 
   let client;
   try {
     client = await pool.connect();
-    
+
     // First check if booking exists
     const checkResult = await client.query(
-      'SELECT id, campaign_name, advertiser_name FROM booking_requests WHERE id = $1',
+      "SELECT id, campaign_name, advertiser_name FROM booking_requests WHERE id = $1",
       [bookingId]
     );
 
     if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Booking request not found'
+        message: "Booking request not found",
       });
     }
 
     // Delete the booking request
-    await client.query('DELETE FROM booking_requests WHERE id = $1', [bookingId]);
+    await client.query("DELETE FROM booking_requests WHERE id = $1", [
+      bookingId,
+    ]);
 
     res.json({
       success: true,
-      message: 'Booking request deleted successfully'
+      message: "Booking request deleted successfully",
     });
-
   } catch (error) {
-    console.error('Error deleting booking request:', error);
+    console.error("Error deleting booking request:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete booking request'
+      message: "Failed to delete booking request",
     });
   } finally {
     if (client) {
@@ -402,15 +435,19 @@ export async function deleteBookingRequest(req: Request & { user?: AuthUser }, r
 }
 
 // Get detailed booking information
-export async function getBookingDetails(req: Request & { user?: AuthUser }, res: Response) {
+export async function getBookingDetails(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   const { bookingId } = req.params;
 
   let client;
   try {
     client = await pool.connect();
-    
+
     // Get booking details with screen and user information
-    const bookingResult = await client.query(`
+    const bookingResult = await client.query(
+      `
       SELECT 
         br.*,
         s.screen_name,
@@ -424,12 +461,14 @@ export async function getBookingDetails(req: Request & { user?: AuthUser }, res:
       LEFT JOIN screens s ON br.screen_id = s.id
       LEFT JOIN users u ON s.user_id = u.id
       WHERE br.id = $1
-    `, [bookingId]);
+    `,
+      [bookingId]
+    );
 
     if (bookingResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Booking request not found'
+        message: "Booking request not found",
       });
     }
 
@@ -437,15 +476,14 @@ export async function getBookingDetails(req: Request & { user?: AuthUser }, res:
       success: true,
       data: {
         booking: bookingResult.rows[0],
-        logs: [] // Placeholder for booking logs
-      }
+        logs: [], // Placeholder for booking logs
+      },
     });
-
   } catch (error) {
-    console.error('Error fetching booking details:', error);
+    console.error("Error fetching booking details:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch booking details'
+      message: "Failed to fetch booking details",
     });
   } finally {
     if (client) {
@@ -455,50 +493,58 @@ export async function getBookingDetails(req: Request & { user?: AuthUser }, res:
 }
 
 // Bulk actions for bookings
-export async function bulkUpdateBookings(req: Request & { user?: AuthUser }, res: Response) {
+export async function bulkUpdateBookings(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
   const { bookingIds, action, adminNotes } = req.body;
 
   if (!Array.isArray(bookingIds) || bookingIds.length === 0) {
     return res.status(400).json({
       success: false,
-      message: 'bookingIds must be a non-empty array'
+      message: "bookingIds must be a non-empty array",
     });
   }
 
-  if (!['accept', 'reject', 'cancel', 'delete'].includes(action)) {
+  if (!["accept", "reject", "cancel", "delete"].includes(action)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid action. Must be accept, reject, cancel, or delete'
+      message: "Invalid action. Must be accept, reject, cancel, or delete",
     });
   }
 
   let client;
   try {
     client = await pool.connect();
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
-    const results: Array<{id: string, status?: string, error?: string}> = [];
-    const statusMap: {[key: string]: string} = {
-      'accept': 'accepted',
-      'reject': 'rejected',
-      'cancel': 'cancelled'
+    const results: Array<{ id: string; status?: string; error?: string }> = [];
+    const statusMap: { [key: string]: string } = {
+      accept: "accepted",
+      reject: "rejected",
+      cancel: "cancelled",
     };
 
     for (const bookingId of bookingIds) {
       try {
-        if (action === 'delete') {
-          await client.query('DELETE FROM booking_requests WHERE id = $1', [bookingId]);
-          results.push({ id: bookingId, status: 'deleted' });
+        if (action === "delete") {
+          await client.query("DELETE FROM booking_requests WHERE id = $1", [
+            bookingId,
+          ]);
+          results.push({ id: bookingId, status: "deleted" });
         } else {
           // Update status
-          const updateResult = await client.query(`
+          const updateResult = await client.query(
+            `
             UPDATE booking_requests 
             SET 
               status = $1,
               updated_at = CURRENT_TIMESTAMP
             WHERE id = $2
             RETURNING campaign_name, advertiser_name
-          `, [statusMap[action], bookingId]);
+          `,
+            [statusMap[action], bookingId]
+          );
 
           if (updateResult.rows.length > 0) {
             results.push({ id: bookingId, status: statusMap[action] });
@@ -506,26 +552,28 @@ export async function bulkUpdateBookings(req: Request & { user?: AuthUser }, res
         }
       } catch (error) {
         console.error(`Error processing booking ${bookingId}:`, error);
-        results.push({ id: bookingId, error: error instanceof Error ? error.message : 'Unknown error' });
+        results.push({
+          id: bookingId,
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
       }
     }
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     res.json({
       success: true,
       data: results,
-      message: `Bulk ${action} completed`
+      message: `Bulk ${action} completed`,
     });
-
   } catch (error) {
     if (client) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
     }
-    console.error('Error in bulk booking update:', error);
+    console.error("Error in bulk booking update:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to perform bulk action'
+      message: "Failed to perform bulk action",
     });
   } finally {
     if (client) {

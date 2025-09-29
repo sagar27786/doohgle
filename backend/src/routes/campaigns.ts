@@ -27,7 +27,9 @@ const router = express.Router();
 // Public campaigns route (no auth required)
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM campaigns ORDER BY created_at DESC");
+    const result = await pool.query(
+      "SELECT * FROM campaigns ORDER BY created_at DESC"
+    );
     res.json({
       success: true,
       campaigns: result.rows,

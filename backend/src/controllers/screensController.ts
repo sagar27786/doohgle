@@ -110,7 +110,10 @@ export async function getMyScreens(
 // ==================== ADS MANAGER FUNCTIONS (EXTENDING EXISTING) ====================
 
 // Get all screens for ads manager with filters
-export async function getAllScreens(req: Request, res: Response) {
+export async function getAllScreens(
+  req: Request & { user?: AuthUser }, 
+  res: Response
+) {
   try {
     const {
       city,
@@ -120,6 +123,8 @@ export async function getAllScreens(req: Request, res: Response) {
       max_budget,
       limit = "20",
     } = req.query;
+
+    const userId = req.user?.id; // Optional user context for favorites
 
     let query = `
       SELECT
@@ -144,52 +149,62 @@ export async function getAllScreens(req: Request, res: Response) {
         s.peak_viewing_hours as peak_hours,
         'Mixed demographics' as demographics,
         25.00 as cost_per_10_seconds,
-        s.image_url,
+        s.day_photo_url as image_url,
         s.video_url,
         s.is_active,
         500.00 as hourly_rate,
         4000.00 as daily_rate,
-        25000.00 as weekly_rate
+        25000.00 as weekly_rate,
+        s.day_photo_url,
+        s.night_photo_url,
+        CASE WHEN fs.id IS NOT NULL THEN true ELSE false END as is_favorite
       FROM screens s
+      LEFT JOIN favorite_screens fs ON s.id = fs.screen_id AND fs.user_id = $1
       WHERE s.is_active = true
     `;
 
     const params: any[] = [];
     let paramIndex = 1;
 
+    // Always add userId as first parameter (null if not logged in)
+    params.push(userId || null);
+
     if (city) {
-      query += ` AND LOWER(s.city) LIKE LOWER($${paramIndex})`;
+      query += ` AND LOWER(s.city) LIKE LOWER($${++paramIndex})`;
       params.push(`%${city}%`);
-      paramIndex++;
     }
 
     if (screen_type) {
-      query += ` AND LOWER(s.device_type) LIKE LOWER($${paramIndex})`;
+      query += ` AND LOWER(s.device_type) LIKE LOWER($${++paramIndex})`;
       params.push(`%${screen_type}%`);
-      paramIndex++;
     }
 
     if (max_budget) {
-      query += ` AND 4000.00 <= $${paramIndex}`;
+      query += ` AND 4000.00 <= $${++paramIndex}`;
       params.push(parseFloat(max_budget as string));
-      paramIndex++;
     }
 
-    query += ` ORDER BY s.city, s.screen_size_inches DESC, s.created_at DESC LIMIT $${paramIndex}`;
+    query += ` ORDER BY ${userId ? 'is_favorite DESC,' : ''} s.city, s.screen_size_inches DESC, s.created_at DESC LIMIT $${++paramIndex}`;
     params.push(parseInt(limit as string));
 
     const result = await pool.query(query, params);
 
-    // Format results to include pricing information
-    const formattedResults = result.rows.map((row) => ({
-      ...row,
-      pricing: {
-        hourly: row.hourly_rate || 0,
-        daily: row.daily_rate || 0,
-        weekly: row.weekly_rate || 0,
-        cost_per_10_seconds: row.cost_per_10_seconds || 50,
-      },
-    }));
+    // Process URLs for each screen and format results
+    const formattedResults = await Promise.all(
+      result.rows.map(async (row) => ({
+        ...row,
+        day_photo_url: await getRenderableUrl(row.day_photo_url),
+        night_photo_url: await getRenderableUrl(row.night_photo_url),
+        image_url: await getRenderableUrl(row.day_photo_url), // fallback
+        video_url: await getRenderableUrl(row.video_url),
+        pricing: {
+          hourly: row.hourly_rate || 0,
+          daily: row.daily_rate || 0,
+          weekly: row.weekly_rate || 0,
+          cost_per_10_seconds: row.cost_per_10_seconds || 50,
+        },
+      }))
+    );
 
     res.json({
       success: true,
@@ -596,7 +611,9 @@ function extractS3KeyFromUrl(url: string): string | null {
 }
 
 // Given a DB field (which can be a key or URL), return a presigned URL if private, or the original if already public
-async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null> {
+async function getRenderableUrl(
+  urlOrKey?: string | null
+): Promise<string | null> {
   if (!urlOrKey) return null;
 
   // If it's a URL, return as-is for now (temporary fix for S3 permissions)
@@ -605,14 +622,17 @@ async function getRenderableUrl(urlOrKey?: string | null): Promise<string | null
   }
 
   // For S3 keys, construct public URL instead of presigned (temporary fix)
-  const bucketName = process.env.S3_BUCKET_NAME || 'doohgle';
-  const region = process.env.AWS_REGION || 'ap-southeast-2';
+  const bucketName = process.env.S3_BUCKET_NAME || "doohgle";
+  const region = process.env.AWS_REGION || "ap-southeast-2";
   return `https://${bucketName}.s3.${region}.amazonaws.com/${urlOrKey}`;
 }
 
 // Build assets array from the three columns in the screens table
 async function buildAssetsFromScreenRow(screen: any) {
-  const assets: { asset_type: "photo_day" | "photo_night" | "video"; url: string }[] = [];
+  const assets: {
+    asset_type: "photo_day" | "photo_night" | "video";
+    url: string;
+  }[] = [];
 
   const dayUrl = await getRenderableUrl(screen.day_photo_url);
   if (dayUrl) assets.push({ asset_type: "photo_day", url: dayUrl });
@@ -624,4 +644,148 @@ async function buildAssetsFromScreenRow(screen: any) {
   if (videoUrl) assets.push({ asset_type: "video", url: videoUrl });
 
   return assets;
+}
+
+// ==================== FAVORITE SCREENS FUNCTIONALITY ====================
+
+/**
+ * Toggle favorite status of a screen for the current user
+ */
+export async function toggleFavoriteScreen(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { screenId } = req.params;
+  
+  if (!screenId) {
+    return res.status(400).json({ message: "Screen ID is required" });
+  }
+
+  try {
+    // Check if screen exists
+    const screenCheck = await pool.query("SELECT id FROM screens WHERE id = $1", [screenId]);
+    if (screenCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Screen not found" });
+    }
+
+    // Check if already favorited
+    const existingFavorite = await pool.query(
+      "SELECT id FROM favorite_screens WHERE user_id = $1 AND screen_id = $2",
+      [userId, screenId]
+    );
+
+    if (existingFavorite.rows.length > 0) {
+      // Remove from favorites
+      await pool.query(
+        "DELETE FROM favorite_screens WHERE user_id = $1 AND screen_id = $2",
+        [userId, screenId]
+      );
+      return res.status(200).json({ 
+        message: "Screen removed from favorites", 
+        is_favorite: false 
+      });
+    } else {
+      // Add to favorites
+      await pool.query(
+        "INSERT INTO favorite_screens (user_id, screen_id) VALUES ($1, $2)",
+        [userId, screenId]
+      );
+      return res.status(200).json({ 
+        message: "Screen added to favorites", 
+        is_favorite: true 
+      });
+    }
+  } catch (error) {
+    console.error("Error toggling favorite screen:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+/**
+ * Get all favorite screens for the current user
+ */
+export async function getUserFavoriteScreens(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const result = await pool.query(`
+      SELECT 
+        s.*,
+        fs.created_at as favorited_at,
+        true as is_favorite
+      FROM screens s
+      INNER JOIN favorite_screens fs ON s.id = fs.screen_id
+      WHERE fs.user_id = $1
+      ORDER BY fs.created_at DESC
+    `, [userId]);
+
+    // Process URLs for each screen
+    const screensWithUrls = await Promise.all(
+      result.rows.map(async (screen) => ({
+        ...screen,
+        day_photo_url: await getRenderableUrl(screen.day_photo_url),
+        night_photo_url: await getRenderableUrl(screen.night_photo_url),
+        video_url: await getRenderableUrl(screen.video_url)
+      }))
+    );
+
+    return res.status(200).json({
+      success: true,
+      favorites: screensWithUrls,
+      count: screensWithUrls.length
+    });
+  } catch (error) {
+    console.error("Error fetching favorite screens:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+/**
+ * Check if screens are favorited by the current user
+ */
+export async function checkFavoriteStatus(
+  req: Request & { user?: AuthUser },
+  res: Response
+) {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { screenIds } = req.body;
+  
+  if (!screenIds || !Array.isArray(screenIds)) {
+    return res.status(400).json({ message: "Screen IDs array is required" });
+  }
+
+  try {
+    const result = await pool.query(`
+      SELECT screen_id, true as is_favorite
+      FROM favorite_screens 
+      WHERE user_id = $1 AND screen_id = ANY($2)
+    `, [userId, screenIds]);
+
+    const favoriteMap: { [key: string]: boolean } = {};
+    screenIds.forEach(id => favoriteMap[id] = false);
+    result.rows.forEach(row => favoriteMap[row.screen_id] = true);
+
+    return res.status(200).json({
+      success: true,
+      favorites: favoriteMap
+    });
+  } catch (error) {
+    console.error("Error checking favorite status:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 }

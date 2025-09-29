@@ -19,7 +19,7 @@ import campaignRoutes from "./routes/campaigns";
 // AWS Access Key logging (for debugging)
 if (process.env.AWS_ACCESS_KEY_ID) {
   // Remove AWS credential logging for security
-// AWS configuration is loaded from environment variables
+  // AWS configuration is loaded from environment variables
 }
 
 // Initialize database with sample data if empty
@@ -92,21 +92,34 @@ const initializeDatabase = async () => {
 
     // Add missing columns to existing tables if they don't exist
     try {
-      await pool.query(`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS brand VARCHAR(255);`);
-      await pool.query(`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS spent DECIMAL(10, 2) DEFAULT 0;`);
-      await pool.query(`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS impressions INTEGER DEFAULT 0;`);
-      await pool.query(`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS clicks INTEGER DEFAULT 0;`);
-      await pool.query(`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS ctr DECIMAL(5, 2) DEFAULT 0;`);
-      console.log('✅ Campaign table columns updated');
+      await pool.query(
+        `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS brand VARCHAR(255);`
+      );
+      await pool.query(
+        `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS spent DECIMAL(10, 2) DEFAULT 0;`
+      );
+      await pool.query(
+        `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS impressions INTEGER DEFAULT 0;`
+      );
+      await pool.query(
+        `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS clicks INTEGER DEFAULT 0;`
+      );
+      await pool.query(
+        `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS ctr DECIMAL(5, 2) DEFAULT 0;`
+      );
+      console.log("✅ Campaign table columns updated");
     } catch (error) {
-      console.log('⚠️ Some columns might already exist:', (error as any).message);
+      console.log(
+        "⚠️ Some columns might already exist:",
+        (error as any).message
+      );
     }
 
     // Database initialization completed - no sample data inserted
 
-    console.log('✅ Database initialization completed');
+    console.log("✅ Database initialization completed");
   } catch (error) {
-    console.error('❌ Database initialization failed:', error);
+    console.error("❌ Database initialization failed:", error);
   }
 };
 
@@ -117,7 +130,7 @@ app.use(express.json());
 
 // Request logging middleware (only for non-production)
 app.use((req, res, next) => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== "production") {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   }
   next();
@@ -168,7 +181,7 @@ app.listen(PORT, async () => {
   console.log(`Health check: http://localhost:${PORT}/api/health`);
   console.log(`Screens API: http://localhost:${PORT}/api/screens`);
   console.log(`Campaigns API: http://localhost:${PORT}/api/campaigns`);
-  
+
   // Initialize database
   await initializeDatabase();
 });

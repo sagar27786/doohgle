@@ -1,16 +1,26 @@
-import { S3Client, DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, CreateBucketCommand, PutBucketPolicyCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import multer from 'multer';
-import multerS3 from 'multer-s3';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  S3Client,
+  DeleteObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  CreateBucketCommand,
+  PutBucketPolicyCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import multer from "multer";
+import multerS3 from "multer-s3";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 // Log credentials for debugging
 // AWS S3 configuration - credentials loaded from environment
 
 // Configure AWS SDK v3
-const s3Config: { region: string; credentials?: { accessKeyId: string; secretAccessKey: string } } = {
-  region: process.env.AWS_REGION || 'us-east-1',
+const s3Config: {
+  region: string;
+  credentials?: { accessKeyId: string; secretAccessKey: string };
+} = {
+  region: process.env.AWS_REGION || "us-east-1",
 };
 
 if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
@@ -22,27 +32,28 @@ if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
 
 const s3 = new S3Client(s3Config);
 
-export const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME || 'doohgle-media-uploads';
-export const S3_REGION = process.env.AWS_REGION || 'us-east-1';
+export const S3_BUCKET_NAME =
+  process.env.S3_BUCKET_NAME || "doohgle-media-uploads";
+export const S3_REGION = process.env.AWS_REGION || "us-east-1";
 
 // File type validation
 const allowedMimeTypes = [
-  'image/jpeg',
-  'image/jpg', 
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'video/mp4',
-  'video/mpeg',
-  'video/quicktime',
-  'video/x-msvideo', // .avi
-  'video/webm'
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+  "video/mpeg",
+  "video/quicktime",
+  "video/x-msvideo", // .avi
+  "video/webm",
 ];
 
 // File size limits (in bytes)
 const MAX_FILE_SIZE = {
   image: 10 * 1024 * 1024, // 10MB for images
-  video: 100 * 1024 * 1024  // 100MB for videos
+  video: 100 * 1024 * 1024, // 100MB for videos
 };
 
 // Generate unique filename
@@ -54,11 +65,19 @@ const generateFileName = (originalName: string): string => {
 };
 
 // File filter function
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error(`Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`));
+    cb(
+      new Error(
+        `Invalid file type. Allowed types: ${allowedMimeTypes.join(", ")}`
+      )
+    );
   }
 };
 
@@ -71,23 +90,23 @@ export const upload = multer({
     metadata: (req, file, cb) => {
       cb(null, {
         fieldName: file.fieldname,
-        originalName: file.originalname
+        originalName: file.originalname,
       });
     },
     key: (req, file, cb) => {
       const fileName = generateFileName(file.originalname);
       cb(null, fileName);
-    }
+    },
   }),
   fileFilter: fileFilter,
   limits: {
-    fileSize: MAX_FILE_SIZE.video
-  }
+    fileSize: MAX_FILE_SIZE.video,
+  },
 });
 
 // Utility function to get file type from mimetype
-export const getFileType = (mimetype: string): 'image' | 'video' => {
-  return mimetype.startsWith('image/') ? 'image' : 'video';
+export const getFileType = (mimetype: string): "image" | "video" => {
+  return mimetype.startsWith("image/") ? "image" : "video";
 };
 
 // Utility function to validate file size based on type
@@ -101,40 +120,56 @@ export const validateFileSize = (file: Express.Multer.File): boolean => {
 export const deleteFileFromS3 = async (fileUrl: string): Promise<boolean> => {
   try {
     // Extract key from URL
-    const urlParts = fileUrl.split('/');
-    const key = urlParts.slice(-3).join('/'); // Get last 3 parts: screen-media/images|videos/filename
-    
-    await s3.send(new DeleteObjectCommand({
-      Bucket: S3_BUCKET_NAME,
-      Key: key
-    }));
-    
+    const urlParts = fileUrl.split("/");
+    const key = urlParts.slice(-3).join("/"); // Get last 3 parts: screen-media/images|videos/filename
+
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: key,
+      })
+    );
+
     return true;
   } catch (error) {
-    console.error('Error deleting file from S3:', error);
+    console.error("Error deleting file from S3:", error);
     return false;
   }
 };
 
 // Function to generate presigned URL for temporary access
-export const generatePresignedUrl = async (key: string, expiresIn: number = 3600): Promise<string> => {
-  return await getSignedUrl(s3, new GetObjectCommand({
-    Bucket: S3_BUCKET_NAME,
-    Key: key
-  }), { expiresIn });
+export const generatePresignedUrl = async (
+  key: string,
+  expiresIn: number = 3600
+): Promise<string> => {
+  return await getSignedUrl(
+    s3,
+    new GetObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: key,
+    }),
+    { expiresIn }
+  );
 };
 
 // Function to check if S3 bucket exists
 export const ensureBucketExists = async (): Promise<void> => {
   try {
-    await s3.send(new ListObjectsV2Command({ 
-      Bucket: S3_BUCKET_NAME,
-      MaxKeys: 1
-    }));
+    await s3.send(
+      new ListObjectsV2Command({
+        Bucket: S3_BUCKET_NAME,
+        MaxKeys: 1,
+      })
+    );
     console.log(`S3 bucket ${S3_BUCKET_NAME} exists`);
   } catch (error: any) {
-    if (error.name === 'NoSuchBucket' || error.$metadata?.httpStatusCode === 404) {
-      throw new Error(`S3 bucket ${S3_BUCKET_NAME} does not exist. Please create it manually in AWS console.`);
+    if (
+      error.name === "NoSuchBucket" ||
+      error.$metadata?.httpStatusCode === 404
+    ) {
+      throw new Error(
+        `S3 bucket ${S3_BUCKET_NAME} does not exist. Please create it manually in AWS console.`
+      );
     } else {
       throw error;
     }
