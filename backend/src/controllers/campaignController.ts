@@ -296,21 +296,31 @@ export const estimateBudget = async (req: Request, res: Response) => {
         const hoursPerDay = timeSlots ? timeSlots.length : 24;
 
         let screenCost;
-        const price_per_day = 4000.00; // Default daily rate
-        const price_per_hour = 500.00; // Default hourly rate
+        // Get actual pricing from database - no dummy fallbacks
+        const pricingResult = await pool.query(
+          'SELECT hourly_rate, daily_rate FROM screen_pricing WHERE screen_id = $1',
+          [screen.id]
+        );
         
-        if (hoursPerDay === 24) {
-          screenCost = price_per_day * days;
+        const pricing = pricingResult.rows[0];
+        if (!pricing || (!pricing.hourly_rate && !pricing.daily_rate)) {
+          throw new Error(`No pricing information available for screen ${screen.id}`);
+        }
+        
+        if (hoursPerDay === 24 && pricing.daily_rate) {
+          screenCost = pricing.daily_rate * days;
+        } else if (pricing.hourly_rate) {
+          screenCost = pricing.hourly_rate * hoursPerDay * days;
         } else {
-          screenCost = price_per_hour * hoursPerDay * days;
+          throw new Error(`Insufficient pricing data for screen ${screen.id}`);
         }
 
         totalCost += screenCost;
         screenCosts.push({
           screenId: screen.id,
           screenName: screen.name,
-          pricePerDay: price_per_day,
-          pricePerHour: price_per_hour,
+          pricePerDay: pricing.daily_rate,
+          pricePerHour: pricing.hourly_rate,
           days,
           hoursPerDay,
           totalCost: screenCost,
@@ -788,11 +798,12 @@ export const getCitiesList = async (req: AuthRequest, res: Response) => {
       SELECT 
         city,
         COUNT(*) as screen_count,
-        4000.00 as min_price,
-        4000.00 as max_price,
-        10000 as avg_traffic
-      FROM screens 
-      WHERE is_active = true AND city IS NOT NULL
+        MIN(COALESCE(sp.daily_rate, sp.hourly_rate * 24)) as min_price,
+        MAX(COALESCE(sp.daily_rate, sp.hourly_rate * 24)) as max_price,
+        AVG(s.daily_footfall) as avg_traffic
+      FROM screens s
+      LEFT JOIN screen_pricing sp ON s.id = sp.screen_id
+      WHERE s.is_active = true AND s.city IS NOT NULL
       GROUP BY city
       ORDER BY screen_count DESC
     `);
@@ -829,16 +840,16 @@ export const getFilterOptions = async (req: AuthRequest, res: Response) => {
         ORDER BY screen_count DESC
       `),
 
-      // Get price ranges
+      // Get price ranges from actual pricing data
       pool.query(`
         SELECT 
-          4000.00 as min_price,
-          4000.00 as max_price,
-          4000.00 as price_25th,
-          4000.00 as price_75th
-        FROM screens 
-        WHERE is_active = true
-        LIMIT 1
+          MIN(COALESCE(sp.daily_rate, sp.hourly_rate * 24)) as min_price,
+          MAX(COALESCE(sp.daily_rate, sp.hourly_rate * 24)) as max_price,
+          PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY COALESCE(sp.daily_rate, sp.hourly_rate * 24)) as price_25th,
+          PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY COALESCE(sp.daily_rate, sp.hourly_rate * 24)) as price_75th
+        FROM screens s
+        LEFT JOIN screen_pricing sp ON s.id = sp.screen_id
+        WHERE s.is_active = true AND (sp.daily_rate IS NOT NULL OR sp.hourly_rate IS NOT NULL)
       `),
     ]);
 

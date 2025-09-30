@@ -142,24 +142,25 @@ export async function getAllScreens(
         s.longitude,
         s.screen_size_inches as screen_size_width,
         s.screen_size_inches as screen_size_height,
-        CASE WHEN s.resolution = '1920x1080' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE 1280 END as resolution_width,
-        CASE WHEN s.resolution = '1920x1080' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE 720 END as resolution_height,
-        10000 as daily_footfall,
-        5000 as vehicle_count,
+        CASE WHEN s.resolution = '1920x1080' THEN 1920 WHEN s.resolution = '4K' THEN 3840 ELSE NULL END as resolution_width,
+        CASE WHEN s.resolution = '1920x1080' THEN 1080 WHEN s.resolution = '4K' THEN 2160 ELSE NULL END as resolution_height,
+        NULL as daily_footfall,
+        NULL as vehicle_count,
         s.peak_viewing_hours as peak_hours,
-        'Mixed demographics' as demographics,
-        25.00 as cost_per_10_seconds,
+        NULL as demographics,
+        NULL as cost_per_10_seconds,
         s.day_photo_url as image_url,
         s.video_url,
         s.is_active,
-        500.00 as hourly_rate,
-        4000.00 as daily_rate,
-        25000.00 as weekly_rate,
+        sp.hourly_rate,
+        sp.daily_rate,
+        sp.weekly_rate,
         s.day_photo_url,
         s.night_photo_url,
         CASE WHEN fs.id IS NOT NULL THEN true ELSE false END as is_favorite
       FROM screens s
       LEFT JOIN favorite_screens fs ON s.id = fs.screen_id AND fs.user_id = $1
+      LEFT JOIN screen_pricing sp ON s.id = sp.screen_id
       WHERE s.is_active = true
     `;
 
@@ -180,7 +181,11 @@ export async function getAllScreens(
     }
 
     if (max_budget) {
-      query += ` AND 4000.00 <= $${++paramIndex}`;
+      query += ` AND EXISTS (
+        SELECT 1 FROM screen_pricing sp 
+        WHERE sp.screen_id = s.id 
+        AND COALESCE(sp.daily_rate, sp.hourly_rate * 24) <= $${++paramIndex}
+      )`;
       params.push(parseFloat(max_budget as string));
     }
 
