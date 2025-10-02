@@ -1,592 +1,272 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { motion } from "framer-motion";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { MapPin, Tv, Building2 } from "lucide-react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { Search, Star, MapPin } from "lucide-react";
+import { getAllScreens, ScreenSearchResult } from "../../api/screens";
+import { useFavorites } from "../../contexts/FavoritesContext";
 
-// Create custom billboard icon
-const createBillboardIcon = (color = "#3b82f6") => {
-  const iconHtml = renderToStaticMarkup(
-    <div
-      style={{
-        backgroundColor: "white",
-        borderRadius: "50%",
-        padding: "6px",
-        border: `2px solid ${color}`,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <img
-        src="/billboard.png"
-        alt="Billboard"
-        style={{
-          width: "24px",
-          height: "24px",
-          objectFit: "contain",
-        }}
-      />
-    </div>
-  );
+// Fix leaflet icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
-  return L.divIcon({
-    html: iconHtml,
-    className: "custom-billboard-icon",
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
-  });
+interface MapScreen {
+  id: number;
+  name: string;
+  lat: number;
+  lng: number;
+  type: string;
+  location: string;
+  city: string;
+}
+
+const convertToMapScreen = (screen: ScreenSearchResult): MapScreen | null => {
+  if (!screen.latitude || !screen.longitude) return null;
+
+  return {
+    id: screen.id,
+    name: screen.name,
+    lat: screen.latitude,
+    lng: screen.longitude,
+    type: screen.screen_type || "Billboard",
+    location: screen.address,
+    city: screen.city,
+  };
 };
 
-// Get custom icon based on screen type
-const getCustomIcon = (type: string) => {
-  switch (type) {
-    case "Billboard":
-      return createBillboardIcon("#3b82f6"); // blue
-    case "Transit Display":
-      return createBillboardIcon("#16a34a"); // green
-    case "Mall Screen":
-      return createBillboardIcon("#9333ea"); // purple
-    default:
-      return createBillboardIcon("#6b7280"); // gray
-  }
-};
-
-// Country data with coordinates
-const countries = [
-  { name: "India", code: "IND", lat: 22.9734, lng: 78.6569, zoom: 5 },
-  { name: "Delhi", code: "DEL", lat: 28.7041, lng: 77.1025, zoom: 11 },
-  { name: "Mumbai", code: "MUM", lat: 19.076, lng: 72.8777, zoom: 11 },
-  { name: "Bengaluru", code: "BLR", lat: 12.9716, lng: 77.5946, zoom: 11 },
-  { name: "Chennai", code: "CHE", lat: 13.0827, lng: 80.2707, zoom: 11 },
-  { name: "Kolkata", code: "KOL", lat: 22.5726, lng: 88.3639, zoom: 11 },
-  { name: "Hyderabad", code: "HYD", lat: 17.385, lng: 78.4867, zoom: 11 },
+const cities = [
+  { name: "Delhi", lat: 28.6139, lng: 77.209, zoom: 11 },
+  { name: "Mumbai", lat: 19.076, lng: 72.8777, zoom: 11 },
+  { name: "Bengaluru", lat: 12.9716, lng: 77.5946, zoom: 11 },
 ];
 
-// DOOH screen locations by country
-const doohScreens = {
-  DEL: [
-    {
-      name: "Connaught Place Billboard",
-      lat: 28.6315,
-      lng: 77.2167,
-      type: "Billboard",
-      location: "Delhi",
-    },
-    {
-      name: "Indira Gandhi Airport Display",
-      lat: 28.5562,
-      lng: 77.1,
-      type: "Transit Display",
-      location: "Delhi",
-    },
-    {
-      name: "Select Citywalk Mall",
-      lat: 28.5286,
-      lng: 77.2197,
-      type: "Mall Screen",
-      location: "Delhi",
-    },
-  ],
-  MUM: [
-    {
-      name: "Bandra Station Display",
-      lat: 19.0544,
-      lng: 72.8406,
-      type: "Transit Display",
-      location: "Mumbai",
-    },
-    {
-      name: "Marine Drive Billboard",
-      lat: 18.943,
-      lng: 72.8237,
-      type: "Billboard",
-      location: "Mumbai",
-    },
-    {
-      name: "Phoenix Marketcity Mall",
-      lat: 19.0865,
-      lng: 72.8895,
-      type: "Mall Screen",
-      location: "Mumbai",
-    },
-  ],
-  BLR: [
-    {
-      name: "Electronic City Tech Park LED",
-      lat: 12.8452,
-      lng: 77.6601,
-      type: "Billboard",
-      location: "Bengaluru",
-    },
-    {
-      name: "Whitefield Transit Display",
-      lat: 12.9692,
-      lng: 77.7498,
-      type: "Transit Display",
-      location: "Bengaluru",
-    },
-    {
-      name: "Forum Mall Screen",
-      lat: 12.9345,
-      lng: 77.611,
-      type: "Mall Screen",
-      location: "Bengaluru",
-    },
-  ],
-  CHE: [
-    {
-      name: "Marina Beach Billboard",
-      lat: 13.0472,
-      lng: 80.2824,
-      type: "Billboard",
-      location: "Chennai",
-    },
-    {
-      name: "Express Avenue Mall",
-      lat: 13.0594,
-      lng: 80.2597,
-      type: "Mall Screen",
-      location: "Chennai",
-    },
-    {
-      name: "Chennai Central Station Display",
-      lat: 13.0827,
-      lng: 80.2757,
-      type: "Transit Display",
-      location: "Chennai",
-    },
-  ],
-  KOL: [
-    {
-      name: "Howrah Bridge Billboard",
-      lat: 22.585,
-      lng: 88.3468,
-      type: "Billboard",
-      location: "Kolkata",
-    },
-    {
-      name: "Kolkata Airport Display",
-      lat: 22.6547,
-      lng: 88.4467,
-      type: "Transit Display",
-      location: "Kolkata",
-    },
-    {
-      name: "Quest Mall Screen",
-      lat: 22.539,
-      lng: 88.3656,
-      type: "Mall Screen",
-      location: "Kolkata",
-    },
-  ],
-  HYD: [
-    {
-      name: "Charminar Billboard",
-      lat: 17.3616,
-      lng: 78.4747,
-      type: "Billboard",
-      location: "Hyderabad",
-    },
-    {
-      name: "Rajiv Gandhi Airport Display",
-      lat: 17.2403,
-      lng: 78.4294,
-      type: "Transit Display",
-      location: "Hyderabad",
-    },
-    {
-      name: "GVK One Mall",
-      lat: 17.412,
-      lng: 78.4483,
-      type: "Mall Screen",
-      location: "Hyderabad",
-    },
-  ],
-};
-
-// Get icon for screen type (for popup display)
-const getScreenTypeIcon = (type: string) => {
-  switch (type) {
-    case "Billboard":
-      return <img src="/billboard.png" alt="Billboard" className="w-4 h-4" />;
-    case "Transit Display":
-      return <MapPin className="w-4 h-4 text-green-600" />;
-    case "Mall Screen":
-      return <Building2 className="w-4 h-4 text-purple-600" />;
-    default:
-      return <Tv className="w-4 h-4 text-gray-600" />;
-  }
-};
-
-// Component to control map programmatically
-type MapControllerProps = {
-  selectedCountry: {
-    lat: number;
-    lng: number;
-    zoom: number;
-    name: string;
-    code: string;
-  };
-  searchLocation: { lat: number; lng: number } | null;
-};
-
-function MapController({
-  selectedCountry,
-  searchLocation,
-}: MapControllerProps) {
-  const map = useMap();
+const InteractiveMap: React.FC = () => {
+  const [selectedCity, setSelectedCity] = useState("All Cities");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [screens, setScreens] = useState<MapScreen[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { favoriteScreenIds, toggleFavorite } = useFavorites();
 
   useEffect(() => {
-    if (searchLocation) {
-      map.setView([searchLocation.lat, searchLocation.lng], 13);
-    } else {
-      map.setView(
-        [selectedCountry.lat, selectedCountry.lng],
-        selectedCountry.zoom
-      );
-    }
-  }, [map, selectedCountry, searchLocation]);
+    const loadScreens = async () => {
+      try {
+        setLoading(true);
+        const apiScreens = await getAllScreens();
+        const mapScreens = apiScreens
+          .map(convertToMapScreen)
+          .filter((screen): screen is MapScreen => screen !== null);
 
-  return null;
-}
+        const sorted = mapScreens.sort((a, b) => {
+          const aFav = favoriteScreenIds.has(a.id);
+          const bFav = favoriteScreenIds.has(b.id);
+          if (aFav && !bFav) return -1;
+          if (!aFav && bFav) return 1;
+          return 0;
+        });
 
-// General location search using OpenStreetMap Nominatim
-interface GeocodeLocationResult {
-  lat: number;
-  lng: number;
-  place: string;
-}
+        setScreens(sorted);
+      } catch (error) {
+        console.error("Failed to load screens:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-const geocodeLocation = async (
-  query: string,
-  countryCode: string
-): Promise<GeocodeLocationResult> => {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      query
-    )}&countrycodes=${countryCode.toLowerCase()}&limit=1`;
+    loadScreens();
+  }, [favoriteScreenIds]);
 
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "DOOH-Map-App/1.0", // recommended for Nominatim
-      },
-    });
+  const filteredScreens = screens.filter((screen) => {
+    const matchesSearch = screen.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCity =
+      selectedCity === "All Cities" || screen.city === selectedCity;
+    return matchesSearch && matchesCity;
+  });
 
-    const data: Array<{ lat: string; lon: string; display_name: string }> =
-      await response.json();
-    if (data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-        place: data[0].display_name,
-      };
-    }
-    throw new Error("Location not found");
-  } catch (error) {
-    throw new Error("Unable to find location for this query");
-  }
-};
-
-// Geocoding function with fallback support
-interface ZippopotamPlace {
-  "place name": string;
-  longitude: string;
-  latitude: string;
-  state: string;
-}
-
-interface ZippopotamResponse {
-  places: ZippopotamPlace[];
-}
-
-interface NominatimResult {
-  lat: string;
-  lon: string;
-  display_name: string;
-}
-
-interface GeocodePostalCodeResult {
-  lat: number;
-  lng: number;
-  place: string;
-  state?: string;
-}
-
-const geocodePostalCode = async (
-  postalCode: string,
-  countryCode: string
-): Promise<GeocodePostalCodeResult> => {
-  try {
-    // First try with Zippopotam API
-    const response = await fetch(
-      `https://api.zippopotam.us/${countryCode.toLowerCase()}/${postalCode}`
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"
+        />
+      </div>
     );
-
-    if (response.ok) {
-      const data: ZippopotamResponse = await response.json();
-      return {
-        lat: parseFloat(data.places[0].latitude),
-        lng: parseFloat(data.places[0].longitude),
-        place: data.places[0]["place name"],
-        state: data.places[0]["state"],
-      };
-    }
-
-    // Fallback to OpenStreetMap Nominatim
-    const nominatimResponse = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&postalcode=${postalCode}&countrycodes=${countryCode.toLowerCase()}&limit=1`,
-      {
-        headers: {
-          "User-Agent": "DOOH-Map-App/1.0",
-        },
-      }
-    );
-
-    if (nominatimResponse.ok) {
-      const nominatimData: NominatimResult[] = await nominatimResponse.json();
-      if (nominatimData.length > 0) {
-        return {
-          lat: parseFloat(nominatimData[0].lat),
-          lng: parseFloat(nominatimData[0].lon),
-          place: nominatimData[0].display_name,
-        };
-      }
-    }
-
-    throw new Error("Location not found");
-  } catch (error) {
-    throw new Error("Unable to find location for this postal code");
   }
-};
-
-export default function InteractiveMap() {
-  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentScreens, setCurrentScreens] = useState(doohScreens.DEL);
-  const [postalCode, setPostalCode] = useState("");
-  const [searchLocation, setSearchLocation] = useState<
-    GeocodeLocationResult | GeocodePostalCodeResult | null
-  >(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState("");
-
-  interface Country {
-    name: string;
-    code: string;
-    lat: number;
-    lng: number;
-    zoom: number;
-  }
-
-  const handleCountryChange = (country: Country) => {
-    setSelectedCountry(country);
-
-    if (country.code === "IND") {
-      // Flatten all markers from every city
-      const allScreens = Object.values(doohScreens).flat();
-      setCurrentScreens(allScreens);
-    } else {
-      setCurrentScreens(
-        doohScreens[country.code as keyof typeof doohScreens] || []
-      );
-    }
-
-    setSearchLocation(null);
-    setPostalCode("");
-    setSearchError("");
-  };
-
-  const handleLocationSearch = async () => {
-    if (!postalCode.trim()) {
-      setSearchError("Please enter a location or postal code");
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchError("");
-
-    try {
-      const isPostalCode = /\d/.test(postalCode.trim());
-      let location;
-      if (isPostalCode) {
-        location = await geocodePostalCode(
-          postalCode.trim(),
-          selectedCountry.code
-        );
-      } else {
-        location = await geocodeLocation(
-          postalCode.trim(),
-          selectedCountry.code
-        );
-      }
-
-      setSearchLocation(location);
-      setSearchError("");
-    } catch (error) {
-      setSearchError(
-        typeof error === "object" && error !== null && "message" in error
-          ? String((error as { message?: string }).message)
-          : "An error occurred"
-      );
-      setSearchLocation(null);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleLocationSearch();
-    }
-  };
-
-  const clearSearch = () => {
-    setPostalCode("");
-    setSearchLocation(null);
-    setSearchError("");
-  };
-
-  const filteredScreens = currentScreens.filter(
-    (screen) =>
-      screen.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      screen.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      screen.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
-    <div className="flex flex-col lg:flex-row h-auto justify-between align-middle p-4 bg-gray-200 dark:bg-slate-900 lg:pl-[10%]">
-      {/* Sidebar */}
-      <div className="w-full lg:w-64 bg-white dark:bg-slate-800 shadow-md border-b lg:border-r border-gray-200 dark:border-slate-700 flex flex-col rounded-lg overflow-hidden mb-4 lg:mb-0">
-        <div className="p-4 border-b border-gray-200 dark:border-slate-700">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-            DOOH Platform
-          </h1>
-          <p className="text-xs text-gray-600 dark:text-gray-300">
-            Digital Out-of-Home Advertising
-          </p>
-        </div>
-
-        <div className="p-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Target Cities
-          </label>
-          <select
-            value={selectedCountry.code}
-            onChange={(e) => {
-              const country = countries.find((c) => c.code === e.target.value);
-              if (country) handleCountryChange(country);
-            }}
-            className="w-full px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-white"
-          >
-            {countries.map((country) => (
-              <option key={country.code} value={country.code}>
-                {country.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="p-4 border-t border-gray-200 dark:border-slate-700">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Search Location
-          </label>
-          <div className="flex gap-2 mb-2 items-center">
+    <div className="w-full h-screen bg-gray-50">
+      <div className="bg-white shadow-sm border-b p-4">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="Enter location"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
-              onKeyDown={handleKeyPress}
-              className="flex-1 min-w-0 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded-md focus:ring-1 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              placeholder="Search screens..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            <button
-              onClick={handleLocationSearch}
-              disabled={isSearching}
-              className="w-9 h-8 flex items-center justify-center bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md text-sm transition-colors"
-            >
-              {isSearching ? "..." : <MapPin className="w-4 h-4" />}
-            </button>
           </div>
 
-          {searchError && (
-            <p className="text-xs text-red-600 dark:text-red-400 mb-2">
-              {searchError}
-            </p>
-          )}
-
-          {searchLocation && (
-            <div className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-200 dark:border-green-800">
-              <p className="text-green-800 dark:text-green-200 font-medium">
-                Found:
-              </p>
-              <p className="text-green-700 dark:text-green-300">
-                {searchLocation.place}
-              </p>
-              {"state" in searchLocation && searchLocation.state && (
-                <p className="text-green-600 dark:text-green-400">
-                  {searchLocation.state}
-                </p>
-              )}
+          <div className="flex gap-2 flex-wrap">
+            {["All Cities", ...cities.map((city) => city.name)].map((city) => (
               <button
-                onClick={clearSearch}
-                className="mt-1 text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline"
+                key={city}
+                onClick={() => setSelectedCity(city)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  selectedCity === city
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
               >
-                Clear search
+                {city}
               </button>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 lg:pl-4">
-        <div className="h-[400px] sm:h-[500px] lg:h-[600px] w-full lg:w-[70vw] rounded-lg shadow-md overflow-hidden">
+      <div className="flex h-[calc(100vh-100px)]">
+        <div className="flex-1">
           <MapContainer
-            center={[selectedCountry.lat, selectedCountry.lng]}
-            zoom={selectedCountry.zoom}
+            center={[20.5937, 78.9629]}
+            zoom={5}
             className="h-full w-full"
             zoomControl={true}
           >
             <TileLayer
-              url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-              subdomains={["mt0", "mt1", "mt2", "mt3"]}
-              attribution="&copy; Google Maps"
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution="&copy; OpenStreetMap contributors"
             />
-            <MapController
-              selectedCountry={selectedCountry}
-              searchLocation={searchLocation}
-            />
-            {/* Screen markers with custom monitor icons */}
-            {filteredScreens.map((screen, idx) => (
-              <Marker
-                key={idx}
-                position={[screen.lat, screen.lng]}
-                icon={getCustomIcon(screen.type)}
-              >
+
+            {filteredScreens.map((screen) => (
+              <Marker key={screen.id} position={[screen.lat, screen.lng]}>
                 <Popup>
-                  <div className="p-1">
-                    <div className="flex items-center gap-1 mb-1">
-                      {getScreenTypeIcon(screen.type)}
-                      <h3 className="font-semibold text-gray-900 text-sm">
-                        {screen.name}
-                      </h3>
+                  <div className="p-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold">{screen.name}</h3>
+                      <button
+                        onClick={() => toggleFavorite(screen.id)}
+                        className={
+                          favoriteScreenIds.has(screen.id)
+                            ? "text-yellow-500"
+                            : "text-gray-400"
+                        }
+                      >
+                        <Star
+                          className="w-4 h-4"
+                          fill={
+                            favoriteScreenIds.has(screen.id)
+                              ? "currentColor"
+                              : "none"
+                          }
+                        />
+                      </button>
                     </div>
-                    <p className="text-xs text-gray-600 mb-1">
+                    <p className="text-sm text-gray-600 mt-1">
+                      <MapPin className="w-3 h-3 inline mr-1" />
                       {screen.location}
                     </p>
-                    <span className="inline-block px-1 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-800">
-                      {screen.type}
-                    </span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {screen.type}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {screen.city}
+                      </span>
+                    </div>
                   </div>
                 </Popup>
               </Marker>
             ))}
           </MapContainer>
         </div>
+
+        <div className="w-80 bg-white border-l overflow-y-auto">
+          <div className="p-4 border-b">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Available Screens ({filteredScreens.length})
+            </h2>
+            {favoriteScreenIds.size > 0 && (
+              <p className="text-sm text-gray-600 mt-1">
+                ⭐ Favorites shown first
+              </p>
+            )}
+          </div>
+
+          <div className="divide-y">
+            {filteredScreens.map((screen) => (
+              <div key={screen.id} className="p-4 hover:bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-900">
+                        {screen.name}
+                      </h3>
+                      {favoriteScreenIds.has(screen.id) && (
+                        <Star
+                          className="w-4 h-4 text-yellow-500"
+                          fill="currentColor"
+                        />
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      <MapPin className="w-3 h-3 inline mr-1" />
+                      {screen.location}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                        {screen.type}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {screen.city}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => toggleFavorite(screen.id)}
+                    className={`p-1 rounded ${
+                      favoriteScreenIds.has(screen.id)
+                        ? "text-yellow-500"
+                        : "text-gray-300 hover:text-yellow-400"
+                    }`}
+                  >
+                    <Star
+                      className="w-4 h-4"
+                      fill={
+                        favoriteScreenIds.has(screen.id)
+                          ? "currentColor"
+                          : "none"
+                      }
+                    />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {filteredScreens.length === 0 && (
+              <div className="p-8 text-center text-gray-500">
+                <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No screens found.</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default InteractiveMap;

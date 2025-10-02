@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import MovingScreenCard from '../Screen/MovingScreenCard';
+import { motion } from "framer-motion";
 import {
   MapPin,
   Clock,
@@ -13,7 +12,8 @@ import {
   Users,
   Zap,
   Play,
-
+  Eye,
+  Heart,
 } from "lucide-react";
 import { toggleFavoriteScreen } from "../../api/screens";
 
@@ -60,7 +60,9 @@ const ImprovedCampaignCreation: React.FC = () => {
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
   const [campaignName, setCampaignName] = useState("");
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [favoriteScreens, setFavoriteScreens] = useState<Set<number>>(new Set());
+  const [favoriteScreens, setFavoriteScreens] = useState<Set<number>>(
+    new Set()
+  );
 
   // Time slots
   const timeSlots: TimeSlot[] = [
@@ -108,8 +110,8 @@ const ImprovedCampaignCreation: React.FC = () => {
       setError(null);
       console.log("Fetching all screens from API...");
 
-      const token = localStorage.getItem('token');
-      const headers: any = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem("token");
+      const headers: any = { "Content-Type": "application/json" };
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
@@ -151,20 +153,23 @@ const ImprovedCampaignCreation: React.FC = () => {
           id: screen.id,
           name: screen.name,
           city: screen.city,
-          location_name: screen.location_name || "Indoor",
-          address: screen.address || `${screen.location_name}, ${screen.city}`,
-          daily_footfall: screen.daily_footfall || 10000,
-          cost_per_10_seconds: screen.cost_per_10_seconds || "50",
-          resolution_width: screen.resolution_width || 1280,
-          resolution_height: screen.resolution_height || 720,
-          screen_type: screen.screen_type || "smart_tv",
+          location_name: screen.location_name,
+          address: screen.address,
+          daily_footfall: screen.daily_footfall,
+          cost_per_10_seconds: screen.cost_per_10_seconds,
+          resolution_width: screen.resolution_width,
+          resolution_height: screen.resolution_height,
+          screen_type: screen.screen_type,
           is_active: screen.is_active,
           is_favorite: screen.is_favorite || false,
-          pricing: {
-            daily: parseInt(screen.cost_per_10_seconds || "50") * 360,
-            hourly: parseInt(screen.cost_per_10_seconds || "50") * 36,
-            weekly: parseInt(screen.cost_per_10_seconds || "50") * 360 * 7,
-          },
+          pricing:
+            screen.hourly_rate || screen.daily_rate || screen.weekly_rate
+              ? {
+                  daily: screen.daily_rate,
+                  hourly: screen.hourly_rate,
+                  weekly: screen.weekly_rate,
+                }
+              : undefined,
         }))
         .sort((a: Screen, b: Screen) => {
           // Sort favorites first
@@ -176,7 +181,9 @@ const ImprovedCampaignCreation: React.FC = () => {
       setAllScreens(transformedScreens);
 
       // Update favorites set
-      const favorites = new Set(transformedScreens.filter(s => s.is_favorite).map(s => s.id));
+      const favorites = new Set(
+        transformedScreens.filter((s) => s.is_favorite).map((s) => s.id)
+      );
       setFavoriteScreens(favorites);
 
       // Get unique cities
@@ -197,25 +204,28 @@ const ImprovedCampaignCreation: React.FC = () => {
   };
 
   // Handle favorite toggle
-  const handleFavoriteToggle = async (screenId: number, event?: React.MouseEvent) => {
+  const handleFavoriteToggle = async (
+    screenId: number,
+    event?: React.MouseEvent
+  ) => {
     if (event) {
       event.stopPropagation();
     }
-    
+
     try {
       const result = await toggleFavoriteScreen(screenId);
-      
+
       // Update local state
-      const updateScreens = (screensToUpdate: Screen[]) => 
-        screensToUpdate.map(screen => 
-          screen.id === screenId 
+      const updateScreens = (screensToUpdate: Screen[]) =>
+        screensToUpdate.map((screen) =>
+          screen.id === screenId
             ? { ...screen, is_favorite: result.is_favorite }
             : screen
         );
 
-      setAllScreens(prev => updateScreens(prev));
-      setScreens(prev => updateScreens(prev));
-      
+      setAllScreens((prev) => updateScreens(prev));
+      setScreens((prev) => updateScreens(prev));
+
       // Update favorites set
       const newFavorites = new Set(favoriteScreens);
       if (result.is_favorite) {
@@ -225,7 +235,7 @@ const ImprovedCampaignCreation: React.FC = () => {
       }
       setFavoriteScreens(newFavorites);
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      console.error("Error toggling favorite:", error);
     }
   };
 
@@ -239,14 +249,14 @@ const ImprovedCampaignCreation: React.FC = () => {
         (s) => s.city.toLowerCase() === city.toLowerCase()
       );
     }
-    
+
     // Sort favorites first
     const sorted = filtered.sort((a: Screen, b: Screen) => {
       if (a.is_favorite && !b.is_favorite) return -1;
       if (!a.is_favorite && b.is_favorite) return 1;
       return 0;
     });
-    
+
     setScreens(sorted);
   };
 
@@ -525,7 +535,7 @@ The venue owner will receive your request and respond shortly.`);
               </div>
             ) : (
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-gray-100 hover:scrollbar-thumb-blue-500"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-gray-100 hover:scrollbar-thumb-blue-500"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
@@ -536,13 +546,128 @@ The venue owner will receive your request and respond shortly.`);
                   scrollbarColor: "#60a5fa #f3f4f6",
                 }}
               >
-                {screens.map((screen) => (
-                  <MovingScreenCard
+                {screens.map((screen, index) => (
+                  <motion.div
                     key={screen.id}
-                    screen={screen}
-                    onClick={handleScreenSelect}
-                    showActions={false}
-                  />
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleScreenSelect(screen)}
+                    className="bg-white border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:shadow-lg transition-all duration-300"
+                  >
+                    {/* Screen Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div
+                        className={`p-3 rounded-lg ${getScreenTypeColor(
+                          screen.screen_type
+                        )} text-white`}
+                      >
+                        {getScreenTypeIcon(screen.screen_type)}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {/* Heart/Favorite Button */}
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => handleFavoriteToggle(screen.id, e)}
+                          className={`p-2 rounded-full transition-all duration-200 ${
+                            screen.is_favorite
+                              ? "bg-red-500 text-white shadow-lg"
+                              : "bg-white/90 text-gray-600 hover:bg-red-50 hover:text-red-500"
+                          }`}
+                        >
+                          <Heart
+                            className="w-4 h-4"
+                            fill={screen.is_favorite ? "#ffffff" : "none"}
+                            stroke={
+                              screen.is_favorite ? "#ffffff" : "currentColor"
+                            }
+                          />
+                        </motion.button>
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                          {screen.city.charAt(0).toUpperCase() +
+                            screen.city.slice(1)}
+                        </span>
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                          Active
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Screen Info */}
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {screen.name}
+                    </h3>
+                    <p className="text-gray-600 mb-4 flex items-center">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      {screen.address}
+                    </p>
+
+                    {/* Screen Stats - ONLY show if backend data exists */}
+                    {(screen.daily_footfall ||
+                      (screen.resolution_width &&
+                        screen.resolution_height)) && (
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        {screen.daily_footfall && (
+                          <div className="text-center">
+                            <div className="flex items-center justify-center mb-1">
+                              <Eye className="h-4 w-4 text-blue-600 mr-1" />
+                            </div>
+                            <p className="text-sm text-gray-500">Daily Views</p>
+                            <p className="font-semibold text-gray-900">
+                              {(screen.daily_footfall / 1000).toFixed(1)}K
+                            </p>
+                          </div>
+                        )}
+                        {screen.resolution_width &&
+                          screen.resolution_height && (
+                            <div className="text-center">
+                              <div className="flex items-center justify-center mb-1">
+                                <Monitor className="h-4 w-4 text-green-600 mr-1" />
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                Resolution
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {screen.resolution_width}x
+                                {screen.resolution_height}
+                              </p>
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {/* Pricing - ONLY show if backend data exists */}
+                    {(screen.pricing?.hourly || screen.pricing?.daily) && (
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          {screen.pricing?.hourly && (
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                Starting from
+                              </p>
+                              <p className="text-2xl font-bold text-blue-600">
+                                ₹{screen.pricing.hourly}
+                                <span className="text-sm">/hour</span>
+                              </p>
+                            </div>
+                          )}
+                          {screen.pricing?.daily && (
+                            <div className="text-right">
+                              <p className="text-sm text-gray-600">
+                                Daily Rate
+                              </p>
+                              <p className="text-lg font-semibold text-gray-900">
+                                ₹{screen.pricing.daily}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
                 ))}
               </motion.div>
             )}
@@ -681,14 +806,18 @@ The venue owner will receive your request and respond shortly.`);
                       <span className="font-medium">Location:</span>{" "}
                       {selectedScreen.address}
                     </p>
-                    <p>
-                      <span className="font-medium">Type:</span>{" "}
-                      {selectedScreen.screen_type}
-                    </p>
-                    <p>
-                      <span className="font-medium">Daily Views:</span>{" "}
-                      {selectedScreen.daily_footfall.toLocaleString()}
-                    </p>
+                    {selectedScreen.screen_type && (
+                      <p>
+                        <span className="font-medium">Type:</span>{" "}
+                        {selectedScreen.screen_type}
+                      </p>
+                    )}
+                    {selectedScreen.daily_footfall && (
+                      <p>
+                        <span className="font-medium">Daily Views:</span>{" "}
+                        {selectedScreen.daily_footfall.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>

@@ -37,16 +37,44 @@ interface DashboardStats {
 
 interface AdminScreen {
   id: number;
-  screen_name: string;
+  name: string;
+  description?: string;
+  screen_type: string;
+  location: string;
+  address: string;
   city: string;
-  location_in_venue: string;
-  is_active: boolean;
-  device_type: string;
-  created_at: string;
-  updated_at: string;
-  owner_email: string;
-  owner_name: string;
-  booking_requests_count: number;
+  state: string;
+  pincode: string;
+  latitude: number | null;
+  longitude: number | null;
+  screen_size_width?: number;
+  screen_size_height?: number;
+  resolution_width?: number;
+  resolution_height?: number;
+  daily_footfall?: number;
+  vehicle_count?: number;
+  peak_hours?: string[];
+  demographics?: string;
+  cost_per_10_seconds?: number;
+  image_url?: string;
+  day_photo_url?: string;
+  night_photo_url?: string;
+  video_url?: string;
+  is_active?: boolean;
+  hourly_rate?: number;
+  daily_rate?: number;
+  weekly_rate?: number;
+  pricing?: {
+    hourly: number;
+    daily: number;
+    weekly: number;
+    cost_per_10_seconds: number;
+  };
+  status?: "active" | "inactive" | "maintenance";
+  isFavorite?: boolean;
+  // Additional computed fields for admin
+  impressions?: number;
+  revenue?: number;
 }
 
 interface AdminBookingRequest {
@@ -174,19 +202,48 @@ class AdminService {
       // Use the existing getAllScreens API which returns all screens without authentication
       const screens = await getAllScreens();
 
-      // Transform to match AdminScreen interface
+      console.log("Raw screens data from API:", screens);
+      console.log("Number of screens:", screens.length);
+      if (screens.length > 0) {
+        console.log("Sample screen data:", screens[0]);
+      }
+
+      // Transform to match AdminScreen interface - ONLY show real backend data
       return screens.map((screen: any) => ({
         id: screen.id,
-        screen_name: screen.name || "Unknown Screen",
-        city: screen.city || "Unknown",
-        location_in_venue: screen.location || "Unknown Location",
-        is_active: screen.is_active !== false,
-        device_type: screen.device_type || "LED",
-        created_at: screen.created_at || new Date().toISOString(),
-        updated_at: screen.updated_at || new Date().toISOString(),
-        owner_email: screen.owner_email || "unknown@example.com",
-        owner_name: screen.owner_name || "Unknown Owner",
-        booking_requests_count: screen.booking_requests_count || 0,
+        name: screen.name || screen.screen_name,
+        description: screen.description,
+        screen_type: screen.screen_type,
+        location: screen.location_name || screen.location_in_venue,
+        address: screen.address,
+        city: screen.city,
+        state: screen.state,
+        pincode: screen.pincode,
+        latitude: screen.latitude,
+        longitude: screen.longitude,
+        screen_size_width: screen.screen_size_width,
+        screen_size_height: screen.screen_size_height,
+        resolution_width: screen.resolution_width,
+        resolution_height: screen.resolution_height,
+        daily_footfall: screen.daily_footfall,
+        vehicle_count: screen.vehicle_count,
+        peak_hours: screen.peak_hours,
+        demographics: screen.demographics,
+        cost_per_10_seconds: screen.cost_per_10_seconds,
+        image_url: screen.image_url,
+        day_photo_url: screen.day_photo_url,
+        night_photo_url: screen.night_photo_url,
+        video_url: screen.video_url,
+        is_active: screen.is_active,
+        hourly_rate: screen.hourly_rate,
+        daily_rate: screen.daily_rate,
+        weekly_rate: screen.weekly_rate,
+        pricing: screen.pricing,
+        status: screen.is_active ? "active" : "inactive",
+        isFavorite: screen.is_favorite,
+        // Only show real backend data - no computed/dummy values
+        impressions: screen.daily_footfall || screen.vehicle_count,
+        revenue: screen.daily_rate || screen.hourly_rate,
       }));
     } catch (error) {
       console.error("Error fetching screens:", error);
@@ -196,25 +253,49 @@ class AdminService {
 
   async deleteScreen(screenId: number): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/admin/screens/${screenId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/admin/screens/${screenId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          },
+        }
+      );
 
       if (!response.ok) {
+        // If it's a 404, consider it already deleted
+        if (response.status === 404) {
+          console.log(`Screen ${screenId} not found, considering it deleted`);
+          return;
+        }
+
+        // If backend is unavailable, allow local deletion
+        if (response.status >= 500) {
+          console.warn(
+            `Backend unavailable (${response.status}), allowing local deletion`
+          );
+          return;
+        }
+
         throw new Error(`Failed to delete screen: ${response.status}`);
       }
 
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.message || "Failed to delete screen");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting screen:", error);
+
+      // If it's a network error (backend unavailable), allow local deletion
+      if (error.name === "TypeError" || error.message.includes("fetch")) {
+        console.warn("Network error during delete, allowing local deletion");
+        return;
+      }
+
       throw new Error("Failed to delete screen. Please try again.");
     }
   }

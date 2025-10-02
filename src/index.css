@@ -296,7 +296,8 @@ body {
 
 /* Dazzling UI Animations */
 @keyframes gradient-x {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0%);
     background-position: 0% 50%;
   }
@@ -307,7 +308,8 @@ body {
 }
 
 @keyframes gradient-xy {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -316,7 +318,8 @@ body {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -325,7 +328,8 @@ body {
 }
 
 @keyframes glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     filter: brightness(1);
   }
@@ -349,13 +353,13 @@ body {
 }
 
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: scale(0.95) translateY(-20px); 
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
   }
-  to { 
-    opacity: 1; 
-    transform: scale(1) translateY(0); 
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -385,6 +389,8 @@ body {
   height: 420px;
   perspective: 1000px;
   cursor: pointer;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .card-inner {
@@ -393,20 +399,17 @@ body {
   height: 100%;
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 20px;
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    0 8px 16px rgba(0, 0, 0, 0.06),
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   overflow: hidden;
   transform-style: preserve-3d;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  box-sizing: border-box;
 }
 
 .animated-screen-card:hover .card-inner {
-  box-shadow: 
-    0 30px 60px rgba(0, 0, 0, 0.15),
-    0 12px 24px rgba(0, 0, 0, 0.08),
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15), 0 12px 24px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   transform: translateZ(10px);
 }
@@ -723,4 +726,23 @@ body {
 .animated-screen-card:active {
   outline: 2px solid #d1d5db;
   outline-offset: 2px;
+}
+
+/* Responsive adjustments for admin screens grid */
+@media (max-width: 1280px) {
+  .animated-screen-card {
+    height: 400px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .animated-screen-card {
+    height: 380px;
+  }
+}
+
+@media (max-width: 768px) {
+  .animated-screen-card {
+    height: 360px;
+  }
 }

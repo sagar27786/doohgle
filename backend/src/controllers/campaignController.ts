@@ -298,15 +298,17 @@ export const estimateBudget = async (req: Request, res: Response) => {
         let screenCost;
         // Get actual pricing from database - no dummy fallbacks
         const pricingResult = await pool.query(
-          'SELECT hourly_rate, daily_rate FROM screen_pricing WHERE screen_id = $1',
+          "SELECT hourly_rate, daily_rate FROM screen_pricing WHERE screen_id = $1",
           [screen.id]
         );
-        
+
         const pricing = pricingResult.rows[0];
         if (!pricing || (!pricing.hourly_rate && !pricing.daily_rate)) {
-          throw new Error(`No pricing information available for screen ${screen.id}`);
+          throw new Error(
+            `No pricing information available for screen ${screen.id}`
+          );
         }
-        
+
         if (hoursPerDay === 24 && pricing.daily_rate) {
           screenCost = pricing.daily_rate * days;
         } else if (pricing.hourly_rate) {
@@ -396,10 +398,10 @@ export const getUserCampaigns = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Get user campaigns error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: "Failed to get campaigns",
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };

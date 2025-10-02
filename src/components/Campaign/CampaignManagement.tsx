@@ -7,22 +7,17 @@ import {
   ChevronDown,
   RefreshCw,
   Eye,
-  Edit3,
-  MoreHorizontal,
   DollarSign,
   TrendingUp,
   Activity,
   ArrowUp,
   ArrowDown,
-  BarChart3,
-  Monitor,
-  MapPin,
-  XCircle,
-  Heart,
 } from "lucide-react";
 import ImprovedCampaignCreation from "./ImprovedCampaignCreation";
 import AnimatedScreenCard from "../AnimatedScreenCard";
-import { getAllScreens, toggleFavoriteScreen, getUserFavoriteScreens } from "../../api/screens";
+import ScreenDetailModal from "../ScreenDetailModalDazzling";
+import { getAllScreens } from "../../api/screens";
+import { useFavorites } from "../../contexts/FavoritesContext";
 
 // Import campaign service for real data
 const API_BASE_URL =
@@ -45,14 +40,33 @@ interface Screen {
   id: number;
   name: string;
   city: string;
+  screen_type?: string;
+  is_active?: boolean;
   image_url?: string;
   day_photo_url?: string;
   night_photo_url?: string;
   video_url?: string;
-  hourly_rate?: number;
+  hourly_rate?: number | string;
+  daily_rate?: number | string;
+  weekly_rate?: number | string;
   location_name?: string;
   is_favorite?: boolean; // Add favorite status
   favorited_at?: string; // When it was favorited
+  screen_size_width?: number;
+  screen_size_height?: number;
+  resolution_width?: number;
+  resolution_height?: number;
+  daily_footfall?: number;
+  peak_hours?: string[];
+  latitude?: number;
+  longitude?: number;
+  pricing?: {
+    hourly?: string;
+    daily?: string;
+    weekly?: string;
+    currency?: string;
+    cost_per_10_seconds?: string;
+  };
 }
 
 interface Campaign {
@@ -148,20 +162,10 @@ const CampaignManagement: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
   const [showCreateWorkflow, setShowCreateWorkflow] = useState(false);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [favoriteScreens, setFavoriteScreens] = useState<Set<number>>(new Set());
+  const [showScreenDetail, setShowScreenDetail] = useState(false);
 
-  // Tabs for screen filtering by city and status
-  const tabs = [
-    "All",
-    "Favorites",
-    "Active",
-    "Mumbai",
-    "Delhi",
-    "Bangalore",
-    "Chennai",
-    "Hyderabad",
-  ];
+  // Use favorites context
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   // Load real screens and campaigns from APIs - NO FALLBACK DATA
   useEffect(() => {
@@ -176,13 +180,15 @@ const CampaignManagement: React.FC = () => {
         const screens = screensResponse || [];
         const campaigns = campaignsResponse || [];
 
-        console.log('Loaded screens from API:', screens);
+        console.log("Loaded screens from API:", screens);
 
         // Convert screens data to match our Screen interface
         const formattedScreens: Screen[] = screens.map((screen: any) => ({
           id: screen.id,
           name: screen.screen_name || screen.name,
           city: screen.city,
+          screen_type: screen.screen_type,
+          is_active: screen.is_active,
           // Priority: image_url -> day_photo_url -> video_url -> fallback to dummy
           image_url:
             screen.image_url ||
@@ -192,24 +198,79 @@ const CampaignManagement: React.FC = () => {
           day_photo_url: screen.day_photo_url,
           night_photo_url: screen.night_photo_url,
           video_url: screen.video_url,
-          hourly_rate: parseFloat(screen.hourly_rate || "500"),
+          hourly_rate: screen.hourly_rate
+            ? typeof screen.hourly_rate === "string"
+              ? parseFloat(screen.hourly_rate)
+              : screen.hourly_rate
+            : undefined,
+          daily_rate: screen.daily_rate
+            ? typeof screen.daily_rate === "string"
+              ? parseFloat(screen.daily_rate)
+              : screen.daily_rate
+            : undefined,
+          weekly_rate: screen.weekly_rate
+            ? typeof screen.weekly_rate === "string"
+              ? parseFloat(screen.weekly_rate)
+              : screen.weekly_rate
+            : undefined,
+          pricing: screen.pricing
+            ? {
+                hourly: screen.pricing.hourly
+                  ? typeof screen.pricing.hourly === "string"
+                    ? parseFloat(screen.pricing.hourly)
+                    : screen.pricing.hourly
+                  : undefined,
+                daily: screen.pricing.daily
+                  ? typeof screen.pricing.daily === "string"
+                    ? parseFloat(screen.pricing.daily)
+                    : screen.pricing.daily
+                  : undefined,
+                weekly: screen.pricing.weekly
+                  ? typeof screen.pricing.weekly === "string"
+                    ? parseFloat(screen.pricing.weekly)
+                    : screen.pricing.weekly
+                  : undefined,
+                currency: screen.pricing.currency,
+                cost_per_10_seconds: screen.pricing.cost_per_10_seconds,
+              }
+            : undefined,
           location_name: screen.location_in_venue || screen.location_name,
           is_favorite: screen.is_favorite || false,
           favorited_at: screen.favorited_at,
+          daily_footfall: screen.daily_footfall,
+          peak_hours: screen.peak_hours,
+          screen_size_width: screen.screen_size_width,
+          screen_size_height: screen.screen_size_height,
+          resolution_width: screen.resolution_width,
+          resolution_height: screen.resolution_height,
+          latitude: screen.latitude ? parseFloat(screen.latitude) : undefined,
+          longitude: screen.longitude
+            ? parseFloat(screen.longitude)
+            : undefined,
         }));
 
-        console.log('Formatted screens with favorites:', formattedScreens);
+        console.log("Formatted screens with favorites:", formattedScreens);
 
-        // Track favorite screens
-        const favorites = new Set<number>();
-        formattedScreens.forEach(screen => {
-          if (screen.is_favorite) {
-            favorites.add(screen.id);
+        // DEBUG: Log pricing and coordinates for first screen
+        if (formattedScreens.length > 0) {
+          console.log("🔍 FIRST SCREEN DATA:", {
+            name: formattedScreens[0].name,
+            hourly_rate: formattedScreens[0].hourly_rate,
+            daily_rate: formattedScreens[0].daily_rate,
+            weekly_rate: formattedScreens[0].weekly_rate,
+            pricing: formattedScreens[0].pricing,
+            latitude: formattedScreens[0].latitude,
+            longitude: formattedScreens[0].longitude,
+          });
+        }
+
+        // Log favorite screens (using context)
+        formattedScreens.forEach((screen) => {
+          if (isFavorite(screen.id)) {
             console.log(`Screen ${screen.id} (${screen.name}) is favorited`);
           }
         });
-        setFavoriteScreens(favorites);
-        console.log('Favorite screens set:', favorites);
+        console.log("Favorite screens loaded from context");
 
         // Convert campaigns data and assign screens to each campaign
         const formattedCampaigns: Campaign[] = campaigns.map(
@@ -265,34 +326,32 @@ const CampaignManagement: React.FC = () => {
   }, []);
 
   // Handle favorite toggle
-  const handleFavoriteToggle = async (screenId: number, event?: React.MouseEvent) => {
+  const handleFavoriteToggle = async (
+    screenId: number,
+    event?: React.MouseEvent
+  ) => {
     if (event) {
       event.stopPropagation(); // Prevent triggering screen selection
     }
-    
+
     try {
-      const result = await toggleFavoriteScreen(screenId);
-      
-      // Update local state immediately for better UX
-      const updatedScreens = screensData.map(screen => 
-        screen.id === screenId 
-          ? { ...screen, is_favorite: result.is_favorite }
+      // Use the favorites context to toggle favorite
+      const newFavoriteStatus = await toggleFavorite(screenId);
+
+      // Update local screens data to reflect the change immediately
+      const updatedScreens = screensData.map((screen) =>
+        screen.id === screenId
+          ? { ...screen, is_favorite: newFavoriteStatus }
           : screen
       );
       setScreensData(updatedScreens);
-      
-      // Update favorites set
-      const newFavorites = new Set(favoriteScreens);
-      if (result.is_favorite) {
-        newFavorites.add(screenId);
-      } else {
-        newFavorites.delete(screenId);
-      }
-      setFavoriteScreens(newFavorites);
 
-      console.log(`Screen ${screenId} favorite status updated to:`, result.is_favorite);
+      console.log(
+        `Screen ${screenId} favorite status updated to:`,
+        newFavoriteStatus
+      );
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      console.error("Error toggling favorite:", error);
       // You could add a toast notification here
     }
   };
@@ -305,28 +364,30 @@ const CampaignManagement: React.FC = () => {
         (screen.location_name || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
-      
+
       let matchesTab = true;
       if (selectedTab === "All") {
         matchesTab = true;
       } else if (selectedTab === "Favorites") {
-        matchesTab = screen.is_favorite === true;
+        matchesTab = isFavorite(screen.id);
       } else if (selectedTab === "Active") {
         matchesTab = true; // All screens are considered active for now
       } else {
         // City filter
         matchesTab = screen.city.toLowerCase() === selectedTab.toLowerCase();
       }
-      
+
       return matchesSearch && matchesTab;
     })
     .sort((a, b) => {
       // Sort favorites first if not filtering by favorites specifically
       if (selectedTab !== "Favorites") {
-        if (a.is_favorite && !b.is_favorite) return -1;
-        if (!a.is_favorite && b.is_favorite) return 1;
+        const aIsFavorite = isFavorite(a.id);
+        const bIsFavorite = isFavorite(b.id);
+        if (aIsFavorite && !bIsFavorite) return -1;
+        if (!aIsFavorite && bIsFavorite) return 1;
       }
-      
+
       const aVal = a[sortBy as keyof Screen];
       const bVal = b[sortBy as keyof Screen];
 
@@ -519,83 +580,109 @@ const CampaignManagement: React.FC = () => {
           transition={{ delay: 0.5 }}
           className="bg-white rounded-xl p-4 lg:p-6 shadow-lg border border-gray-100 mb-6"
         >
-          {/* Tab Navigation */}
-          <div className="flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:items-center justify-between mb-6">
-            <div className="flex space-x-1 overflow-x-auto pb-2 lg:pb-0">
-              {tabs.map((tab, index) => (
+          {/* Tab Navigation and Search/Filter Controls - Single Row */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 mb-6">
+            {/* Left Side: Category Tabs (1/3) */}
+            <div className="flex items-center space-x-2">
+              {["All", "Favorites", "Active"].map((tab, index) => (
                 <motion.button
                   key={tab}
                   onClick={() => setSelectedTab(tab)}
-                  className={`px-3 lg:px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
                     selectedTab === tab
-                      ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md"
                   }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
+                  transition={{
+                    delay: 0.6 + index * 0.1,
+                    type: "spring",
+                    stiffness: 200,
+                  }}
                 >
                   {tab}
                   <span
-                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                    className={`ml-2 text-xs px-2 py-0.5 rounded-full font-bold ${
                       selectedTab === tab
-                        ? "bg-blue-200 text-blue-800"
-                        : "bg-gray-200 text-gray-600"
+                        ? "bg-white bg-opacity-30 text-white"
+                        : "bg-white text-gray-700"
                     }`}
                   >
                     {tab === "All"
                       ? screensData.length
                       : tab === "Favorites"
                       ? screensData.filter((s) => s.is_favorite).length
-                      : tab === "Active"
-                      ? screensData.length // All screens are active for now
-                      : screensData.filter((s) => s.city === tab).length}
+                      : screensData.filter((s) => s.is_active).length}
                   </span>
                 </motion.button>
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
-              <div className="relative flex-1 sm:flex-none">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
+            {/* Right Side: Search and Filter Controls (2/3) */}
+            <div className="flex flex-1 items-center space-x-3">
+              <motion.div
+                className="relative flex-1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+              >
+                <motion.div
+                  animate={{ x: [0, 2, 0] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={20}
+                  />
+                </motion.div>
+                <motion.input
                   type="text"
-                  placeholder="Search campaigns..."
+                  placeholder="Search screens..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base shadow-sm hover:shadow-md"
+                  whileFocus={{ scale: 1.01 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 />
-              </div>
+              </motion.div>
 
-              <div className="flex space-x-3">
-                <motion.button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex-1 sm:flex-none"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <motion.button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center justify-center space-x-2 bg-white border-2 border-gray-200 text-gray-700 px-6 py-2.5 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm hover:shadow-md font-medium"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
+              >
+                <Filter size={18} />
+                <span>Filters</span>
+                <motion.div
+                  animate={{ rotate: showFilters ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <Filter size={18} />
-                  <span className="hidden sm:inline">Filters</span>
-                  <ChevronDown
-                    className={`transform transition-transform ${
-                      showFilters ? "rotate-180" : ""
-                    }`}
-                    size={16}
-                  />
-                </motion.button>
-                <motion.button
-                  className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  whileHover={{ scale: 1.05, rotate: 90 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <RefreshCw size={18} />
-                </motion.button>
-              </div>
+                  <ChevronDown size={16} />
+                </motion.div>
+              </motion.button>
+
+              <motion.button
+                className="p-2.5 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm hover:shadow-md"
+                whileHover={{ scale: 1.05, rotate: 90, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, rotate: -90 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                transition={{ delay: 1.0, type: "spring", stiffness: 200 }}
+                onClick={() => window.location.reload()}
+              >
+                <RefreshCw size={18} />
+              </motion.button>
             </div>
           </div>
 
@@ -702,23 +789,66 @@ const CampaignManagement: React.FC = () => {
                 screen={{
                   id: screen.id,
                   name: screen.name,
-                  location: screen.location_name || 'Not specified',
+                  location: screen.location_name || "Not specified",
                   city: screen.city,
-                  price_per_day: screen.hourly_rate ? screen.hourly_rate * 24 : 2500,
-                  type: screen.screen_type || 'LED Display',
-                  status: 'available',
-                  media_urls: [screen.image_url, screen.day_photo_url, screen.night_photo_url].filter(Boolean),
+                  price_per_day: screen.daily_rate
+                    ? Number(screen.daily_rate)
+                    : screen.hourly_rate
+                    ? Number(screen.hourly_rate) * 24
+                    : undefined,
+                  daily_rate: screen.daily_rate
+                    ? Number(screen.daily_rate)
+                    : undefined,
+                  hourly_rate: screen.hourly_rate
+                    ? Number(screen.hourly_rate)
+                    : undefined,
+                  weekly_rate: screen.weekly_rate
+                    ? Number(screen.weekly_rate)
+                    : undefined,
+                  pricing: screen.pricing,
+                  type: screen.screen_type,
+                  status: undefined, // Remove status display
+                  media_urls: [
+                    screen.image_url,
+                    screen.day_photo_url,
+                    screen.night_photo_url,
+                  ].filter(Boolean) as string[],
+                  image_url: screen.image_url,
                   video_url: screen.video_url,
-                  features: ['HD Quality', 'Digital Display', '24/7 Support'],
-                  rating: 4.5,
-                  views_per_day: Math.floor(Math.random() * 10000) + 5000,
-                  isFavorite: screen.is_favorite
+                  day_photo_url: screen.day_photo_url,
+                  night_photo_url: screen.night_photo_url,
+                  latitude: screen.latitude,
+                  longitude: screen.longitude,
+                  features: [],
+                  rating: undefined,
+                  views_per_day: screen.daily_footfall,
+                  isFavorite: isFavorite(screen.id),
+                  // Technical details for the modal
+                  screen_size_width: screen.screen_size_width,
+                  screen_size_height: screen.screen_size_height,
+                  resolution_width: screen.resolution_width,
+                  resolution_height: screen.resolution_height,
+                  orientation: undefined,
+                  device_type: undefined,
+                  device_model: undefined,
+                  viewing_distance: undefined,
+                  typical_viewer_duration: undefined,
+                  peak_hours: screen.peak_hours,
+                  daily_footfall: screen.daily_footfall,
                 }}
-                onFavorite={(screenId) => handleFavoriteToggle(Number(screenId), new Event('click') as any)}
+                onFavorite={(screenId) =>
+                  handleFavoriteToggle(
+                    Number(screenId),
+                    new Event("click") as any
+                  )
+                }
                 onView={(screenData) => {
-                  const foundScreen = filteredScreens.find(s => s.id.toString() === screenData.id.toString());
+                  const foundScreen = filteredScreens.find(
+                    (s) => s.id.toString() === screenData.id.toString()
+                  );
                   if (foundScreen) {
                     setSelectedScreen(foundScreen);
+                    setShowScreenDetail(true);
                   }
                 }}
               />
@@ -726,243 +856,67 @@ const CampaignManagement: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* Professional Screen Detail Modal */}
+        {/* Enhanced Screen Detail Modal */}
         <AnimatePresence>
-          {selectedScreen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-              onClick={() => setSelectedScreen(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-6">
-                  {/* Modal Header */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                        {selectedScreen.name}
-                      </h2>
-                      <p className="text-gray-600 flex items-center">
-                        <MapPin size={16} className="mr-1" />
-                        {selectedScreen.location_name ||
-                          "Location not specified"}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="px-4 py-2 rounded-full text-sm font-medium border bg-green-50 text-green-700 border-green-200">
-                        <div className="flex items-center space-x-1">
-                          <Monitor size={16} />
-                          <span>Active</span>
-                        </div>
-                      </div>
-                      <motion.button
-                        onClick={() => setSelectedScreen(null)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        whileHover={{ scale: 1.1, rotate: 90 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <XCircle size={24} />
-                      </motion.button>
-                    </div>
-                  </div>
-
-                  {/* Screen Media */}
-                  <div className="mb-6">
-                    <div className="relative h-64 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl overflow-hidden">
-                      {selectedScreen.video_url &&
-                      selectedScreen.video_url.includes(".mp4") ? (
-                        <video
-                          src={selectedScreen.video_url}
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          loop
-                          muted
-                          controls
-                          onError={(e) => {
-                            (e.target as HTMLVideoElement).style.display =
-                              "none";
-                          }}
-                        />
-                      ) : selectedScreen.image_url ||
-                        selectedScreen.day_photo_url ||
-                        selectedScreen.night_photo_url ? (
-                        <img
-                          src={
-                            selectedScreen.image_url ||
-                            selectedScreen.day_photo_url ||
-                            selectedScreen.night_photo_url
-                          }
-                          alt={selectedScreen.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white text-2xl font-medium">
-                          {selectedScreen.name}
-                        </div>
-                      )}
-                      <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full text-sm font-medium text-gray-700">
-                        {selectedScreen.city}
-                      </div>
-                      {selectedScreen.video_url && (
-                        <div className="absolute top-4 left-4 bg-red-500/90 px-3 py-1 rounded-full text-sm font-medium text-white">
-                          VIDEO SCREEN
-                        </div>
-                      )}
-                      {/* Day/Night toggle if both photos exist */}
-                      {selectedScreen.day_photo_url &&
-                        selectedScreen.night_photo_url && (
-                          <div className="absolute bottom-4 left-4 flex space-x-2">
-                            <button className="bg-yellow-500/90 px-2 py-1 rounded text-white text-xs">
-                              Day
-                            </button>
-                            <button className="bg-blue-900/90 px-2 py-1 rounded text-white text-xs">
-                              Night
-                            </button>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <motion.div
-                      className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <DollarSign className="text-blue-600" size={24} />
-                        <div>
-                          <p className="text-sm text-gray-600">Hourly Rate</p>
-                          <p className="text-xl font-bold text-gray-900">
-                            ₹{selectedScreen.hourly_rate || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <MapPin className="text-green-600" size={24} />
-                        <div>
-                          <p className="text-sm text-gray-600">City</p>
-                          <p className="text-xl font-bold text-gray-900">
-                            {selectedScreen.city}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Monitor className="text-purple-600" size={24} />
-                        <div>
-                          <p className="text-sm text-gray-600">Status</p>
-                          <p className="text-xl font-bold text-gray-900">
-                            Active
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  {/* Screen Details */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Screen Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900 mb-2">
-                          Basic Details
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Screen ID:</span>
-                            <span className="font-medium">
-                              {selectedScreen.id}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Name:</span>
-                            <span className="font-medium">
-                              {selectedScreen.name}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">City:</span>
-                            <span className="font-medium">
-                              {selectedScreen.city}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Location:</span>
-                            <span className="font-medium">
-                              {selectedScreen.location_name || "Not specified"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900 mb-2">
-                          Pricing
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Hourly Rate:</span>
-                            <span className="font-medium">
-                              ₹{selectedScreen.hourly_rate || "N/A"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Daily Rate:</span>
-                            <span className="font-medium">
-                              ₹
-                              {selectedScreen.hourly_rate
-                                ? (
-                                    selectedScreen.hourly_rate * 24
-                                  ).toLocaleString()
-                                : "N/A"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Monthly Rate:</span>
-                            <span className="font-medium">
-                              ₹
-                              {selectedScreen.hourly_rate
-                                ? (
-                                    selectedScreen.hourly_rate *
-                                    24 *
-                                    30
-                                  ).toLocaleString()
-                                : "N/A"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
+          {selectedScreen && showScreenDetail && (
+            <ScreenDetailModal
+              screen={{
+                id: selectedScreen.id,
+                name: selectedScreen.name,
+                location: selectedScreen.location_name || "Not specified",
+                city: selectedScreen.city,
+                // ALL PRICING DATA - CRITICAL
+                hourly_rate: selectedScreen.hourly_rate
+                  ? Number(selectedScreen.hourly_rate)
+                  : undefined,
+                daily_rate: selectedScreen.daily_rate
+                  ? Number(selectedScreen.daily_rate)
+                  : undefined,
+                weekly_rate: selectedScreen.weekly_rate
+                  ? Number(selectedScreen.weekly_rate)
+                  : undefined,
+                pricing: selectedScreen.pricing,
+                price_per_day: selectedScreen.daily_rate
+                  ? Number(selectedScreen.daily_rate)
+                  : selectedScreen.hourly_rate
+                  ? Number(selectedScreen.hourly_rate) * 24
+                  : undefined,
+                // ALL MEDIA FILES
+                image_url: selectedScreen.image_url,
+                day_photo_url: selectedScreen.day_photo_url,
+                night_photo_url: selectedScreen.night_photo_url,
+                video_url: selectedScreen.video_url,
+                media_urls: [
+                  selectedScreen.image_url,
+                  selectedScreen.day_photo_url,
+                  selectedScreen.night_photo_url,
+                ].filter(Boolean) as string[],
+                // MAP COORDINATES - CRITICAL
+                latitude: selectedScreen.latitude,
+                longitude: selectedScreen.longitude,
+                // OTHER DATA
+                features: [],
+                rating: undefined,
+                views_per_day: selectedScreen.daily_footfall,
+                isFavorite: isFavorite(selectedScreen.id),
+                screen_size_width: selectedScreen.screen_size_width,
+                screen_size_height: selectedScreen.screen_size_height,
+                resolution_width: selectedScreen.resolution_width,
+                resolution_height: selectedScreen.resolution_height,
+                orientation: "landscape",
+                device_type: "smart_tv",
+                device_model: "N/A",
+                viewing_distance: "close",
+                typical_viewer_duration: "N/A",
+                peak_hours: selectedScreen.peak_hours || ["09:00-17:00"],
+                daily_footfall: selectedScreen.daily_footfall,
+              }}
+              isOpen={showScreenDetail}
+              onClose={() => {
+                setShowScreenDetail(false);
+                setSelectedScreen(null);
+              }}
+            />
           )}
         </AnimatePresence>
 

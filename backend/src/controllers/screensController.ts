@@ -29,16 +29,43 @@ export async function createScreen(
     day_photo_url,
     night_photo_url,
     video_url,
+    pricing,
   } = req.body || {};
 
+  // Validate required fields
   if (!screen_name || !location_in_venue) {
     return res
       .status(400)
       .json({ message: "screen_name and location_in_venue are required." });
   }
 
+  if (!city) {
+    return res.status(400).json({ message: "city is required." });
+  }
+
+  if (!latitude || !longitude) {
+    return res
+      .status(400)
+      .json({ message: "latitude and longitude are required." });
+  }
+
+  if (
+    !pricing ||
+    (!pricing.hourly_rate && !pricing.daily_rate && !pricing.weekly_rate)
+  ) {
+    return res.status(400).json({
+      message:
+        "At least one pricing rate (hourly_rate, daily_rate, or weekly_rate) is required.",
+    });
+  }
+
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    // Insert screen
+    const result = await client.query(
       `INSERT INTO screens
        (user_id, screen_name, location_in_venue, city, latitude, longitude, screen_size_inches, resolution, 
         orientation, device_type, device_model, ads_enabled, ad_frequency, viewing_distance, 
@@ -68,13 +95,33 @@ export async function createScreen(
       ]
     );
 
+    const newScreen = result.rows[0];
+
+    // Insert pricing (MANDATORY - already validated above)
+    await client.query(
+      `INSERT INTO screen_pricing (screen_id, hourly_rate, daily_rate, weekly_rate, currency)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        newScreen.id,
+        pricing.hourly_rate ? Number(pricing.hourly_rate) : null,
+        pricing.daily_rate ? Number(pricing.daily_rate) : null,
+        pricing.weekly_rate ? Number(pricing.weekly_rate) : null,
+        pricing.currency || "INR",
+      ]
+    );
+
+    await client.query("COMMIT");
+
     return res.status(201).json({
       message: "Screen registered successfully",
-      screen: result.rows[0],
+      screen: newScreen,
     });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("createScreen error:", err);
     return res.status(500).json({ message: "Server error" });
+  } finally {
+    client.release();
   }
 }
 
@@ -111,7 +158,7 @@ export async function getMyScreens(
 
 // Get all screens for ads manager with filters
 export async function getAllScreens(
-  req: Request & { user?: AuthUser }, 
+  req: Request & { user?: AuthUser },
   res: Response
 ) {
   try {
@@ -189,7 +236,9 @@ export async function getAllScreens(
       params.push(parseFloat(max_budget as string));
     }
 
-    query += ` ORDER BY ${userId ? 'is_favorite DESC,' : ''} s.city, s.screen_size_inches DESC, s.created_at DESC LIMIT $${++paramIndex}`;
+    query += ` ORDER BY ${
+      userId ? "is_favorite DESC," : ""
+    } s.city, s.screen_size_inches DESC, s.created_at DESC LIMIT $${++paramIndex}`;
     params.push(parseInt(limit as string));
 
     const result = await pool.query(query, params);
@@ -666,14 +715,17 @@ export async function toggleFavoriteScreen(
   }
 
   const { screenId } = req.params;
-  
+
   if (!screenId) {
     return res.status(400).json({ message: "Screen ID is required" });
   }
 
   try {
     // Check if screen exists
-    const screenCheck = await pool.query("SELECT id FROM screens WHERE id = $1", [screenId]);
+    const screenCheck = await pool.query(
+      "SELECT id FROM screens WHERE id = $1",
+      [screenId]
+    );
     if (screenCheck.rows.length === 0) {
       return res.status(404).json({ message: "Screen not found" });
     }
@@ -690,9 +742,9 @@ export async function toggleFavoriteScreen(
         "DELETE FROM favorite_screens WHERE user_id = $1 AND screen_id = $2",
         [userId, screenId]
       );
-      return res.status(200).json({ 
-        message: "Screen removed from favorites", 
-        is_favorite: false 
+      return res.status(200).json({
+        message: "Screen removed from favorites",
+        is_favorite: false,
       });
     } else {
       // Add to favorites
@@ -700,9 +752,9 @@ export async function toggleFavoriteScreen(
         "INSERT INTO favorite_screens (user_id, screen_id) VALUES ($1, $2)",
         [userId, screenId]
       );
-      return res.status(200).json({ 
-        message: "Screen added to favorites", 
-        is_favorite: true 
+      return res.status(200).json({
+        message: "Screen added to favorites",
+        is_favorite: true,
       });
     }
   } catch (error) {
@@ -724,7 +776,8 @@ export async function getUserFavoriteScreens(
   }
 
   try {
-    const result = await pool.query(`
+    const result = await pool.query(
+      `
       SELECT 
         s.*,
         fs.created_at as favorited_at,
@@ -733,7 +786,9 @@ export async function getUserFavoriteScreens(
       INNER JOIN favorite_screens fs ON s.id = fs.screen_id
       WHERE fs.user_id = $1
       ORDER BY fs.created_at DESC
-    `, [userId]);
+    `,
+      [userId]
+    );
 
     // Process URLs for each screen
     const screensWithUrls = await Promise.all(
@@ -741,14 +796,14 @@ export async function getUserFavoriteScreens(
         ...screen,
         day_photo_url: await getRenderableUrl(screen.day_photo_url),
         night_photo_url: await getRenderableUrl(screen.night_photo_url),
-        video_url: await getRenderableUrl(screen.video_url)
+        video_url: await getRenderableUrl(screen.video_url),
       }))
     );
 
     return res.status(200).json({
       success: true,
       favorites: screensWithUrls,
-      count: screensWithUrls.length
+      count: screensWithUrls.length,
     });
   } catch (error) {
     console.error("Error fetching favorite screens:", error);
@@ -769,25 +824,28 @@ export async function checkFavoriteStatus(
   }
 
   const { screenIds } = req.body;
-  
+
   if (!screenIds || !Array.isArray(screenIds)) {
     return res.status(400).json({ message: "Screen IDs array is required" });
   }
 
   try {
-    const result = await pool.query(`
+    const result = await pool.query(
+      `
       SELECT screen_id, true as is_favorite
       FROM favorite_screens 
       WHERE user_id = $1 AND screen_id = ANY($2)
-    `, [userId, screenIds]);
+    `,
+      [userId, screenIds]
+    );
 
     const favoriteMap: { [key: string]: boolean } = {};
-    screenIds.forEach(id => favoriteMap[id] = false);
-    result.rows.forEach(row => favoriteMap[row.screen_id] = true);
+    screenIds.forEach((id) => (favoriteMap[id] = false));
+    result.rows.forEach((row) => (favoriteMap[row.screen_id] = true));
 
     return res.status(200).json({
       success: true,
-      favorites: favoriteMap
+      favorites: favoriteMap,
     });
   } catch (error) {
     console.error("Error checking favorite status:", error);

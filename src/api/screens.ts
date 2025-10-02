@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://localhost:4000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://doohgle-backend.onrender.com/api";
 
 export interface ScreenAsset {
   asset_type: "photo_day" | "photo_night" | "video";
@@ -152,8 +153,8 @@ export async function getScreenById(id: string) {
 
 export async function getAllScreens(): Promise<ScreenSearchResult[]> {
   try {
-    const token = localStorage.getItem('token');
-    const headers: any = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem("token");
+    const headers: any = { "Content-Type": "application/json" };
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -217,16 +218,16 @@ export async function toggleFavoriteScreen(screenId: number | string): Promise<{
 }> {
   try {
     const token = localStorage.getItem("token");
-    console.log('toggleFavoriteScreen called with screenId:', screenId);
-    console.log('Auth token present:', !!token);
-    console.log('Token value:', token?.substring(0, 20) + '...');
-    
+    console.log("toggleFavoriteScreen called with screenId:", screenId);
+    console.log("Auth token present:", !!token);
+    console.log("Token value:", token?.substring(0, 20) + "...");
+
     if (!token) {
       throw new Error("Authentication required");
     }
 
     const url = `${API_BASE_URL}/screens/${screenId}/favorite`;
-    console.log('Making request to:', url);
+    console.log("Making request to:", url);
 
     const response = await fetch(url, {
       method: "POST",
@@ -236,11 +237,15 @@ export async function toggleFavoriteScreen(screenId: number | string): Promise<{
       },
     });
 
-    console.log('Toggle favorite API response status:', response.status, response.ok);
+    console.log(
+      "Toggle favorite API response status:",
+      response.status,
+      response.ok
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Toggle favorite API error text:', errorText);
+      console.error("Toggle favorite API error text:", errorText);
       throw new Error(`Failed to toggle favorite: ${response.statusText}`);
     }
 

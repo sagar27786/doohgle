@@ -378,7 +378,6 @@ export async function sendMojoAuthOTP(req: Request, res: Response) {
   }
 }
 
-
 export async function verifyMojoAuthOTP(req: Request, res: Response) {
   const { state_id, otp, password, confirmPassword, name } = req.body as {
     state_id: string;

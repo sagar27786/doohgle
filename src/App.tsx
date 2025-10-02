@@ -1,5 +1,6 @@
 import React, { createContext, useEffect, useState, useContext } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { FavoritesProvider } from "./contexts/FavoritesContext";
 import Header from "./components/Home/Header";
 import MainHero from "./components/Home/MainHero";
 import CompanyLogos from "./components/Home/CompanyLogos";
@@ -203,7 +204,9 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <FavoritesProvider>
+        <AppContent />
+      </FavoritesProvider>
     </ThemeProvider>
   );
 }
